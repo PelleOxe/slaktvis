@@ -56,11 +56,6 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direc
 .theme-btn:hover{color:var(--header-text);}
 .theme-btn.active{background:rgba(255,255,255,.2);color:var(--header-text);}
 /* Språkflaggor */
-#lang-group{display:flex;gap:2px;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:2px;background:rgba(255,255,255,.08);}
-.lang-btn{background:transparent;border:none;padding:3px 7px;border-radius:6px;font-size:17px;
-  cursor:pointer;transition:background .15s;line-height:1;opacity:.55;}
-.lang-btn:hover{background:rgba(255,255,255,.2);opacity:1;}
-.lang-btn.active{background:rgba(255,255,255,.28);opacity:1;box-shadow:0 0 0 1px rgba(255,255,255,.4);}
 #info-block{font-family:sans-serif;font-size:12px;color:var(--header-sub);margin-left:auto;text-align:right;line-height:1.5;}
 #info-block strong{color:var(--header-text);font-size:14px;}
 #copyright{font-family:sans-serif;font-size:11px;color:var(--header-sub);white-space:nowrap;opacity:.75;}
@@ -86,7 +81,7 @@ input[type="file"]{display:none;}
 .gen-btn:disabled{opacity:.35;cursor:default;}
 #gen-count{font-size:12px;font-family:sans-serif;color:var(--text-sec);min-width:18px;text-align:center;}
 #search-box{padding:8px;border-bottom:1px solid var(--border);}
-#search-input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:7px;
+#search-input{width:100%;padding:6px 30px 6px 10px;border:1px solid var(--border);border-radius:7px;
   font-size:13px;font-family:sans-serif;background:var(--bg);color:var(--text);}
 #search-input:focus{outline:none;border-color:var(--accent-mid);}
 #search-input::placeholder{color:var(--text-muted);}
@@ -104,10 +99,23 @@ input[type="file"]{display:none;}
 #right-col{display:grid;grid-template-rows:auto 1fr;gap:var(--gap);overflow:hidden;}
 
 /* ══ BLOCK D ══ */
-#block-d{overflow:hidden;min-height:0;}
+#block-d{overflow:hidden;min-height:0;transition:max-height .35s ease;}
+#block-d.collapsed #block-d-inner{display:none;}
+#block-d.collapsed{max-height:36px !important;}
 #block-d-inner{overflow:auto;padding:6px 10px 8px;}
+/* Kollaps-knapp */
+.d-collapse-wrap{display:flex;align-items:center;gap:3px;margin-left:4px;cursor:pointer;}
+.d-collapse-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--text-muted);font-size:13px;line-height:1;padding:0;
+}
+.d-collapse-label{
+  font-size:11px;font-family:sans-serif;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.5px;user-select:none;
+}
+
 #ancestor-chart{display:flex;align-items:stretch;height:270px;transition:height .3s ease;}
-#fan-chart{width:100%;height:583px;display:none;}
+#fan-chart{width:100%;height:583px;display:none;position:relative;}
 #fan-chart svg{width:100%;height:100%;}
 /* Vy-lägesväljare */
 .view-btns{display:flex;gap:2px;margin-right:8px;}
@@ -144,18 +152,18 @@ input[type="file"]{display:none;}
 #anc-placeholder{font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px;}
 
 /* ══ BOTTOM ROW ══ */
-#bottom-row{display:grid;grid-template-columns:640px 1fr 1fr;gap:var(--gap);overflow:hidden;min-height:0;}
+#bottom-row{display:grid;grid-template-columns:40% 30% 30%;gap:var(--gap);overflow:hidden;min-height:0;}
 
 /* ── Block E ── */
 #block-e{overflow-y:auto;}
 #block-e-inner{padding:12px;}
 #person-header{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start;}
-#person-avatar{width:60px;height:60px;border-radius:50%;background:var(--accent-light);
+#person-avatar{width:60px;height:80px;border-radius:8px;background:var(--accent-light);
   border:2px solid var(--accent-mid);flex-shrink:0;display:flex;align-items:center;justify-content:center;
   font-size:20px;color:var(--accent);overflow:hidden;font-family:sans-serif;}
 #person-avatar.male{background:var(--male-bg);border-color:var(--male);color:var(--male);}
 #person-avatar.female{background:var(--female-bg);border-color:var(--female);color:var(--female);}
-#person-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+#person-avatar img{width:100%;height:100%;object-fit:cover;object-position:center 15%;border-radius:6px;}
 #person-name-block h2{font-size:17px;color:var(--accent);line-height:1.2;}
 #person-name-block h2.male{color:var(--male);}
 #person-name-block h2.female{color:var(--female);}
@@ -219,13 +227,165 @@ input[type="file"]{display:none;}
 [data-theme="parchment"] .anc-card{border-radius:3px;}
 [data-theme="parchment"] .mini-card{border-radius:3px;}
 [data-theme="parchment"] #person-avatar{border-radius:4px;}
+[data-theme="parchment"] #person-avatar img{border-radius:3px;}
+
+/* ══ RESPONSIVE ══ */
+
+/* Tablet landskap (1024px och under) */
+@media (max-width:1024px){
+  #main{grid-template-columns:200px 1fr;}
+  #bottom-row{grid-template-columns:40% 30% 30%;}
+  #person-name-block h2{font-size:15px;}
+}
+
+/* Tablet stående / stor telefon landskap (768px och under) */
+@media (max-width:768px){
+  body{font-size:12px;overflow:auto;}
+  #header{flex-wrap:wrap;gap:6px;padding:6px 10px;}
+  #header h1{font-size:15px;}
+  #info-block{display:none;}
+  #copyright{display:none;}
+    #main{
+    display:flex;flex-direction:column;
+    overflow:visible;padding:4px;gap:4px;
+    height:auto;min-height:100vh;
+  }
+  #left-col{
+    flex-direction:row;flex-shrink:0;
+    height:auto;overflow:visible;
+  }
+  #left-col .panel:first-child{flex-shrink:0;width:100%;}
+  #left-col .panel:last-child{flex:1;max-height:220px;}
+  #right-col{overflow:visible;height:auto;display:flex;flex-direction:column;gap:4px;}
+  #block-d{min-height:0;}
+  #ancestor-chart{height:180px !important;}
+  #fan-chart{height:400px !important;}
+  #bottom-row{
+    display:flex;flex-direction:column;gap:4px;
+    overflow:visible;min-height:0;
+  }
+  #block-e,#block-g,#block-f{min-height:200px;max-height:none;}
+}
+
+/* Telefon stående (480px och under) */
+@media (max-width:480px){
+  #header{padding:5px 8px;gap:4px;}
+  #theme-group{display:none;}
+  #open-menu-wrap{flex-shrink:0;}
+  #main{padding:3px;gap:3px;}
+  .panel-head{font-size:10px;padding:4px 8px 4px 10px;}
+  .gen-btn{width:20px;height:20px;font-size:12px;}
+  #ancestor-chart{height:140px !important;}
+  #fan-chart{height:320px !important;}
+  #block-e,#block-g,#block-f{min-height:160px;}
+  .event-date{width:60px;}
+  .event-type{width:55px;}
+}
+
+/* iPad Pro och liknande (1024–1180px) specifik fix */
+@media (min-width:769px) and (max-width:1180px){
+  #main{grid-template-columns:180px 1fr;}
+  #bottom-row{grid-template-columns:40% 30% 30%;}
+}
+
+/* ══ OFFLINE-BANNER ══ */
+#offline-banner{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:#3d2008;color:#f5e8d0;font-family:sans-serif;font-size:12px;
+  padding:6px 16px;text-align:center;border-top:2px solid #d4920a;
+}
+#offline-banner.show{display:block;}
+
+/* ══ OFFLINE-DIALOG ══ */
+#offline-dialog{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.55);align-items:center;justify-content:center;
+}
+#offline-dialog.show{display:flex;}
+#offline-dialog-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:24px 28px;max-width:400px;width:90%;font-family:sans-serif;
+  box-shadow:0 8px 32px rgba(0,0,0,.25);
+}
+#offline-dialog-box h3{font-size:15px;margin-bottom:10px;color:var(--accent);}
+#offline-dialog-box p{font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:14px;}
+.odlg-option{
+  border:2px solid var(--border);border-radius:8px;padding:12px 14px;
+  margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;
+  position:relative;
+}
+.odlg-option:hover{border-color:var(--accent-mid);background:var(--accent-light);}
+.odlg-option.selected{
+  border-color:var(--accent);
+  background:var(--accent-light);
+  box-shadow:0 0 0 2px var(--accent);
+}
+.odlg-option.selected::before{
+  content:"✓";
+  position:absolute;top:10px;right:12px;
+  color:var(--accent);font-size:15px;font-weight:bold;
+}
+.odlg-option strong{font-size:13px;color:var(--text);display:block;margin-bottom:2px;}
+.odlg-option span{font-size:11px;color:var(--text-muted);}
+.odlg-btns{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+.odlg-btn{padding:6px 16px;border-radius:7px;border:none;font-size:13px;cursor:pointer;font-family:sans-serif;}
+.odlg-btn.primary{background:var(--amber);color:#fff;}
+.odlg-btn.secondary{background:var(--bg);border:1px solid var(--border);color:var(--text);}
+.odlg-btn:hover{opacity:.88;}
+
+/* ══ OFFLINE-START BANNER ══ */
+#resume-bar{
+  display:none;background:var(--accent-light);border-bottom:1px solid var(--border);
+  padding:7px 16px;font-family:sans-serif;font-size:13px;color:var(--text);
+  align-items:center;gap:10px;flex-shrink:0;
+}
+#resume-bar.show{display:flex;}
+#resume-bar button{
+  background:var(--amber);color:#fff;border:none;padding:4px 12px;
+  border-radius:6px;font-size:12px;cursor:pointer;font-family:sans-serif;
+}
+#resume-bar .dismiss{background:none;border:none;color:var(--text-muted);font-size:18px;
+  cursor:pointer;margin-left:auto;padding:0 4px;}
 </style>
 </head>
 <body data-theme="parchment">
 
+
+<div id="offline-banner">📴 Offline-läge — arbetar utan nätverksanslutning</div>
+
+<div id="resume-bar">
+  <span>💾 Sparat dataset hittades: <strong id="resume-filename"></strong></span>
+  <button onclick="loadFromIDB()">Ladda</button>
+  <button class="dismiss" onclick="document.getElementById('resume-bar').classList.remove('show')" title="Stäng">×</button>
+</div>
+
+<div id="offline-dialog">
+  <div id="offline-dialog-box">
+    <h3>Hur vill du använda filen?</h3>
+    <p>Välj hur du vill ladda in ZIP-filen. Offline-läge sparar GEDCOM-filen och miniatyrbilder (ca 80×80 px) i webbläsarens lokala lagring så appen fungerar utan internet nästa gång.</p>
+    <div class="odlg-option selected" id="odlg-normal" onclick="selectOdlg('normal')">
+      <strong>🖼 Normal — med fullstora bilder</strong>
+      <span>Snabb start, bilder i originalstorlek. Inget sparas lokalt.</span>
+    </div>
+    <div class="odlg-option" id="odlg-offline" onclick="selectOdlg('offline')">
+      <strong>📴 Offline-läge — spara för nästa gång</strong>
+      <span>GEDCOM + miniatyrbilder (80×80 px) sparas lokalt. Fungerar utan internet.</span>
+    </div>
+    <div class="odlg-option" id="odlg-noimg" onclick="selectOdlg('noimg')">
+      <strong>📄 Offline utan bilder</strong>
+      <span>Bara GEDCOM-filen sparas. Minsta storlek, inga porträtt.</span>
+    </div>
+    <div class="odlg-btns">
+      <button class="odlg-btn secondary" onclick="closeOfflineDialog()">Avbryt</button>
+      <button class="odlg-btn primary" onclick="confirmOfflineDialog()">Öppna</button>
+    </div>
+  </div>
+</div>
+
 <div id="loading-overlay">
   <div class="spinner"></div>
   <span id="loading-text">…</span>
+  <button id="loading-cancel" onclick="cancelLoad()" style="display:none;margin-top:12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;padding:5px 18px;border-radius:6px;font-size:13px;cursor:pointer;font-family:sans-serif;">Avbryt</button>
 </div>
 
 <div id="header">
@@ -237,7 +397,7 @@ input[type="file"]{display:none;}
     <div id="open-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;
       background:var(--surface);border:1px solid var(--border);border-radius:8px;
       box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:50;min-width:210px;overflow:hidden;">
-      <div class="omenu-item" id="omenu-zip" onclick="document.getElementById('fi-zip').click();closeOpenMenu()">
+      <div class="omenu-item" id="omenu-zip" onclick="openZipDialog()">
         🗜 <span id="omenu-zip-label">ZIP-fil</span>
         <span id="omenu-zip-sub" style="font-size:11px;color:var(--text-muted);display:block">GEDCOM + porträttbilder</span>
       </div>
@@ -256,29 +416,24 @@ input[type="file"]{display:none;}
     <button class="theme-btn" onclick="setTheme('dark',this)" id="tbtn-dark">☾ Mörkt</button>
     <button class="theme-btn active" onclick="setTheme('parchment',this)" id="tbtn-parch">📜 Pergament</button>
   </div>
-
-  <!-- Språk -->
-  <div id="lang-group">
-    <button class="lang-btn active" onclick="setLang('sv',this)" title="Svenska">🇸🇪</button>
-    <button class="lang-btn" onclick="setLang('no',this)" title="Norsk">🇳🇴</button>
-    <button class="lang-btn" onclick="setLang('da',this)" title="Dansk">🇩🇰</button>
-    <button class="lang-btn" onclick="setLang('de',this)" title="Deutsch">🇩🇪</button>
-    <button class="lang-btn" onclick="setLang('en',this)" title="English">🇬🇧</button>
-  </div>
-
   <div id="info-block">
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v0.1.13 &nbsp;|&nbsp; © 2025 Per Andersson</div>
+  <div id="copyright">v0.1.26 &nbsp;|&nbsp; © 2025 Per Andersson</div>
 </div>
 
+<!-- resume-bar already in offline_html -->
 <div id="main">
   <!-- LEFT -->
   <div id="left-col">
     <div class="panel" style="flex-shrink:0">
-      <div id="search-box">
-        <input type="text" id="search-input" oninput="filterPersons(this.value)">
+      <div id="search-box" style="position:relative">
+        <input type="text" id="search-input" oninput="filterPersons(this.value);updateSearchClear()">
+        <button id="search-clear" onclick="clearSearch()" title="Rensa sökning"
+          style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);
+          background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;
+          line-height:1;padding:0 2px;">×</button>
       </div>
     </div>
     <div class="panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
@@ -298,6 +453,10 @@ input[type="file"]{display:none;}
     <div class="panel" id="block-d">
       <div class="panel-head">
         <span id="ph-ancestors">Förfäder</span> — Block D
+        <span class="d-collapse-wrap" onclick="toggleBlockD()" id="d-collapse-wrap" title="Dölj/visa Block D">
+          <button class="d-collapse-btn" id="d-collapse-btn">▲</button>
+          <span class="d-collapse-label" id="d-collapse-label">Dölj</span>
+        </span>
         <div class="view-btns">
           <button class="view-btn active" id="vbtn-antavla" onclick="setDView('antavla',this)" id="vbtn-antavla">Antavla</button>
           <button class="view-btn" id="vbtn-fan" onclick="setDView('fan',this)">Solfjäder</button>
@@ -357,291 +516,6 @@ input[type="file"]{display:none;}
 /* ══════════════════════════════════════════
    I18N
 ══════════════════════════════════════════ */
-const LANG={
-  sv:{
-    openFile:'📂 Öppna fil ▾',
-    zipLabel:'ZIP-fil',zipSub:'GEDCOM + porträttbilder',
-    gedLabel:'GEDCOM-fil',gedSub:'Utan bilder',
-    themeLight:'☀ Ljust',themeDark:'☾ Mörkt',themeParch:'📜 Pergament',
-    noFile:'Ingen fil laddad',
-    allPersons:'Alla personer',
-    ancestors:'Förfäder',
-    person:'Person',
-    famG:'Föräldrar & Syskon',
-    relations:'Relationer',
-    selectPerson:'Välj en person i listan.',
-    selectDetail:'Välj en person för att se detaljer.',
-    noParentsSiblings:'Inga kända föräldrar eller syskon.',
-    noHits:'Inga träffar',
-    openPrompt:'Öppna en fil för att börja.',
-    loadingZip:'Öppnar ZIP-fil…',
-    loadingFiles:'Läser filer…',
-    loadingGed:'Tolkar GEDCOM…',
-    loadingGedFile:'Läser GEDCOM-fil…',
-    noGedInZip:'Ingen GEDCOM-fil hittades i ZIP-filen.',
-    errorRead:'Kunde inte läsa filen.',
-    errorParse:'Fel vid tolkning: ',
-    errorGeneric:'Fel: ',
-    searchPlaceholder:'🔍 Sök person…',
-    called:'Kallas',
-    surname:'Efternamn',
-    born:'Född',
-    died:'Död',
-    age:'år',
-    evBorn:'Född',evBapt:'Döpt',evOccu:'Yrke',evRes:'Bostad',evDied:'Död',evBuri:'Begr.',
-    parents:'Föräldrar',
-    siblings:'Syskon',
-    focusPerson:'Fokusperson',
-    partner:'Partner',
-    children:'Barn',
-    noChildren:'Inga registrerade barn',
-    unknown:'Okänd',
-    genFewer:'Färre generationer',
-    genMore:'Fler generationer',
-    persons:'personer',
-    viewAntavla:'Antavla',
-    viewFan:'Solfjäder',
-  },
-  no:{
-    openFile:'📂 Åpne fil ▾',
-    zipLabel:'ZIP-fil',zipSub:'GEDCOM + portrettbilder',
-    gedLabel:'GEDCOM-fil',gedSub:'Uten bilder',
-    themeLight:'☀ Lyst',themeDark:'☾ Mørkt',themeParch:'📜 Pergament',
-    noFile:'Ingen fil lastet',
-    allPersons:'Alle personer',
-    ancestors:'Forfedre',
-    person:'Person',
-    famG:'Foreldre & Søsken',
-    relations:'Relasjoner',
-    selectPerson:'Velg en person i listen.',
-    selectDetail:'Velg en person for å se detaljer.',
-    noParentsSiblings:'Ingen kjente foreldre eller søsken.',
-    noHits:'Ingen treff',
-    openPrompt:'Åpne en fil for å starte.',
-    loadingZip:'Åpner ZIP-fil…',
-    loadingFiles:'Leser filer…',
-    loadingGed:'Tolker GEDCOM…',
-    loadingGedFile:'Leser GEDCOM-fil…',
-    noGedInZip:'Ingen GEDCOM-fil funnet i ZIP-filen.',
-    errorRead:'Kunne ikke lese filen.',
-    errorParse:'Feil ved tolkning: ',
-    errorGeneric:'Feil: ',
-    searchPlaceholder:'🔍 Søk person…',
-    called:'Kalles',
-    surname:'Etternavn',
-    born:'Født',
-    died:'Død',
-    age:'år',
-    evBorn:'Født',evBapt:'Døpt',evOccu:'Yrke',evRes:'Bosted',evDied:'Død',evBuri:'Begr.',
-    parents:'Foreldre',
-    siblings:'Søsken',
-    focusPerson:'Fokusperson',
-    partner:'Partner',
-    children:'Barn',
-    noChildren:'Ingen registrerte barn',
-    unknown:'Ukjent',
-    genFewer:'Færre generasjoner',
-    genMore:'Flere generasjoner',
-    persons:'personer',
-    viewAntavla:'Anetabell',
-    viewFan:'Viftevisning',
-  },
-  da:{
-    openFile:'📂 Åbn fil ▾',
-    zipLabel:'ZIP-fil',zipSub:'GEDCOM + portrætbilleder',
-    gedLabel:'GEDCOM-fil',gedSub:'Uden billeder',
-    themeLight:'☀ Lyst',themeDark:'☾ Mørkt',themeParch:'📜 Pergament',
-    noFile:'Ingen fil indlæst',
-    allPersons:'Alle personer',
-    ancestors:'Forfædre',
-    person:'Person',
-    famG:'Forældre & Søskende',
-    relations:'Relationer',
-    selectPerson:'Vælg en person på listen.',
-    selectDetail:'Vælg en person for at se detaljer.',
-    noParentsSiblings:'Ingen kendte forældre eller søskende.',
-    noHits:'Ingen resultater',
-    openPrompt:'Åbn en fil for at starte.',
-    loadingZip:'Åbner ZIP-fil…',
-    loadingFiles:'Læser filer…',
-    loadingGed:'Fortolker GEDCOM…',
-    loadingGedFile:'Læser GEDCOM-fil…',
-    noGedInZip:'Ingen GEDCOM-fil fundet i ZIP-filen.',
-    errorRead:'Kunne ikke læse filen.',
-    errorParse:'Fejl ved fortolkning: ',
-    errorGeneric:'Fejl: ',
-    searchPlaceholder:'🔍 Søg person…',
-    called:'Kaldes',
-    surname:'Efternavn',
-    born:'Født',
-    died:'Død',
-    age:'år',
-    evBorn:'Født',evBapt:'Døbt',evOccu:'Erhverv',evRes:'Bopæl',evDied:'Død',evBuri:'Begr.',
-    parents:'Forældre',
-    siblings:'Søskende',
-    focusPerson:'Fokusperson',
-    partner:'Partner',
-    children:'Børn',
-    noChildren:'Ingen registrerede børn',
-    unknown:'Ukendt',
-    genFewer:'Færre generationer',
-    genMore:'Flere generationer',
-    persons:'personer',
-    viewAntavla:'Anetavle',
-    viewFan:'Viftevisning',
-  },
-  de:{
-    openFile:'📂 Datei öffnen ▾',
-    zipLabel:'ZIP-Datei',zipSub:'GEDCOM + Portraitbilder',
-    gedLabel:'GEDCOM-Datei',gedSub:'Ohne Bilder',
-    themeLight:'☀ Hell',themeDark:'☾ Dunkel',themeParch:'📜 Pergament',
-    noFile:'Keine Datei geladen',
-    allPersons:'Alle Personen',
-    ancestors:'Vorfahren',
-    person:'Person',
-    famG:'Eltern & Geschwister',
-    relations:'Beziehungen',
-    selectPerson:'Wählen Sie eine Person aus der Liste.',
-    selectDetail:'Wählen Sie eine Person, um Details zu sehen.',
-    noParentsSiblings:'Keine bekannten Eltern oder Geschwister.',
-    noHits:'Keine Treffer',
-    openPrompt:'Öffnen Sie eine Datei, um zu beginnen.',
-    loadingZip:'ZIP-Datei wird geöffnet…',
-    loadingFiles:'Dateien werden gelesen…',
-    loadingGed:'GEDCOM wird ausgewertet…',
-    loadingGedFile:'GEDCOM-Datei wird gelesen…',
-    noGedInZip:'Keine GEDCOM-Datei in der ZIP-Datei gefunden.',
-    errorRead:'Datei konnte nicht gelesen werden.',
-    errorParse:'Fehler bei der Auswertung: ',
-    errorGeneric:'Fehler: ',
-    searchPlaceholder:'🔍 Person suchen…',
-    called:'Genannt',
-    surname:'Nachname',
-    born:'Geboren',
-    died:'Gestorben',
-    age:'Jahre',
-    evBorn:'Geb.',evBapt:'Getauft',evOccu:'Beruf',evRes:'Wohnort',evDied:'Gest.',evBuri:'Begr.',
-    parents:'Eltern',
-    siblings:'Geschwister',
-    focusPerson:'Fokusperson',
-    partner:'Partner',
-    children:'Kinder',
-    noChildren:'Keine registrierten Kinder',
-    unknown:'Unbekannt',
-    genFewer:'Weniger Generationen',
-    genMore:'Mehr Generationen',
-    persons:'Personen',
-    viewAntavla:'Ahnentafel',
-    viewFan:'Fächerdiagramm',
-  },
-  en:{
-    openFile:'📂 Open file ▾',
-    zipLabel:'ZIP file',zipSub:'GEDCOM + portrait images',
-    gedLabel:'GEDCOM file',gedSub:'Without images',
-    themeLight:'☀ Light',themeDark:'☾ Dark',themeParch:'📜 Parchment',
-    noFile:'No file loaded',
-    allPersons:'All persons',
-    ancestors:'Ancestors',
-    person:'Person',
-    famG:'Parents & Siblings',
-    relations:'Relations',
-    selectPerson:'Select a person from the list.',
-    selectDetail:'Select a person to view details.',
-    noParentsSiblings:'No known parents or siblings.',
-    noHits:'No results',
-    openPrompt:'Open a file to get started.',
-    loadingZip:'Opening ZIP file…',
-    loadingFiles:'Reading files…',
-    loadingGed:'Parsing GEDCOM…',
-    loadingGedFile:'Reading GEDCOM file…',
-    noGedInZip:'No GEDCOM file found in the ZIP file.',
-    errorRead:'Could not read the file.',
-    errorParse:'Parse error: ',
-    errorGeneric:'Error: ',
-    searchPlaceholder:'🔍 Search person…',
-    called:'Known as',
-    surname:'Surname',
-    born:'Born',
-    died:'Died',
-    age:'yrs',
-    evBorn:'Born',evBapt:'Baptised',evOccu:'Occupation',evRes:'Residence',evDied:'Died',evBuri:'Buried',
-    parents:'Parents',
-    siblings:'Siblings',
-    focusPerson:'Focus person',
-    partner:'Partner',
-    children:'Children',
-    noChildren:'No registered children',
-    unknown:'Unknown',
-    genFewer:'Fewer generations',
-    genMore:'More generations',
-    persons:'persons',
-    viewAntavla:'Pedigree',
-    viewFan:'Fan chart',
-  }
-};
-
-let CL='sv'; // current language
-function t(k){return(LANG[CL]||LANG.sv)[k]||k;}
-
-function setLang(code,btn){
-  CL=code;
-  document.documentElement.lang=code;
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b===btn));
-  applyLang();
-  // Använd setTimeout(0) för att säkra att CL är satt innan rendering
-  setTimeout(()=>{
-    renderList(S.filteredIds||[]);
-    if(S.curId){
-      renderD(S.curId);
-      renderE(S.curId);
-      renderG(S.curId);
-      renderF(S.curId);
-    } else {
-      const ph=document.getElementById('anc-placeholder');
-      if(ph)ph.textContent=t('selectPerson');
-      const ns=document.getElementById('no-selection');
-      if(ns)ns.textContent=t('selectDetail');
-      document.getElementById('block-g-inner').innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${t('selectPerson')}</div>`;
-      document.getElementById('block-f-inner').innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${t('selectPerson')}</div>`;
-      const et=document.getElementById('empty-text');
-      if(et)et.textContent=t('openPrompt');
-    }
-    const ifile=document.getElementById('info-file');
-    if(Object.values(LANG).some(ll=>ifile.textContent===ll.noFile)||ifile.textContent==='—')
-      ifile.textContent=t('noFile');
-  },0);
-}
-
-function applyLang(){
-  const l=LANG[CL]||LANG.sv;
-  document.getElementById('btn-open').textContent=l.openFile;
-  document.getElementById('omenu-zip-label').textContent=l.zipLabel;
-  document.getElementById('omenu-zip-sub').textContent=l.zipSub;
-  document.getElementById('omenu-ged-label').textContent=l.gedLabel;
-  document.getElementById('omenu-ged-sub').textContent=l.gedSub;
-  document.getElementById('tbtn-light').textContent=l.themeLight;
-  document.getElementById('tbtn-dark').textContent=l.themeDark;
-  document.getElementById('tbtn-parch').textContent=l.themeParch;
-  document.getElementById('ph-persons').textContent=l.allPersons;
-  document.getElementById('ph-ancestors').textContent=l.ancestors;
-  document.getElementById('ph-person').textContent=l.person;
-  document.getElementById('ph-famg').textContent=l.famG;
-  document.getElementById('ph-relations').textContent=l.relations;
-  document.getElementById('anc-placeholder').textContent=l.selectPerson;
-  document.getElementById('no-selection').textContent=l.selectDetail;
-  document.getElementById('search-input').placeholder=l.searchPlaceholder;
-  document.getElementById('gen-minus').title=l.genFewer;
-  document.getElementById('gen-plus').title=l.genMore;
-  document.getElementById('vbtn-antavla').textContent=l.viewAntavla;
-  document.getElementById('vbtn-fan').textContent=l.viewFan;
-  const et=document.getElementById('empty-text');
-  if(et)et.textContent=l.openPrompt;
-  // Info file if not loaded
-  const ifile=document.getElementById('info-file');
-  if(ifile.textContent==='—'||Object.values(LANG).some(ll=>ifile.textContent===ll.noFile))
-    ifile.textContent=l.noFile;
-}
-
 /* ══════════════════════════════════════════
    TEMA
 ══════════════════════════════════════════ */
@@ -654,7 +528,7 @@ function setTheme(t,btn){
    DISGEN HELPERS
 ══════════════════════════════════════════ */
 function cleanName(r){return r?r.replace(/\*/g,'').replace(/\s+/g,' ').trim():'';}
-function callName(r){if(!r)return null;const m=r.match(/\*(\S+)/);return m?m[1]:null;}
+function callName(r){if(!r)return null;const m=r.match(/(\S+)\*/);return m?m[1]:null;}
 
 // Rensa Disgen ortstaggar: <EO=5Spetsbergen=> → Spetsbergen
 // Mönster: <EO=5TEXT=> där TEXT är ortnamnet
@@ -703,7 +577,7 @@ const AVATAR_F=makeSvgAvatar('F');
 /* ══════════════════════════════════════════
    STATE
 ══════════════════════════════════════════ */
-const S={persons:{},families:{},images:{},curId:null,genCount:4,filteredIds:[]};
+const S={persons:{},families:{},images:{},curId:null,genCount:4,filteredIds:[],history:[]};
 
 /* ══════════════════════════════════════════
    GEDCOM PARSER
@@ -714,7 +588,7 @@ function parseGedcom(text){
   let cur=null,ct=null,sub=null;
   let noteLines=[];
   const flushNote=()=>{if(cur&&ct==='I'&&noteLines.length){cur.noteRaw.push(...noteLines);}noteLines=[];};
-  const newP=()=>({id:'',nameRaw:'',name:'',callname:null,nameGiven:'',nameSur:'',sex:'',
+  const newP=()=>({id:'',nameRaw:'',name:'',fullName:'',callname:null,nameGiven:'',nameSur:'',sex:'',
     birt:{date:'',place:''},deat:{date:'',place:''},buri:{date:'',place:''},
     chr:{date:'',place:''},occu:'',resi:[],obje:[],famc:[],fams:[],noteRaw:[]});
   const newF=()=>({id:'',husb:'',wife:'',chil:[]});
@@ -735,14 +609,40 @@ function parseGedcom(text){
       if(lv===1){
         if(sub==='NOTE')flushNote();
         sub=tag;
-        if(tag==='NAME'){const rv=val.replace(/\//g,' ').replace(/\s+/g,' ').trim();cur.nameRaw=rv;cur.name=cleanName(rv);cur.callname=callName(rv);}
+        if(tag==='NAME'){
+          // Spara råvärdet
+          cur.nameRaw=val;
+          // Extrahera tilltalsnamn (* = tilltalsnamn i Disgen)
+          cur.callname=callName(val);
+          // Extrahera FÖRSTA efternamnet inom // (Disgens namnkonvention)
+          const surMatch=val.match(/\/([^/]+)\//);
+          if(surMatch){
+            // Första ordet inom // = födelseefternamn
+            cur.nameSur=cleanName(surMatch[1].split(' ')[0]);
+            // Förnamnen = allt före //
+            const givenRaw=val.substring(0,val.indexOf('/')).trim();
+            cur.nameGiven=cleanName(givenRaw);
+          } else {
+            // Inga // — rensa och ta hela som förnamn
+            const rv=cleanName(val);
+            cur.nameGiven=rv;
+            cur.nameSur='';
+            cur.fullName=rv;
+          }
+          // Visningsnamn: tilltalsnamn (om finns) + födelseefternamn
+          const displayGiven=cur.callname||cur.nameGiven.split(' ')[0];
+          cur.name=cleanName([displayGiven,cur.nameSur].filter(Boolean).join(' '));
+          // fullName: alla förnamn + alla efternamn (för sökning)
+          const allSurnames=surMatch?cleanName(surMatch[1]):'';
+          cur.fullName=cleanName([cur.nameGiven,allSurnames].filter(Boolean).join(' '));
+        }
         else if(tag==='SEX')cur.sex=val;
         else if(tag==='OCCU')cur.occu=cleanDisgenTags(val);
         else if(tag==='FAMC')cur.famc.push(val.replace(/@/g,''));
         else if(tag==='FAMS')cur.fams.push(val.replace(/@/g,''));
         else if(tag==='NOTE'){noteLines=val?[val]:[];}
       }else if(lv===2){
-        if(sub==='NAME'){if(tag==='GIVN')cur.nameGiven=cleanName(val);else if(tag==='SURN')cur.nameSur=cleanName(val);}
+        if(sub==='NAME'){if(tag==='GIVN'&&!cur.nameGiven)cur.nameGiven=cleanName(val);else if(tag==='SURN'&&!cur.nameSur)cur.nameSur=cleanName(val.split(' ')[0]);}
         else if(sub==='BIRT'){if(tag==='DATE')cur.birt.date=val;else if(tag==='PLAC')cur.birt.place=cleanDisgenTags(val);}
         else if(sub==='DEAT'){if(tag==='DATE')cur.deat.date=val;else if(tag==='PLAC')cur.deat.place=cleanDisgenTags(val);}
         else if(sub==='BURI'){if(tag==='DATE')cur.buri.date=val;else if(tag==='PLAC')cur.buri.place=cleanDisgenTags(val);}
@@ -763,7 +663,11 @@ function parseGedcom(text){
   }
   flushNote();
   for(const p of Object.values(persons)){
-    if(!p.name&&(p.nameGiven||p.nameSur))p.name=[p.nameGiven,p.nameSur].filter(Boolean).join(' ');
+    if(!p.name||(p.name==='(Okänt namn)'&&(p.nameGiven||p.nameSur))){
+      const dg=p.callname||(p.nameGiven?p.nameGiven.split(' ')[0]:'');
+      p.name=cleanName([dg,p.nameSur].filter(Boolean).join(' '))||p.nameGiven||'(Okänt namn)';
+    }
+    if(!p.fullName)p.fullName=p.name;
     if(!p.name)p.name='(Okänt namn)';
     p.bio=p.noteRaw.length?processDisgenNote(p.noteRaw):'';
   }
@@ -782,59 +686,222 @@ function closeOpenMenu(){document.getElementById('open-menu').style.display='non
 document.addEventListener('click',()=>closeOpenMenu());
 
 /* ══════════════════════════════════════════
+   INDEXEDDB — offline-lagring
+══════════════════════════════════════════ */
+let loadCancelled=false;
+function cancelLoad(){loadCancelled=true;document.getElementById("loading-cancel").style.display="none";hideLoad();}
+function showLoadCancel(msg){loadCancelled=false;document.getElementById("loading-cancel").style.display="block";showLoad(msg);}
+function hideLoadCancel(){document.getElementById("loading-cancel").style.display="none";hideLoad();}
+
+const IDB_NAME='slaktvis',IDB_VER=1,IDB_STORE='data';
+function openIDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(IDB_NAME,IDB_VER);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore(IDB_STORE);
+    req.onsuccess=e=>res(e.target.result);
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+async function idbSet(key,val){
+  const db=await openIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).put(val,key);
+    tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);
+  });
+}
+async function idbGet(key){
+  const db=await openIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readonly');
+    const req=tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess=e=>res(e.target.result);
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+async function idbDel(key){
+  const db=await openIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).delete(key);
+    tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);
+  });
+}
+
+// Skala bild till thumbnail via Canvas
+function blobToThumb(blob,w=60,h=80){
+  return new Promise(res=>{
+    const url=URL.createObjectURL(blob);
+    const img=new Image();
+    img.onload=()=>{
+      const cv=document.createElement('canvas');
+      cv.width=w;cv.height=h;
+      const ctx=cv.getContext('2d');
+      // Portrait crop: fyll bredden, ta toppen (ansiktet)
+      const scale=w/img.width;
+      const scaledH=img.height*scale;
+      // Om bilden är bredare än hög: skala på höjd istället, centrera horisontellt
+      let sx=0,sy=0,sw=img.width,sh=img.height,dw=w,dh=h;
+      if(img.width/img.height > w/h){
+        // Bredare bild: croppa sidorna
+        sh=img.height; sw=Math.round(img.height*(w/h));
+        sx=Math.round((img.width-sw)/2); sy=0;
+      } else {
+        // Smalare/portrait: croppa underifrån (behåll toppen för ansiktet)
+        sw=img.width; sh=Math.round(img.width*(h/w));
+        sx=0; sy=Math.round(img.height*0.05); // 5% offset uppifrån
+        if(sy+sh>img.height) sy=0;
+      }
+      ctx.drawImage(img,sx,sy,sw,sh,0,0,w,h);
+      URL.revokeObjectURL(url);
+      res(cv.toDataURL('image/jpeg',0.75));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);res(null);};
+    img.src=url;
+  });
+}
+
+/* ── Offline-dialog ── */
+let pendingZipFile=null, odlgMode='normal';
+
+function openZipDialog(){
+  closeOpenMenu();
+  pendingZipFile=null; odlgMode='normal';
+  selectOdlg('normal');
+  document.getElementById('offline-dialog').classList.add('show');
+}
+function closeOfflineDialog(){
+  document.getElementById('offline-dialog').classList.remove('show');
+  document.getElementById('fi-zip').value='';
+}
+function selectOdlg(mode){
+  odlgMode=mode;
+  ['normal','offline','noimg'].forEach(m=>{
+    document.getElementById('odlg-'+m).classList.toggle('selected',m===mode);
+  });
+}
+function confirmOfflineDialog(){
+  closeOfflineDialog();
+  document.getElementById('fi-zip').click();
+}
+
+/* ══════════════════════════════════════════
    LADDA PARSED GEDCOM
 ══════════════════════════════════════════ */
 function loadParsed(gedText,fileName){
-  showLoad(t('loadingGed'));
+  showLoad('Tolkar GEDCOM…');
   setTimeout(()=>{
     try{
       const{persons,families}=parseGedcom(gedText);
       S.persons=persons;S.families=families;
       const cnt=Object.keys(persons).length;
-      document.getElementById('info-count').innerHTML=`<strong>${cnt.toLocaleString('sv-SE')}</strong> ${t('persons')}`;
+      document.getElementById('info-count').innerHTML=`<strong>${cnt.toLocaleString('sv-SE')}</strong> ${'personer'}`;
       document.getElementById('info-file').textContent=fileName;
       buildList();clearSel();hideLoad();
-    }catch(err){hideLoad();alert(t('errorParse')+err.message);console.error(err);}
+    }catch(err){hideLoad();alert('Fel vid tolkning: '+err.message);console.error(err);}
   },10);
 }
 
 /* ── ZIP ── */
 document.getElementById('fi-zip').addEventListener('change',async e=>{
   const file=e.target.files[0];if(!file)return;
-  showLoad(t('loadingZip'));
+  showLoad('Öppnar ZIP-fil…');
   try{
     const zip=await JSZip.loadAsync(file);
     let ged=null;
     for(const u of Object.values(S.images))URL.revokeObjectURL(u);
     Object.keys(S.images).forEach(k=>delete S.images[k]);
+    const imgEntries=[];
     const tasks=[];
     zip.forEach((path,entry)=>{
       if(entry.dir)return;
       const name=path.split('/').pop(),ext=name.split('.').pop().toLowerCase();
       if(ext==='ged'||ext==='gedcom')tasks.push(entry.async('text').then(tx=>{ged=tx;}));
-      else if(['jpg','jpeg','png','gif','webp'].includes(ext))
-        tasks.push(entry.async('blob').then(b=>{S.images[name.toLowerCase()]=URL.createObjectURL(b);}));
+      else if(['jpg','jpeg','png','gif','webp'].includes(ext)){
+        if(odlgMode==='normal'){
+          tasks.push(entry.async('blob').then(b=>{S.images[name.toLowerCase()]=URL.createObjectURL(b);}));
+        } else if(odlgMode==='offline'){
+          tasks.push(entry.async('blob').then(b=>imgEntries.push({name:name.toLowerCase(),blob:b})));
+        }
+        // noimg: hoppa över bilder helt
+      }
     });
-    showLoad(t('loadingFiles'));
+    showLoad('Läser filer…');
     await Promise.all(tasks);
-    if(!ged){alert(t('noGedInZip'));hideLoad();return;}
+    if(!ged){alert('Ingen GEDCOM-fil hittades i ZIP-filen.');hideLoad();return;}
+
+    if(odlgMode==='offline'||odlgMode==='noimg'){
+      // Spara i IndexedDB
+      showLoad('Sparar offline-data…');
+      await idbSet('gedcom',ged);
+      await idbSet('filename',file.name);
+      if(odlgMode==='offline'&&imgEntries.length){
+        showLoadCancel('Skapar miniatyrbilder…');
+        const thumbMap={};
+        let done=0;
+        for(const {name,blob} of imgEntries){
+          if(loadCancelled){hideLoadCancel();return;}
+          const thumb=await blobToThumb(blob,60,80);
+          if(thumb)thumbMap[name]=thumb;
+          done++;
+          if(done%5===0)showLoad(`Skapar miniatyrer ${done}/${imgEntries.length}…`);
+        }
+        hideLoadCancel();
+        await idbSet('thumbs',thumbMap);
+        for(const [name,dataUrl] of Object.entries(thumbMap)){
+          S.images[name]=dataUrl;
+        }
+      } else {
+        await idbDel('thumbs');
+      }
+    }
+
     loadParsed(ged,file.name);
-  }catch(err){hideLoad();alert(t('errorGeneric')+err.message);console.error(err);}
+  }catch(err){hideLoad();alert('Fel: '+err.message);console.error(err);}
   e.target.value='';
 });
 
 /* ── GEDCOM direkt ── */
 document.getElementById('fi-ged').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
-  showLoad(t('loadingGedFile'));
+  showLoad('Läser GEDCOM-fil…');
   for(const u of Object.values(S.images))URL.revokeObjectURL(u);
   Object.keys(S.images).forEach(k=>delete S.images[k]);
   const reader=new FileReader();
   reader.onload=ev=>loadParsed(ev.target.result,file.name);
-  reader.onerror=()=>{hideLoad();alert(t('errorRead'));};
+  reader.onerror=()=>{hideLoad();alert('Kunde inte läsa filen.');};
   reader.readAsText(file,'UTF-8');
   e.target.value='';
 });
+
+/* ── Ladda från IndexedDB vid start ── */
+async function checkIDB(){
+  try{
+    const ged=await idbGet('gedcom');
+    const fn=await idbGet('filename');
+    if(!ged)return;
+    document.getElementById('resume-filename').textContent=fn||'sparat dataset';
+    document.getElementById('resume-bar').classList.add('show');
+  }catch(e){console.log('IDB ej tillgänglig',e);}
+}
+async function loadFromIDB(){
+  document.getElementById('resume-bar').classList.remove('show');
+  showLoad('Laddar sparad data…');
+  try{
+    const ged=await idbGet('gedcom');
+    const fn=await idbGet('filename');
+    const thumbs=await idbGet('thumbs');
+    if(thumbs&&typeof thumbs==='object'){
+      for(const [name,dataUrl] of Object.entries(thumbs)) S.images[name]=dataUrl;
+    }
+    if(ged) loadParsed(ged,fn||'offline-data');
+    else{hideLoad();alert('Ingen sparad data hittades.');}
+  }catch(err){hideLoad();alert('Kunde inte läsa sparad data: '+err.message);}
+}
+async function clearIDB(){
+  try{await idbDel('gedcom');await idbDel('filename');await idbDel('thumbs');}
+  catch(e){console.log(e);}
+}
 
 /* ══════════════════════════════════════════
    PERSONLISTA
@@ -847,12 +914,18 @@ function buildList(){
 function filterPersons(q){
   q=q.trim().toLowerCase();
   const all=Object.keys(S.persons).sort((a,b)=>sortKey(S.persons[a]).localeCompare(sortKey(S.persons[b]),'sv'));
-  S.filteredIds=q?all.filter(id=>S.persons[id].name.toLowerCase().includes(q)):all;
+  if(!q){S.filteredIds=all;renderList(all);return;}
+  // Dela söksträngen i enskilda ord — alla ord måste finnas i namnet (valfri ordning)
+  const words=q.split(/\s+/).filter(Boolean);
+  S.filteredIds=all.filter(id=>{
+    const name=S.persons[id].name.toLowerCase();
+    return words.every(w=>name.includes(w));
+  });
   renderList(S.filteredIds);
 }
 function renderList(ids){
   const list=document.getElementById('person-list');
-  if(!ids||!ids.length){list.innerHTML=`<div style="padding:16px;text-align:center;font-family:sans-serif;font-size:13px;color:var(--text-muted)">${t('noHits')}</div>`;return;}
+  if(!ids||!ids.length){list.innerHTML=`<div style="padding:16px;text-align:center;font-family:sans-serif;font-size:13px;color:var(--text-muted)">${'Inga träffar'}</div>`;return;}
   const frag=document.createDocumentFragment();
   for(const id of ids){
     const p=S.persons[id];
@@ -872,21 +945,34 @@ function renderList(ids){
 /* ══════════════════════════════════════════
    SELEKTION
 ══════════════════════════════════════════ */
-function sel(id){
+function sel(id,addHistory=true){
+  if(addHistory&&S.curId&&S.curId!==id) S.history.push(S.curId);
   S.curId=id;
   document.querySelectorAll('.person-item').forEach(el=>el.classList.toggle('selected',el.dataset.id===id));
   renderD(id);renderE(id);renderG(id);renderF(id);
   const el=document.querySelector(`.person-item[data-id="${id}"]`);
   if(el)el.scrollIntoView({block:'nearest'});
+  updateBackBtn();
+}
+function goBack(){
+  if(!S.history.length)return;
+  const prev=S.history.pop();
+  sel(prev,false);
+}
+function updateBackBtn(){
+  const btn=document.getElementById('fan-back-btn');
+  if(btn)btn.style.opacity=S.history.length?'1':'0.3';
+  const btn2=document.getElementById('fan-back-btn2');
+  if(btn2)btn2.style.opacity=S.history.length?'1':'0.3';
 }
 function clearSel(){
   S.curId=null;
-  document.getElementById('ancestor-chart').innerHTML=`<div id="anc-placeholder" style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">${t('selectPerson')}</div>`;
-  document.getElementById('no-selection').textContent=t('selectDetail');
+  document.getElementById('ancestor-chart').innerHTML=`<div id="anc-placeholder" style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">${'Välj en person i listan.'}</div>`;
+  document.getElementById('no-selection').textContent='Välj en person för att se detaljer.';
   document.getElementById('no-selection').style.display='flex';
   document.getElementById('person-details').style.display='none';
-  document.getElementById('block-g-inner').innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${t('selectPerson')}</div>`;
-  document.getElementById('block-f-inner').innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${t('selectPerson')}</div>`;
+  document.getElementById('block-g-inner').innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Välj en person i listan.'}</div>`;
+  document.getElementById('block-f-inner').innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Välj en person i listan.'}</div>`;
 }
 
 /* ══════════════════════════════════════════
@@ -975,25 +1061,24 @@ function renderFan(id){
   const container=document.getElementById('fan-chart');
   container.innerHTML='';
   const p=S.persons[id];
-  if(!p){container.innerHTML='<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">'+t('selectPerson')+'</div>';return;}
+  if(!p){
+    container.innerHTML='<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">'+'Välj en person i listan.'+'</div>';
+    return;
+  }
 
   const FAN_GENS=5;
   const cols=buildGenTree(id,FAN_GENS+1);
 
   const W=container.clientWidth||700;
-  const H=583;
-  const CX=W/2, CY=H-38;
-  const RC=60;
-  const RINGS=[RC,RC+90,RC+182,RC+268,RC+346,RC+416];
+  const H=container.clientHeight||583;
+  // +15% skala via större radier och RC
+  const RC=69;   // 60*1.15
+  const RINGS=[RC,RC+104,RC+209,RC+308,RC+398,RC+479];
+  const CX=W/2, CY=H-30; // centrum längre ner för att rymma den stora solfjädern
 
-  const RING_M=['#c8daf5','#afc6f0','#96b2eb','#7d9ee6','#6490e1'];
-  const RING_F=['#f5c8e8','#f0afd8','#eb96c8','#e67db8','#e164a8'];
-  const RING_U=['#e8e4de','#ddd9d2','#d2cec6','#c7c3bb','#bcb8b0'];
 
   const START=Math.PI, TOTAL=Math.PI;
-
   function pt(r,a){return{x:CX+r*Math.cos(a),y:CY-r*Math.sin(a)};}
-
   function arc(r1,r2,a1,a2){
     const p1=pt(r1,a1),p2=pt(r1,a2),p3=pt(r2,a2),p4=pt(r2,a1);
     const lg=Math.abs(a2-a1)>Math.PI?1:0;
@@ -1004,42 +1089,131 @@ function renderFan(id){
   const cv=k=>cs.getPropertyValue(k).trim();
 
   const ns='http://www.w3.org/2000/svg';
+
+  // ── Yttre wrapper: position:relative för zoom-knappar ──
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:relative;width:100%;height:100%;overflow:hidden;';
+
   const svg=document.createElementNS(ns,'svg');
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  svg.style.cssText='display:block;width:100%;height:'+H+'px';
+  svg.style.cssText='display:block;width:100%;height:100%;cursor:grab;user-select:none;';
 
-  // Center
+  // ── Pan & zoom state ──
+  let zoom=1, panX=0, panY=0, dragging=false, dragStartX=0, dragStartY=0, dragPanX=0, dragPanY=0;
+  // ── SVG defs: radiella gradienter per kön ──
+  // Gradient från centrum (ljusast) till yttre kant (mörkast), gemensam för alla ringar per kön
+  const outerR=RINGS[RINGS.length-1]; // yttersta ringens radius
+  const defs=document.createElementNS(ns,'defs');
+
+  function makeRadGrad(id2,innerCol,outerCol){
+    const rg=document.createElementNS(ns,'radialGradient');
+    rg.setAttribute('id',id2);
+    rg.setAttribute('cx',CX); rg.setAttribute('cy',CY);
+    rg.setAttribute('r',outerR);
+    rg.setAttribute('gradientUnits','userSpaceOnUse');
+    const s1=document.createElementNS(ns,'stop');
+    s1.setAttribute('offset','0%'); s1.setAttribute('stop-color',innerCol);
+    const s2=document.createElementNS(ns,'stop');
+    s2.setAttribute('offset','100%'); s2.setAttribute('stop-color',outerCol);
+    rg.appendChild(s1); rg.appendChild(s2);
+    defs.appendChild(rg);
+  }
+
+  // Man: ljus himmelblå → medium kornblå
+  makeRadGrad('grad-male',  '#ddeeff', '#8ab8e8');
+  // Kvinna: ljus rosenkvarts → medium rosa
+  makeRadGrad('grad-female','#fce8f4', '#e8a0cc');
+  // Okänd: ljus grå → medium grå
+  makeRadGrad('grad-unk',   '#f0ede8', '#c8c4bc');
+
+  svg.appendChild(defs);
+
+  const gRoot=document.createElementNS(ns,'g');
+  gRoot.setAttribute('id','fan-root');
+  svg.appendChild(gRoot);
+
+  function applyTransform(){
+    gRoot.setAttribute('transform',`translate(${panX},${panY}) scale(${zoom})`);
+  }
+
+  // Mushjul = zoom mot muspekarens position
+  svg.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const rect=svg.getBoundingClientRect();
+    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    const delta=e.deltaY<0?1.12:1/1.12;
+    const newZoom=Math.min(8,Math.max(0.3,zoom*delta));
+    // Justera pan så zoomcentrum stannar under muspekaren
+    panX=mx-(mx-panX)*(newZoom/zoom);
+    panY=my-(my-panY)*(newZoom/zoom);
+    zoom=newZoom;
+    applyTransform();
+  },{passive:false});
+
+  // Drag/pan
+  svg.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    dragging=true; dragStartX=e.clientX; dragStartY=e.clientY;
+    dragPanX=panX; dragPanY=panY;
+    svg.style.cursor='grabbing';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    panX=dragPanX+(e.clientX-dragStartX);
+    panY=dragPanY+(e.clientY-dragStartY);
+    applyTransform();
+  });
+  window.addEventListener('mouseup',()=>{if(dragging){dragging=false;svg.style.cursor='grab';}});
+
+  // Touch pan
+  let lastTouchX=0,lastTouchY=0,touching=false;
+  svg.addEventListener('touchstart',e=>{if(e.touches.length===1){touching=true;lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;}},{passive:true});
+  svg.addEventListener('touchmove',e=>{
+    if(!touching||e.touches.length!==1)return;
+    panX+=e.touches[0].clientX-lastTouchX; panY+=e.touches[0].clientY-lastTouchY;
+    lastTouchX=e.touches[0].clientX; lastTouchY=e.touches[0].clientY;
+    applyTransform(); e.preventDefault();
+  },{passive:false});
+  svg.addEventListener('touchend',()=>{touching=false;});
+
+  // ── Texthjälp: ren svart text, fetstil ──
+  function makeTxt(txt,x,y,fs,bold,muted){
+    const te=document.createElementNS(ns,'text');
+    te.setAttribute('x',x); te.setAttribute('y',y+'');
+    te.setAttribute('text-anchor','middle'); te.setAttribute('dominant-baseline','middle');
+    te.setAttribute('font-size',fs+''); te.setAttribute('font-family','sans-serif');
+    te.setAttribute('fill', muted?'#444433':'#000000');
+    if(bold)te.setAttribute('font-weight','bold');
+    te.setAttribute('pointer-events','none');
+    te.textContent=txt;
+    return te;
+  }
+
+  // ── Center-cirkel ──
   const cp2=S.persons[id];
-  const cFill=cp2.sex==='M'?cv('--male-bg'):cp2.sex==='F'?cv('--female-bg'):cv('--bg');
+  const cFill=cp2.sex==='M'?cv('--male-bg'):cp2.sex==='F'?cv('--female-bg'):cv('--surface');
   const cStroke=cp2.sex==='M'?cv('--male'):cp2.sex==='F'?cv('--female'):cv('--border');
   const cg=document.createElementNS(ns,'g');
-  cg.style.cursor='pointer';cg.onclick=()=>sel(id);
+  cg.style.cursor='pointer'; cg.onclick=()=>sel(id);
   const cc=document.createElementNS(ns,'circle');
-  cc.setAttribute('cx',CX);cc.setAttribute('cy',CY);cc.setAttribute('r',RC);
-  cc.setAttribute('fill',cFill);cc.setAttribute('stroke',cStroke);cc.setAttribute('stroke-width','2');
+  cc.setAttribute('cx',CX); cc.setAttribute('cy',CY); cc.setAttribute('r',RC);
+  cc.setAttribute('fill',cFill); cc.setAttribute('stroke',cStroke); cc.setAttribute('stroke-width','2');
   cg.appendChild(cc);
   const nameParts=shortN(cp2.name).split(' ');
-  const lineH=12;
+  const lineH=13;
   nameParts.forEach((part,i)=>{
-    const tx=document.createElementNS(ns,'text');
-    tx.setAttribute('x',CX);
-    tx.setAttribute('y',CY+(i-(nameParts.length-1)/2)*lineH);
-    tx.setAttribute('text-anchor','middle');tx.setAttribute('dominant-baseline','middle');
-    tx.setAttribute('font-size','10');tx.setAttribute('font-family','sans-serif');
-    tx.setAttribute('fill','#1a1008');tx.setAttribute('font-weight','bold');
-    tx.setAttribute('stroke','rgba(255,255,255,0.7)');tx.setAttribute('stroke-width','2');
-    tx.setAttribute('paint-order','stroke');
-    tx.setAttribute('pointer-events','none');tx.textContent=part;
-    cg.appendChild(tx);
+    cg.appendChild(makeTxt(part,CX,CY+(i-(nameParts.length-1)/2)*lineH,11,true,false));
   });
-  svg.appendChild(cg);
+  gRoot.appendChild(cg);
 
-  // Ringar
+  // ── Ringar ──
   for(let g=1;g<=FAN_GENS&&g<cols.length;g++){
     const ring=cols[g];
     const count=ring.length;
     const step=TOTAL/count;
-    const r1=RINGS[g-1],r2=RINGS[g];
+    const r1=RINGS[g-1], r2=RINGS[g];
+    const fs=g<=2?10.5:g===3?9.5:8.5;
 
     ring.forEach((pid,idx)=>{
       const a1=START-idx*step;
@@ -1048,9 +1222,10 @@ function renderFan(id){
 
       let fill,stroke,sw='1';
       if(pp){
-        fill=pp.sex==='M'?RING_M[g-1]:pp.sex==='F'?RING_F[g-1]:RING_U[g-1];
-        stroke=pp.sex==='M'?cv('--male'):pp.sex==='F'?cv('--female'):cv('--border');
-      } else {fill='none';stroke=cv('--border');sw='0.5';}
+        if(pp.sex==='M')     { fill='url(#grad-male)';   stroke=cv('--male'); }
+        else if(pp.sex==='F'){ fill='url(#grad-female)'; stroke=cv('--female'); }
+        else                 { fill='url(#grad-unk)';    stroke=cv('--border'); }
+      } else { fill='none'; stroke=cv('--border'); sw='0.5'; }
 
       const path=document.createElementNS(ns,'path');
       path.setAttribute('d',arc(r1,r2,a2,a1));
@@ -1059,72 +1234,82 @@ function renderFan(id){
       path.setAttribute('stroke-width',sw);
       if(!pp)path.setAttribute('stroke-dasharray','3,3');
       if(pp){path.style.cursor='pointer';path.onclick=()=>sel(pid);}
-      svg.appendChild(path);
+      gRoot.appendChild(path);
 
       if(pp){
         const aMid=(a1+a2)/2;
         const rMid=(r1+r2)/2;
         const tx2=CX+rMid*Math.cos(aMid);
         const ty2=CY-rMid*Math.sin(aMid);
-        // Rotationsvinkel: text följer ringen, alltid läsbart uppåt
         let rot=-aMid*(180/Math.PI);
-        // Spegla om text hamnar upp-och-ned (vänster halva)
         if(aMid>Math.PI/2&&aMid<Math.PI*1.5)rot+=180;
         const segW=Math.abs(a1-a2)*rMid;
-        const fs=g<=2?10:9;
+        const lh=fs+3;
+
         const tg2=document.createElementNS(ns,'g');
         tg2.setAttribute('transform',`translate(${tx2},${ty2}) rotate(${rot})`);
         tg2.setAttribute('pointer-events','none');
 
         const parts=shortN(pp.name).split(' ');
-        const lh=fs+2;
-        if(segW>25){
+
+        if(segW>28){
+          // Namn: centrera vertikalt, inga rader om datum ska få plats
+          const yv=yr(pp.birt.date),yd=yr(pp.deat.date);
+          const ds=[yv,yd].filter(Boolean).join('–');
+          const hasDate=ds&&segW>45;
+          const totalLines=parts.length+(hasDate?1:0);
+          const blockH=totalLines*lh;
+          const yStart=-blockH/2+lh/2;
+
           parts.forEach((pt2,pi)=>{
-            const te=document.createElementNS(ns,'text');
-            te.setAttribute('x','0');
-            te.setAttribute('y',(pi-(parts.length-1)/2)*lh+'');
-            te.setAttribute('text-anchor','middle');te.setAttribute('dominant-baseline','middle');
-            te.setAttribute('font-size',fs+'');te.setAttribute('font-family','sans-serif');
-            te.setAttribute('fill','#1a1008');
-            te.setAttribute('stroke','rgba(255,255,255,0.85)');
-            te.setAttribute('stroke-width','2.5');
-            te.setAttribute('paint-order','stroke');
-            te.textContent=pt2;
-            tg2.appendChild(te);
+            tg2.appendChild(makeTxt(pt2,0,yStart+pi*lh,fs,true,false));
           });
-          if(segW>40){
-            const yv=yr(pp.birt.date),yd=yr(pp.deat.date);
-            const ds=[yv,yd].filter(Boolean).join('–');
-            if(ds){
-              const td=document.createElementNS(ns,'text');
-              td.setAttribute('x','0');td.setAttribute('y',(parts.length/2*lh + lh)+'');
-              td.setAttribute('text-anchor','middle');td.setAttribute('dominant-baseline','middle');
-              td.setAttribute('font-size','8');td.setAttribute('font-family','sans-serif');
-              td.setAttribute('fill','#2a1008');
-              td.setAttribute('stroke','rgba(255,255,255,0.9)');
-              td.setAttribute('stroke-width','2');
-              td.setAttribute('paint-order','stroke');
-              td.textContent=ds;
-              tg2.appendChild(td);
-            }
+          if(hasDate){
+            // Datum halvvägs — precis under sista namnraden
+            const yDate=yStart+parts.length*lh - lh*0.22+lh*0.2;
+            tg2.appendChild(makeTxt(ds,0,yDate,8.5,false,false));
           }
-        } else if(segW>12){
-          const te=document.createElementNS(ns,'text');
-          te.setAttribute('x','0');te.setAttribute('y','0');
-          te.setAttribute('text-anchor','middle');te.setAttribute('dominant-baseline','middle');
-          te.setAttribute('font-size','8');te.setAttribute('font-family','sans-serif');
-          te.setAttribute('fill','#1a1008');
-          te.setAttribute('stroke','rgba(255,255,255,0.85)');
-          te.setAttribute('stroke-width','2');
-          te.setAttribute('paint-order','stroke');
-          te.textContent=parts[0]||'';
-          tg2.appendChild(te);
+        } else if(segW>14){
+          tg2.appendChild(makeTxt(parts[0]||'',0,0,fs-1,true,false));
         }
-        svg.appendChild(tg2);
+        gRoot.appendChild(tg2);
       }
     });
   }
-  container.appendChild(svg);
+
+  wrap.appendChild(svg);
+
+  // ── Zoom-knappar nere till vänster ──
+  const zoomBar=document.createElement('div');
+  zoomBar.style.cssText='position:absolute;bottom:10px;left:10px;display:flex;flex-direction:column;gap:3px;z-index:10;';
+  [['◀',null],['＋',1.3],['−',1/1.3],['⌂',0]].forEach(([lbl,factor])=>{
+    const btn=document.createElement('button');
+    btn.textContent=lbl;
+    btn.style.cssText='width:28px;height:28px;border-radius:6px;border:1px solid var(--border);'
+      +'background:var(--surface);color:var(--text);font-size:14px;cursor:pointer;'
+      +'display:flex;align-items:center;justify-content:center;font-family:sans-serif;'
+      +'box-shadow:0 1px 4px rgba(0,0,0,.15);';
+    if(lbl==='◀') btn.id='fan-back-btn';
+    if(lbl==='⌂') btn.id='fan-reset-btn';
+    btn.title=lbl==='⌂'?'Återställ':lbl==='◀'?'Föregående person':'';
+    btn.style.opacity=(lbl==='◀'&&!S.history.length)?'0.3':'1';
+    btn.onclick=()=>{
+      if(factor===null){goBack();return;}
+      if(factor===0){zoom=1;panX=0;panY=0;}
+      else{
+        const rect=svg.getBoundingClientRect();
+        const mx=rect.width/2, my=rect.height/2;
+        const newZoom=Math.min(8,Math.max(0.3,zoom*factor));
+        panX=mx-(mx-panX)*(newZoom/zoom);
+        panY=my-(my-panY)*(newZoom/zoom);
+        zoom=newZoom;
+      }
+      applyTransform();
+    };
+    zoomBar.appendChild(btn);
+  });
+  wrap.appendChild(zoomBar);
+  container.appendChild(wrap);
 }
 function sc(p){if(!p)return'';return p.sex==='M'?'male':p.sex==='F'?'female':'';}
 function makeAncCard(id,extra){
@@ -1132,7 +1317,7 @@ function makeAncCard(id,extra){
   const p=id?S.persons[id]:null;
   const s=sc(p);
   d.className='anc-card '+(extra||'')+' '+s;
-  if(!p){d.classList.add('anc-empty');d.innerHTML=`<div class="anc-name" style="color:var(--text-muted)">${t('unknown')}</div>`;return d;}
+  if(!p){d.classList.add('anc-empty');d.innerHTML=`<div class="anc-name" style="color:var(--text-muted)">${'Okänd'}</div>`;return d;}
   const dates=[yr(p.birt.date),yr(p.deat.date)].filter(Boolean).join('–');
   d.innerHTML=`<div class="anc-name">${esc(shortN(p.name))}</div>${dates?`<div class="anc-dates">${dates}</div>`:''}`;
   d.onclick=()=>sel(id);return d;
@@ -1166,22 +1351,22 @@ function renderE(id){
 
   const nh=document.getElementById('person-name');nh.textContent=p.name;nh.className=s;
   const badge=document.getElementById('person-callname-badge');
-  if(p.callname){badge.style.display='inline-block';badge.textContent=t('called')+': '+p.callname;}
+  if(p.callname){badge.style.display='inline-block';badge.textContent='Kallas'+': '+p.callname;}
   else badge.style.display='none';
-  document.getElementById('person-birth-name').textContent=p.nameSur?t('surname')+': '+p.nameSur:'';
+  document.getElementById('person-birth-name').textContent=p.nameSur?'Efternamn'+': '+p.nameSur:'';
   const y1=yr(p.birt.date),y2=yr(p.deat.date);
   const yrsEl=document.getElementById('person-years');
-  if(y1||y2){const age=(y1&&y2)?` (${parseInt(y2)-parseInt(y1)} ${t('age')})`:'';
-    yrsEl.textContent=t('born')+': '+(y1||'?')+(y2?' – '+t('died')+': '+y2+age:'');}
+  if(y1||y2){const age=(y1&&y2)?` (${parseInt(y2)-parseInt(y1)} ${'år'})`:'';
+    yrsEl.textContent='Född'+': '+(y1||'?')+(y2?' – '+'Död'+': '+y2+age:'');}
   else yrsEl.textContent='';
 
   const evs=[];
-  if(p.birt.date||p.birt.place)evs.push({date:p.birt.date,type:t('evBorn'),desc:p.birt.place});
-  if(p.chr.date||p.chr.place)evs.push({date:p.chr.date,type:t('evBapt'),desc:p.chr.place});
-  if(p.occu)evs.push({date:'',type:t('evOccu'),desc:p.occu});
-  for(const r of p.resi)evs.push({date:'',type:t('evRes'),desc:r});
-  if(p.deat.date||p.deat.place)evs.push({date:p.deat.date,type:t('evDied'),desc:p.deat.place});
-  if(p.buri.date||p.buri.place)evs.push({date:p.buri.date,type:t('evBuri'),desc:p.buri.place});
+  if(p.birt.date||p.birt.place)evs.push({date:p.birt.date,type:'Född',desc:p.birt.place});
+  if(p.chr.date||p.chr.place)evs.push({date:p.chr.date,type:'Döpt',desc:p.chr.place});
+  if(p.occu)evs.push({date:'',type:'Yrke',desc:p.occu});
+  for(const r of p.resi)evs.push({date:'',type:'Bostad',desc:r});
+  if(p.deat.date||p.deat.place)evs.push({date:p.deat.date,type:'Död',desc:p.deat.place});
+  if(p.buri.date||p.buri.place)evs.push({date:p.buri.date,type:'Begr.',desc:p.buri.place});
 
   const ul=document.getElementById('event-list');
   ul.innerHTML=evs.length?evs.map(ev=>`<li class="event-item">
@@ -1201,7 +1386,7 @@ function renderG(id){
   const p=S.persons[id];
   const inner=document.getElementById('block-g-inner');
   inner.innerHTML='';
-  if(!p){inner.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${t('selectPerson')}</div>`;return;}
+  if(!p){inner.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Välj en person i listan.'}</div>`;return;}
   let has=false;
   if(p.famc.length){
     const parents=[];
@@ -1209,7 +1394,7 @@ function renderG(id){
       if(fam.husb&&S.persons[fam.husb])parents.push(fam.husb);
       if(fam.wife&&S.persons[fam.wife])parents.push(fam.wife);}
     if(parents.length){
-      const lbl=document.createElement('div');lbl.className='sec-label';lbl.textContent=t('parents');
+      const lbl=document.createElement('div');lbl.className='sec-label';lbl.textContent='Föräldrar';
       inner.appendChild(lbl);
       for(const pid of parents)inner.appendChild(miniCard(pid,''));
       has=true;
@@ -1221,7 +1406,7 @@ function renderG(id){
   if(siblings.length){
     const all=[...siblings,id];
     all.sort((a,b)=>(yr(S.persons[a]?.birt.date)||'9999').localeCompare(yr(S.persons[b]?.birt.date)||'9999'));
-    const lbl=document.createElement('div');lbl.className='sec-label';lbl.textContent=t('siblings');
+    const lbl=document.createElement('div');lbl.className='sec-label';lbl.textContent='Syskon';
     inner.appendChild(lbl);
     // Indenterad container precis som barn i Block F
     const sibDiv=document.createElement('div');sibDiv.className='rel-children';
@@ -1229,7 +1414,7 @@ function renderG(id){
     inner.appendChild(sibDiv);
     has=true;
   }
-  if(!has)inner.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${t('noParentsSiblings')}</div>`;
+  if(!has)inner.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Inga kända föräldrar eller syskon.'}</div>`;
 }
 
 /* ══════════════════════════════════════════
@@ -1239,12 +1424,12 @@ function renderF(id){
   const p=S.persons[id];
   const inner=document.getElementById('block-f-inner');
   inner.innerHTML='';if(!p)return;
-  const lbl0=document.createElement('div');lbl0.className='sec-label';lbl0.textContent=t('focusPerson');
+  const lbl0=document.createElement('div');lbl0.className='sec-label';lbl0.textContent='Fokusperson';
   inner.appendChild(lbl0);inner.appendChild(miniCard(id,'self'));
   for(const famId of p.fams){
     const fam=S.families[famId];if(!fam)continue;
     const spId=p.sex==='M'?fam.wife:fam.husb;
-    const lbl=document.createElement('div');lbl.className='sec-label';lbl.textContent=t('partner');
+    const lbl=document.createElement('div');lbl.className='sec-label';lbl.textContent='Partner';
     inner.appendChild(lbl);
     const grp=document.createElement('div');grp.className='rel-group';
     const children=fam.chil.filter(cid=>S.persons[cid]);
@@ -1255,13 +1440,13 @@ function renderF(id){
       grp.appendChild(row);
       const childDiv=document.createElement('div');childDiv.className='rel-children';
       if(children.length){
-        const cl=document.createElement('div');cl.className='sec-label';cl.textContent=t('children');childDiv.appendChild(cl);
+        const cl=document.createElement('div');cl.className='sec-label';cl.textContent='Barn';childDiv.appendChild(cl);
         for(const cid of children)childDiv.appendChild(miniCard(cid,''));
-      }else childDiv.innerHTML=`<div style="font-family:sans-serif;font-size:11px;color:var(--text-muted);padding:3px">${t('noChildren')}</div>`;
+      }else childDiv.innerHTML=`<div style="font-family:sans-serif;font-size:11px;color:var(--text-muted);padding:3px">${'Inga registrerade barn'}</div>`;
       grp.appendChild(childDiv);
       toggleBtn.onclick=()=>{const h=childDiv.style.display==='none';childDiv.style.display=h?'block':'none';toggleBtn.textContent=h?'▼':'▶';};
     }else if(children.length){
-      const cl=document.createElement('div');cl.className='sec-label';cl.textContent=t('children');grp.appendChild(cl);
+      const cl=document.createElement('div');cl.className='sec-label';cl.textContent='Barn';grp.appendChild(cl);
       for(const cid of children)grp.appendChild(miniCard(cid,''));
     }
     inner.appendChild(grp);
@@ -1288,8 +1473,39 @@ function shortN(n){if(!n||n.length<=22)return n;const p=n.split(' ');return p.le
 function showLoad(msg){document.getElementById('loading-text').textContent=msg;document.getElementById('loading-overlay').classList.add('show');}
 function hideLoad(){document.getElementById('loading-overlay').classList.remove('show');}
 
+/* ══ BLOCK D COLLAPSE ══ */
+function clearSearch(){
+  const inp=document.getElementById('search-input');
+  inp.value='';
+  filterPersons('');
+  updateSearchClear();
+  inp.focus();
+}
+function updateSearchClear(){
+  const val=document.getElementById('search-input').value;
+  document.getElementById('search-clear').style.display=val?'block':'none';
+}
+
+function toggleBlockD(){
+  const bd=document.getElementById('block-d');
+  const collapsed=bd.classList.toggle('collapsed');
+  document.getElementById('d-collapse-btn').textContent=collapsed?'▼':'▲';
+  document.getElementById('d-collapse-label').textContent=collapsed?'Expandera':'Dölj';
+  // Inaktivera/aktivera Block D-kontroller
+  const disable=collapsed;
+  ['vbtn-antavla','vbtn-fan','gen-minus','gen-plus'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.disabled=disable;el.style.opacity=disable?'0.35':'1';el.style.pointerEvents=disable?'none':'auto';}
+  });
+}
+
 /* ══ Init ══ */
-applyLang();
+checkIDB();
+
+/* ══ ONLINE/OFFLINE BANNER ══ */
+window.addEventListener('online', ()=>document.getElementById('offline-banner').classList.remove('show'));
+window.addEventListener('offline',()=>document.getElementById('offline-banner').classList.add('show'));
+if(!navigator.onLine) document.getElementById('offline-banner').classList.add('show');
 </script>
 </body>
 </html>
