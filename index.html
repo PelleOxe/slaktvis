@@ -154,7 +154,7 @@ input[type="file"]{display:none;}
 #anc-placeholder{font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px;}
 
 /* ══ BOTTOM ROW ══ */
-#bottom-row{display:grid;grid-template-columns:40% 30% 30%;gap:var(--gap);overflow:hidden;min-height:0;}
+#bottom-row{display:grid;grid-template-columns:4fr 3fr 3fr;gap:var(--gap);overflow:hidden;min-height:0;}
 
 /* ── Block E ── */
 #block-e{overflow-y:auto;}
@@ -190,8 +190,8 @@ input[type="file"]{display:none;}
 /* ── Block G + F ── */
 #block-g{overflow-y:auto;}
 #block-g-inner{padding:8px;}
-#block-f{overflow-y:auto;}
-#block-f-inner{padding:8px;}
+#block-f{overflow-y:auto;overflow-x:hidden;}
+#block-f-inner{padding:8px;overflow-x:hidden;}
 .mini-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;
   padding:6px 9px;margin-bottom:5px;cursor:pointer;font-family:sans-serif;font-size:12px;
   display:flex;align-items:center;gap:6px;transition:border-color .12s;}
@@ -238,7 +238,7 @@ input[type="file"]{display:none;}
 /* Tablet landskap (1024px och under) */
 @media (max-width:1024px){
   #main{grid-template-columns:200px 1fr;}
-  #bottom-row{grid-template-columns:40% 30% 30%;}
+  #bottom-row{grid-template-columns:4fr 3fr 3fr;}
   #person-name-block h2{font-size:15px;}
 }
 
@@ -293,7 +293,7 @@ input[type="file"]{display:none;}
 /* iPad Pro och liknande (1024–1180px) specifik fix */
 @media (min-width:769px) and (max-width:1180px){
   #main{grid-template-columns:180px 1fr;}
-  #bottom-row{grid-template-columns:40% 30% 30%;}
+  #bottom-row{grid-template-columns:4fr 3fr 3fr;}
 }
 
 /* ══ OFFLINE-BANNER ══ */
@@ -499,7 +499,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v0.1.35 &nbsp;|&nbsp; © 2025 Per Andersson</div>
+  <div id="copyright">v0.1.41 &nbsp;|&nbsp; © 2025 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -677,7 +677,8 @@ function parseGedcom(text){
   const newP=()=>({id:'',nameRaw:'',name:'',fullName:'',callname:null,nameGiven:'',nameSur:'',allSurnames:'',sex:'',
     birt:{date:'',place:''},deat:{date:'',place:''},buri:{date:'',place:''},
     chr:{date:'',place:''},occu:'',resi:[],obje:[],famc:[],fams:[],noteRaw:[]});
-  const newF=()=>({id:'',husb:'',wife:'',chil:[]});
+  // famc är [{id,pedi}], fams är strängar
+  const newF=()=>({id:'',husb:'',wife:'',chil:[],chilPedi:{}});
 
   for(const raw of lines){
     const m=raw.match(/^(\d+)\s+(@\S+@|\w+)\s*(.*)?$/);
@@ -724,11 +725,12 @@ function parseGedcom(text){
         }
         else if(tag==='SEX')cur.sex=val;
         else if(tag==='OCCU')cur.occu=cleanDisgenTags(val);
-        else if(tag==='FAMC')cur.famc.push(val.replace(/@/g,''));
+        else if(tag==='FAMC'){cur.famc.push({id:val.replace(/@/g,''),pedi:'birth'});sub='FAMC';}
         else if(tag==='FAMS')cur.fams.push(val.replace(/@/g,''));
         else if(tag==='NOTE'){noteLines=val?[val]:[];}
       }else if(lv===2){
         if(sub==='NAME'){if(tag==='GIVN'&&!cur.nameGiven)cur.nameGiven=cleanName(val);else if(tag==='SURN'&&!cur.nameSur)cur.nameSur=cleanName(val.split(' ')[0]);}
+        else if(sub==='FAMC'&&tag==='PEDI'&&cur.famc.length){cur.famc[cur.famc.length-1].pedi=val.toLowerCase();}
         else if(sub==='BIRT'){if(tag==='DATE')cur.birt.date=val;else if(tag==='PLAC')cur.birt.place=cleanDisgenTags(val);}
         else if(sub==='DEAT'){if(tag==='DATE')cur.deat.date=val;else if(tag==='PLAC')cur.deat.place=cleanDisgenTags(val);}
         else if(sub==='BURI'){if(tag==='DATE')cur.buri.date=val;else if(tag==='PLAC')cur.buri.place=cleanDisgenTags(val);}
@@ -740,14 +742,31 @@ function parseGedcom(text){
           else if(tag==='CONT')noteLines.push(val);
         }
       }
+    }else if(ct==='F'&&lv===2){
+      // PEDI under CHIL i familjeposten — spara på barnets famc-post
+      if(sub==='CHIL'&&tag==='PEDI'&&cur.chil.length){
+        const lastChildId=cur.chil[cur.chil.length-1];
+        // Spara i en temporär map, appliceras på personer efter parsing
+        if(!cur.chilPedi)cur.chilPedi={};
+        cur.chilPedi[lastChildId]=val.toLowerCase();
+      }
     }else if(ct==='F'&&lv===1){
       sub=tag;
       if(tag==='HUSB')cur.husb=val.replace(/@/g,'');
       else if(tag==='WIFE')cur.wife=val.replace(/@/g,'');
-      else if(tag==='CHIL')cur.chil.push(val.replace(/@/g,''));
+      else if(tag==='CHIL'){cur.chil.push(val.replace(/@/g,''));sub='CHIL';}
     }
   }
   flushNote();
+  // Applicera PEDI från FAM-poster på barnens FAMC-relationer
+  for(const fam of Object.values(families)){
+    if(!fam.chilPedi||!Object.keys(fam.chilPedi).length)continue;
+    for(const [childId,pedi] of Object.entries(fam.chilPedi)){
+      const child=persons[childId];if(!child)continue;
+      const fc=child.famc.find(f=>f.id===fam.id);
+      if(fc)fc.pedi=pedi;
+    }
+  }
   for(const p of Object.values(persons)){
     if(!p.name||(p.name==='(Okänt namn)'&&(p.nameGiven||p.nameSur))){
       const dg=p.callname||(p.nameGiven?p.nameGiven.split(' ')[0]:'');
@@ -1108,11 +1127,15 @@ function changeGen(delta){
 document.getElementById('gen-minus').disabled=false;
 document.getElementById('gen-plus').disabled=false;
 
-function getParents(pid){
+function getParents(pid,inclFoster=false){
   const p=S.persons[pid];if(!p)return[null,null];
   let f=null,m=null;
-  for(const fid of p.famc){const fam=S.families[fid];if(!fam)continue;
-    if(fam.husb&&S.persons[fam.husb])f=fam.husb;if(fam.wife&&S.persons[fam.wife])m=fam.wife;}
+  for(const fc of p.famc){
+    if(!inclFoster&&(fc.pedi==='foster'||fc.pedi==='adopted'))continue;
+    const fam=S.families[fc.id];if(!fam)continue;
+    if(fam.husb&&S.persons[fam.husb])f=fam.husb;
+    if(fam.wife&&S.persons[fam.wife])m=fam.wife;
+  }
   return[f,m];
 }
 function buildGenTree(rootId,maxGen){
@@ -1524,7 +1547,20 @@ function buildStamNode(id, isHP){
       if(children.length){
         const childDiv=document.createElement('div');
         childDiv.className='stam-children';childDiv.style.marginTop='2px';
-        for(const cid of children)childDiv.appendChild(buildStamNode(cid,false));
+        for(const cid of children){
+          const childNode=buildStamNode(cid,false);
+          // Kolla om barnet är foster/adopterad i denna familj
+          const pLabelS=getPediLabel(cid);
+          if(pLabelS){
+            const firstRow=childNode.querySelector&&childNode.querySelector('.stam-person-row');
+            if(firstRow){
+              const lb=document.createElement('span');
+              lb.style.cssText='font-size:11px;color:var(--text-muted);font-style:italic;font-family:sans-serif;margin-left:4px;';
+              lb.textContent=pLabelS;firstRow.appendChild(lb);
+            }
+          }
+          childDiv.appendChild(childNode);
+        }
         allFamsBlock.appendChild(childDiv);
       }
     }
@@ -1643,18 +1679,23 @@ function renderG(id){
   let has=false;
   if(p.famc.length){
     const parents=[];
-    for(const famId of p.famc){const fam=S.families[famId];if(!fam)continue;
-      if(fam.husb&&S.persons[fam.husb])parents.push(fam.husb);
-      if(fam.wife&&S.persons[fam.wife])parents.push(fam.wife);}
+    for(const fc of p.famc){const fam=S.families[fc.id];if(!fam)continue;
+      const label=fc.pedi==='foster'?' (foster)':fc.pedi==='adopted'?' (adopterad)':'';
+      if(fam.husb&&S.persons[fam.husb])parents.push({id:fam.husb,label});
+      if(fam.wife&&S.persons[fam.wife])parents.push({id:fam.wife,label});}
     if(parents.length){
       const lbl=document.createElement('div');lbl.className='sec-label';lbl.textContent='Föräldrar';
       inner.appendChild(lbl);
-      for(const pid of parents)inner.appendChild(miniCard(pid,''));
+      for(const {id:pid,label} of parents){
+        const mc=miniCard(pid,'');
+        if(label){const lb=document.createElement('span');lb.style.cssText='font-size:11px;color:var(--text-muted);font-style:italic;margin-left:4px;font-family:sans-serif;';lb.textContent=label;mc.appendChild(lb);}
+        inner.appendChild(mc);
+      }
       has=true;
     }
   }
   const siblings=[];
-  for(const famId of p.famc){const fam=S.families[famId];if(!fam)continue;
+  for(const fc of p.famc){const fam=S.families[fc.id];if(!fam)continue;
     for(const cid of fam.chil)if(cid!==id&&S.persons[cid]&&!siblings.includes(cid))siblings.push(cid);}
   if(siblings.length){
     const all=[...siblings,id];
@@ -1668,6 +1709,18 @@ function renderG(id){
     has=true;
   }
   if(!has)inner.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Inga kända föräldrar eller syskon.'}</div>`;
+}
+
+
+// Hämta pedi-etikett för ett barn — kolla alla famc-relationer
+function getPediLabel(cid){
+  const cp=S.persons[cid];if(!cp)return'';
+  for(const fc of cp.famc){
+    if(fc.pedi==='foster')return' (foster)';
+    if(fc.pedi==='adopted')return' (adopterad)';
+  }
+  // Kolla även ADOP-taggen via noteRaw om PEDI saknas men ADOP TYPE finns
+  return'';
 }
 
 /* ══════════════════════════════════════════
@@ -1692,15 +1745,25 @@ function renderF(id){
       row.appendChild(toggleBtn);row.appendChild(miniCard(spId,''));
       grp.appendChild(row);
       const childDiv=document.createElement('div');childDiv.className='rel-children';
+      childDiv.style.display='none';
+      toggleBtn.textContent='▶';
       if(children.length){
         const cl=document.createElement('div');cl.className='sec-label';cl.textContent='Barn';childDiv.appendChild(cl);
-        for(const cid of children)childDiv.appendChild(miniCard(cid,''));
+        for(const cid of children){
+          const mc=miniCard(cid,'');
+          const pLabel=getPediLabel(cid);if(pLabel){const lb=document.createElement('span');lb.style.cssText='font-size:11px;color:var(--text-muted);font-style:italic;margin-left:4px;font-family:sans-serif;';lb.textContent=pLabel;mc.appendChild(lb);}
+          childDiv.appendChild(mc);
+        }
       }else childDiv.innerHTML=`<div style="font-family:sans-serif;font-size:11px;color:var(--text-muted);padding:3px">${'Inga registrerade barn'}</div>`;
       grp.appendChild(childDiv);
       toggleBtn.onclick=()=>{const h=childDiv.style.display==='none';childDiv.style.display=h?'block':'none';toggleBtn.textContent=h?'▼':'▶';};
     }else if(children.length){
       const cl=document.createElement('div');cl.className='sec-label';cl.textContent='Barn';grp.appendChild(cl);
-      for(const cid of children)grp.appendChild(miniCard(cid,''));
+      for(const cid of children){
+        const mc=miniCard(cid,'');
+        const pLabel=getPediLabel(cid);if(pLabel){const lb=document.createElement('span');lb.style.cssText='font-size:11px;color:var(--text-muted);font-style:italic;margin-left:4px;font-family:sans-serif;';lb.textContent=pLabel;mc.appendChild(lb);}
+        grp.appendChild(mc);
+      }
     }
     inner.appendChild(grp);
   }
