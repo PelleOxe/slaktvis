@@ -499,7 +499,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v0.1.42 &nbsp;|&nbsp; © 2025 Per Andersson</div>
+  <div id="copyright">v1.0.01 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -571,6 +571,7 @@ input[type="file"]{display:none;}
                 <div class="p-meta" id="person-given-names" style="display:none"></div>
                 <div class="p-meta" id="person-sur-names" style="display:none"></div>
                 <div class="p-meta" id="person-years"></div>
+                <div class="p-meta" id="person-id" style="font-size:11px;color:var(--text-muted);font-family:sans-serif;"></div>
               </div>
             </div>
             <ul class="event-list" id="event-list"></ul>
@@ -578,15 +579,15 @@ input[type="file"]{display:none;}
           </div>
         </div>
       </div>
-      <!-- Block G -->
-      <div class="panel" id="block-g">
-        <div class="panel-head"><span id="ph-famg">Föräldrar &amp; Syskon</span> — Block G</div>
-        <div id="block-g-inner"></div>
-      </div>
       <!-- Block F -->
       <div class="panel" id="block-f">
         <div class="panel-head"><span id="ph-relations">Relationer</span> — Block F</div>
         <div id="block-f-inner"></div>
+      </div>
+      <!-- Block G -->
+      <div class="panel" id="block-g">
+        <div class="panel-head"><span id="ph-famg">Föräldrar &amp; Syskon</span> — Block G</div>
+        <div id="block-g-inner"></div>
       </div>
     </div>
   </div>
@@ -618,32 +619,49 @@ function callName(r){
 
 // Rensa Disgen ortstaggar: <EO=5Spetsbergen=> → Spetsbergen
 // Mönster: <EO=5TEXT=> där TEXT är ortnamnet
+function stripDisgenLang(s){
+  // Hantera $1text$2text på en rad — plocka bara $1-delen (svenska)
+  if(!s)return s;
+  // Om $1 finns: ta texten mellan $1 och $2 (eller slutet)
+  const m=s.match(/\$1([^$]+)/);
+  if(m)return m[1].trim();
+  // Om $0 finns: ta texten efter $0
+  const m0=s.match(/\$0([^$]+)/);
+  if(m0)return m0[1].trim();
+  // Om $2 finns men ingen $1/$0: hoppa över hela strängen
+  if(s.includes('$2'))return'';
+  return s;
+}
+
 function cleanDisgenTags(s){
   if(!s)return s;
-  return s.replace(/<EO=\d+([^=]*)=>/g,'$1').trim();
+  // EP-taggar (personreferenser): <EP=2Ulla= =1Ekstrand=> → "Ulla Ekstrand"
+  s=s.replace(/<EP=\d+([^=]+)= =\d+([^=]+)=>/g,'$1 $2');
+  // EP-taggar enkel variant
+  s=s.replace(/<EP=[^>]*>/g,'');
+  // EO-taggar (orter): <EO=5Spetsbergen=> → "Spetsbergen"
+  s=s.replace(/<EO=\d+([^=]*)=>/g,'$1');
+  return s.trim();
 }
 
 // Bearbeta NOTE-text: filtrera $2-block, trimma $0/$1-tolkar, rensa ortstaggar
 // Disgen lägger $0/$1/$2 som språkmarkörer, ibland mitt i en CONC-ihopsatt rad.
 // Vi delar upp hela råtexten på dessa markörer och behåller bara $0- och $1-segment.
 function processDisgenNote(rawLines){
-  // Sätt ihop alla rader till en enda sträng (CONC är redan ihopsatt, CONT har \n)
   const full=rawLines.join('\n');
-  // Dela på språkmarkörerna $0, $1, $2 – de förekommer i texten som segment-separatorer
-  // Mönster: $0, $1, $2 kan stå i radstart eller efter \n
-  const segments=full.split(/(?:^|\n)\s*\$([012])\s*/m);
-  // split med capture-group ger: [före_första, code, text, code, text, ...]
-  // Första elementet är text före första markör (kan vara tomt)
+  // Dela på $0/$1/$2 var de än förekommer i texten
+  const segments=full.split(/\$([012])/);
+  // segments: [text_före, code, text, code, text, ...]
   const kept=[];
-  // Hantera ev. text före första markör (okodad text – behåll)
-  if(segments[0].trim())kept.push(cleanDisgenTags(segments[0]));
-  // Iterera par: [code, text]
+  // Text före första markör — kan vara tom eller sakna markör (behandla som svenska)
+  const pre=segments[0].trim();
+  if(pre) kept.push(cleanDisgenTags(pre));
   for(let i=1;i<segments.length;i+=2){
-    const code=segments[i];   // '0', '1', eller '2'
+    const code=segments[i];
     const txt=segments[i+1]||'';
-    if(code==='2')continue;   // Engelska – hoppa över
-    // $0 = originalspråk (svenska), $1 = ev. annat nordiskt – behåll båda
-    kept.push(cleanDisgenTags(txt.trim()));
+    if(code==='2')continue; // Engelska — hoppa över
+    const cleaned=cleanDisgenTags(txt.trim());
+    if(cleaned)kept.push(cleaned);
   }
   return kept.filter(Boolean).join('\n\n').trim();
 }
@@ -676,7 +694,7 @@ function parseGedcom(text){
   const flushNote=()=>{if(cur&&ct==='I'&&noteLines.length){cur.noteRaw.push(...noteLines);}noteLines=[];};
   const newP=()=>({id:'',nameRaw:'',name:'',fullName:'',callname:null,nameGiven:'',nameSur:'',allSurnames:'',sex:'',
     birt:{date:'',place:''},deat:{date:'',place:''},buri:{date:'',place:''},
-    chr:{date:'',place:''},occu:'',resi:[],obje:[],famc:[],fams:[],noteRaw:[]});
+    chr:{date:'',place:''},occu:'',resi:[],immi:[],obje:[],famc:[],fams:[],noteRaw:[]});
   // famc är [{id,pedi}], fams är strängar
   const newF=()=>({id:'',husb:'',wife:'',chil:[],chilPedi:{}});
 
@@ -724,7 +742,10 @@ function parseGedcom(text){
           cur.fullName=cleanName([cur.nameGiven,cur.allSurnames].filter(Boolean).join(' '));
         }
         else if(tag==='SEX')cur.sex=val;
-        else if(tag==='OCCU')cur.occu=cleanDisgenTags(val);
+        else if(tag==='OCCU')cur.occu=cleanDisgenTags(stripDisgenLang(val));
+        else if(tag==='RESI'){cur.resi.push({date:'',place:''});sub='RESI';}
+        else if(tag==='IMMI'){cur.immi.push({date:'',place:''});sub='IMMI';}
+        else if(tag==='EMIG'){sub='EMIG';} // Ignorera EMIG, bara IMMI (inflyttning) behövs
         else if(tag==='FAMC'){cur.famc.push({id:val.replace(/@/g,''),pedi:'birth'});sub='FAMC';}
         else if(tag==='FAMS')cur.fams.push(val.replace(/@/g,''));
         else if(tag==='NOTE'){noteLines=val?[val]:[];}
@@ -736,7 +757,14 @@ function parseGedcom(text){
         else if(sub==='BURI'){if(tag==='DATE')cur.buri.date=val;else if(tag==='PLAC')cur.buri.place=cleanDisgenTags(val);}
         else if(sub==='CHR'){if(tag==='DATE')cur.chr.date=val;else if(tag==='PLAC')cur.chr.place=cleanDisgenTags(val);}
         else if(sub==='OBJE'&&tag==='FILE')cur.obje.push(val);
-        else if(sub==='RESI'&&tag==='PLAC')cur.resi.push(cleanDisgenTags(val));
+        else if(sub==='RESI'){
+          if(tag==='DATE'&&cur.resi.length)cur.resi[cur.resi.length-1].date=val;
+          else if(tag==='PLAC'&&cur.resi.length)cur.resi[cur.resi.length-1].place=cleanDisgenTags(val);
+        }
+        else if(sub==='IMMI'){
+          if(tag==='DATE'&&cur.immi.length)cur.immi[cur.immi.length-1].date=val;
+          else if(tag==='PLAC'&&cur.immi.length)cur.immi[cur.immi.length-1].place=cleanDisgenTags(val);
+        }
         else if(sub==='NOTE'){
           if(tag==='CONC'){if(noteLines.length)noteLines[noteLines.length-1]+=val;else noteLines.push(val);}
           else if(tag==='CONT')noteLines.push(val);
@@ -1023,8 +1051,19 @@ function filterPersons(q){
   // Dela söksträngen i enskilda ord — alla ord måste finnas i namnet (valfri ordning)
   const words=q.split(/\s+/).filter(Boolean);
   S.filteredIds=all.filter(id=>{
-    const name=(S.persons[id].fullName||S.persons[id].name).toLowerCase();
-    return words.every(w=>name.includes(w));
+    const p2=S.persons[id];
+    const name=(p2.fullName||p2.name).toLowerCase();
+    // År
+    const bYear=yr(p2.birt.date)||'';
+    const dYear=yr(p2.deat.date)||'';
+    // Alla orter: född, döpt, bostad, vigd (via fams), död, begravd
+    const places=[
+      p2.birt.place, p2.chr.place, p2.deat.place, p2.buri.place,
+      ...p2.resi.map(r=>r.place||r),   // resi är nu [{date,place}] men fallback för gamla
+      ...p2.immi.map(r=>r.place||''),
+    ].filter(Boolean).join(' ').toLowerCase();
+    const searchStr=name+' '+bYear+' '+dYear+' '+places;
+    return words.every(w=>searchStr.includes(w));
   });
   renderList(S.filteredIds);
 }
@@ -1617,6 +1656,7 @@ function renderE(id){
   else av.textContent=initials(p.name);
 
   const nh=document.getElementById('person-name');nh.textContent=p.name;nh.className=s;
+  const pidEl=document.getElementById('person-id');if(pidEl)pidEl.textContent='#'+id;
   // Förnamn-rad: visa alla förnamn, markera tilltalsnamnet
   const givenEl=document.getElementById('person-given-names');
   if(p.nameGiven){
@@ -1653,7 +1693,25 @@ function renderE(id){
   if(p.birt.date||p.birt.place)evs.push({date:p.birt.date,type:'Född',desc:p.birt.place});
   if(p.chr.date||p.chr.place)evs.push({date:p.chr.date,type:'Döpt',desc:p.chr.place});
   if(p.occu)evs.push({date:'',type:'Yrke',desc:p.occu});
-  for(const r of p.resi)evs.push({date:'',type:'Bostad',desc:r});
+  // Bostäder: kombinera RESI och IMMI, sortera kronologiskt
+  const allResi=[
+    ...p.resi.map(r=>({date:r.date||'',type:'Bostad',desc:r.place})),
+    ...p.immi.map(r=>({date:r.date||'',type:'Bostad',desc:r.place}))
+  ].filter(r=>r.desc);
+  // Sortera: poster med datum först (kronologiskt), sedan utan datum
+  allResi.sort((a,b)=>{
+    if(!a.date&&!b.date)return 0;
+    if(!a.date)return 1;
+    if(!b.date)return -1;
+    return a.date.localeCompare(b.date);
+  });
+  // Deduplicera identiska adresser i följd
+  let lastPlace='';
+  for(const r of allResi){
+    if(r.desc===lastPlace)continue;
+    lastPlace=r.desc;
+    evs.push(r);
+  }
   if(p.deat.date||p.deat.place)evs.push({date:p.deat.date,type:'Död',desc:p.deat.place});
   if(p.buri.date||p.buri.place)evs.push({date:p.buri.date,type:'Begr.',desc:p.buri.place});
 
