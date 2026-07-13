@@ -82,7 +82,10 @@ input[type="file"]{display:none;}
 .gen-btn:hover:not(:disabled){background:var(--accent-light);border-color:var(--accent-mid);}
 .gen-btn:disabled{opacity:.35;cursor:default;}
 #gen-count{font-size:12px;font-family:sans-serif;color:var(--text-sec);min-width:18px;text-align:center;}
-#search-box{padding:8px;border-bottom:1px solid var(--border);}
+#search-box{padding:8px 8px 0;}
+#search-filters{display:flex;gap:12px;padding:5px 8px 6px;border-bottom:1px solid var(--border);}
+.sf-label{display:flex;align-items:center;gap:4px;font-family:sans-serif;font-size:11px;color:var(--text-muted);cursor:pointer;user-select:none;white-space:nowrap;}
+.sf-label input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--accent);}
 #search-input{width:100%;padding:6px 30px 6px 10px;border:1px solid var(--border);border-radius:7px;
   font-size:13px;font-family:sans-serif;background:var(--bg);color:var(--text);}
 #search-input:focus{outline:none;border-color:var(--accent-mid);}
@@ -499,7 +502,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.0.01 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.0.03 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -513,6 +516,10 @@ input[type="file"]{display:none;}
           style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);
           background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;
           line-height:1;padding:0 2px;">×</button>
+      </div>
+      <div id="search-filters">
+        <label class="sf-label"><input type="checkbox" id="sf-year" onchange="filterPersons(document.getElementById('search-input').value)"> Årtal</label>
+        <label class="sf-label"><input type="checkbox" id="sf-place" onchange="filterPersons(document.getElementById('search-input').value)"> Ort</label>
       </div>
     </div>
     <div class="panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
@@ -1053,16 +1060,20 @@ function filterPersons(q){
   S.filteredIds=all.filter(id=>{
     const p2=S.persons[id];
     const name=(p2.fullName||p2.name).toLowerCase();
-    // År
-    const bYear=yr(p2.birt.date)||'';
-    const dYear=yr(p2.deat.date)||'';
-    // Alla orter: född, döpt, bostad, vigd (via fams), död, begravd
-    const places=[
-      p2.birt.place, p2.chr.place, p2.deat.place, p2.buri.place,
-      ...p2.resi.map(r=>r.place||r),   // resi är nu [{date,place}] men fallback för gamla
-      ...p2.immi.map(r=>r.place||''),
-    ].filter(Boolean).join(' ').toLowerCase();
-    const searchStr=name+' '+bYear+' '+dYear+' '+places;
+    let searchStr=name;
+    const useYear=document.getElementById('sf-year')?.checked;
+    const usePlace=document.getElementById('sf-place')?.checked;
+    if(useYear){
+      searchStr+=' '+(yr(p2.birt.date)||'')+' '+(yr(p2.deat.date)||'');
+    }
+    if(usePlace){
+      const places=[
+        p2.birt.place, p2.chr.place, p2.deat.place, p2.buri.place,
+        ...p2.resi.map(r=>r.place||r),
+        ...p2.immi.map(r=>r.place||''),
+      ].filter(Boolean).join(' ').toLowerCase();
+      searchStr+=' '+places;
+    }
     return words.every(w=>searchStr.includes(w));
   });
   renderList(S.filteredIds);
