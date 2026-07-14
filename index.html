@@ -406,6 +406,7 @@ input[type="file"]{display:none;}
   margin-top:2px;
   margin-bottom:4px;
 }
+.stam-person-row.stam-spouse{display:inline-flex;}
 .stam-indent{padding-left:20px;}
 /* Toast */
 #stam-toast{
@@ -502,7 +503,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.0.04 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.0.10 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -520,6 +521,7 @@ input[type="file"]{display:none;}
       <div id="search-filters">
         <label class="sf-label"><input type="checkbox" id="sf-year" onchange="filterPersons(document.getElementById('search-input').value)"> Årtal</label>
         <label class="sf-label"><input type="checkbox" id="sf-place" onchange="filterPersons(document.getElementById('search-input').value)"> Ort</label>
+        <span id="search-hits" style="font-size:11px;color:var(--text);margin-left:auto;font-family:sans-serif;"></span>
       </div>
     </div>
     <div class="panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
@@ -538,7 +540,7 @@ input[type="file"]{display:none;}
     <!-- Block D -->
     <div class="panel" id="block-d">
       <div class="panel-head">
-        <span id="ph-ancestors">Förfäder</span> — Block D
+        <span id="ph-ancestors">Förfäder</span>
         <span class="d-collapse-wrap" onclick="toggleBlockD()" id="d-collapse-wrap" title="Dölj/visa Block D">
           <button class="d-collapse-btn" id="d-collapse-btn">▲</button>
           <span class="d-collapse-label" id="d-collapse-label">Dölj</span>
@@ -567,7 +569,7 @@ input[type="file"]{display:none;}
     <div id="bottom-row">
       <!-- Block E -->
       <div class="panel" id="block-e">
-        <div class="panel-head"><span id="ph-person">Person</span> — Block E</div>
+        <div class="panel-head"><span id="ph-person">Person</span></div>
         <div id="block-e-inner">
           <div id="no-selection"></div>
           <div id="person-details" style="display:none">
@@ -588,12 +590,12 @@ input[type="file"]{display:none;}
       </div>
       <!-- Block F -->
       <div class="panel" id="block-f">
-        <div class="panel-head"><span id="ph-relations">Relationer</span> — Block F</div>
+        <div class="panel-head"><span id="ph-relations">Relationer</span></div>
         <div id="block-f-inner"></div>
       </div>
       <!-- Block G -->
       <div class="panel" id="block-g">
-        <div class="panel-head"><span id="ph-famg">Föräldrar &amp; Syskon</span> — Block G</div>
+        <div class="panel-head"><span id="ph-famg">Föräldrar &amp; Syskon</span></div>
         <div id="block-g-inner"></div>
       </div>
     </div>
@@ -778,12 +780,21 @@ function parseGedcom(text){
         }
       }
     }else if(ct==='F'&&lv===2){
-      // PEDI under CHIL i familjeposten — spara på barnets famc-post
+      // PEDI under CHIL i familjeposten
       if(sub==='CHIL'&&tag==='PEDI'&&cur.chil.length){
         const lastChildId=cur.chil[cur.chil.length-1];
-        // Spara i en temporär map, appliceras på personer efter parsing
         if(!cur.chilPedi)cur.chilPedi={};
         cur.chilPedi[lastChildId]=val.toLowerCase();
+      }
+      // Datum/plats under MARR
+      else if(sub==='MARR'){
+        if(tag==='DATE')cur.marr.date=val;
+        else if(tag==='PLAC')cur.marr.place=cleanDisgenTags(val);
+      }
+      // Datum/plats under DIV
+      else if(sub==='DIV'){
+        if(tag==='DATE')cur.divr.date=val;
+        else if(tag==='PLAC')cur.divr.place=cleanDisgenTags(val);
       }
     }else if(ct==='F'&&lv===1){
       sub=tag;
@@ -793,12 +804,6 @@ function parseGedcom(text){
       else if(tag==='MARR'){sub='MARR';}
       else if(tag==='DIV'){sub='DIV';if(val&&val.toLowerCase()==='y'&&!cur.divr.date)cur.divr.date='Y';}
       else if(tag==='_COML'||tag==='SLGS'||tag==='_SEPR')cur.relType=tag;
-    }else if(ct==='F'&&lv===2&&sub==='MARR'){
-      if(tag==='DATE')cur.marr.date=val;
-      else if(tag==='PLAC')cur.marr.place=cleanDisgenTags(val);
-    }else if(ct==='F'&&lv===2&&sub==='DIV'){
-      if(tag==='DATE')cur.divr.date=val;
-      else if(tag==='PLAC')cur.divr.place=cleanDisgenTags(val);
     }
   }
   flushNote();
@@ -1089,6 +1094,16 @@ function filterPersons(q){
 }
 function renderList(ids){
   const list=document.getElementById('person-list');
+  const hitsEl=document.getElementById('search-hits');
+  const total=Object.keys(S.persons||{}).length;
+  if(hitsEl){
+    if(total>0){
+      const q=((document.getElementById('search-input')||{}).value||'').trim();
+      const fyear=!!(document.getElementById('sf-year')||{}).checked;
+      const fplace=!!(document.getElementById('sf-place')||{}).checked;
+      hitsEl.textContent=(q||fyear||fplace) ? `${ids.length} träffar` : `${ids.length} personer`;
+    } else { hitsEl.textContent=''; }
+  }
   if(!ids||!ids.length){list.innerHTML=`<div style="padding:16px;text-align:center;font-family:sans-serif;font-size:13px;color:var(--text-muted)">${'Inga träffar'}</div>`;return;}
   const frag=document.createDocumentFragment();
   for(const id of ids){
@@ -1572,18 +1587,21 @@ function buildStamNode(id, isHP){
     // Samlat block för alla familjer
     const allFamsBlock=document.createElement('div');
     allFamsBlock.className='stam-children';
-    allFamsBlock.style.display='none';
+    allFamsBlock.style.cssText='display:none;';
 
     for(const fam of validFams){
       const spouseId=p.sex==='M'?fam.wife:fam.husb;
       const children=fam.chil.filter(cid=>S.persons[cid]);
+
+      // Wrapper per familj — säkerställer radbrytning mellan partners
+      const famBlock=document.createElement('div');
 
       // Partner-rad
       if(spouseId&&S.persons[spouseId]){
         const sp=S.persons[spouseId];
         const ssc=sp.sex==='M'?'stam-male':sp.sex==='F'?'stam-female':'';
         const spRow=document.createElement('div');
-        spRow.className='stam-person-row '+ssc;
+        spRow.className='stam-person-row stam-spouse '+ssc;
         const spDot=document.createElement('div');
         spDot.className='stam-dot '+(sp.sex==='M'?'male':sp.sex==='F'?'female':'unknown');
         spRow.appendChild(spDot);
@@ -1593,13 +1611,13 @@ function buildStamNode(id, isHP){
         const spDates=[yr(sp.birt.date),yr(sp.deat.date)].filter(Boolean).join('–');
         if(spDates){const sd=document.createElement('span');sd.className='stam-dates';sd.textContent=spDates;spRow.appendChild(sd);}
         spName.onclick=(e)=>{e.stopPropagation();stamAskHP(spouseId);};
-        allFamsBlock.appendChild(spRow);
+        famBlock.appendChild(spRow);
       } else {
-        const ukRow=document.createElement('div');ukRow.className='stam-person-row';
+        const ukRow=document.createElement('div');ukRow.className='stam-person-row stam-spouse';
         const ukSpan=document.createElement('span');ukSpan.className='stam-name';
         ukSpan.style.color='var(--text-muted)';ukSpan.style.fontStyle='italic';
         ukSpan.textContent='Okänd partner';ukRow.appendChild(ukSpan);
-        allFamsBlock.appendChild(ukRow);
+        famBlock.appendChild(ukRow);
       }
 
       // Barn under denna partner
@@ -1620,8 +1638,9 @@ function buildStamNode(id, isHP){
           }
           childDiv.appendChild(childNode);
         }
-        allFamsBlock.appendChild(childDiv);
+        famBlock.appendChild(childDiv);
       }
+      allFamsBlock.appendChild(famBlock);
     }
 
     wrapper.appendChild(allFamsBlock);
