@@ -69,7 +69,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direc
 input[type="file"]{display:none;}
 
 /* ══ LAYOUT ══ */
-#main{display:grid;grid-template-columns:256px 1fr;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);}
+#main{display:grid;grid-template-columns:256px 1fr 220px;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);}
 #left-col{display:flex;flex-direction:column;gap:var(--gap);overflow:hidden;}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
 .panel-head{font-family:sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.9px;
@@ -217,7 +217,60 @@ input[type="file"]{display:none;}
   font-family:sans-serif;width:20px;flex-shrink:0;text-align:center;padding:0;line-height:1;}
 .rel-children{padding-left:24px;border-left:2px solid var(--border);margin:3px 0 3px 10px;}
 
-/* ══ SCROLLBAR ══ */
+/* ══ BLOCK H — SLÄKTSKAP ══ */
+#block-h{display:flex;flex-direction:column;overflow:hidden;}
+#rel-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+#rel-inner{flex:1;overflow-y:auto;padding:8px;}
+#ref-search-wrap{padding:6px 8px;border-bottom:1px solid var(--border);position:relative;}
+#ref-input{width:100%;padding:5px 26px 5px 8px;border:1px solid var(--border);border-radius:6px;
+  background:var(--surface);color:var(--text);font-size:12px;font-family:sans-serif;}
+#ref-input:focus{outline:none;border-color:var(--accent-mid);}
+#ref-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;
+  color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;display:none;}
+#ref-results{max-height:110px;overflow-y:auto;border-bottom:1px solid var(--border);}
+.ref-item{padding:5px 10px;cursor:pointer;font-family:sans-serif;font-size:12px;
+  color:var(--text);border-bottom:1px solid var(--border);}
+.ref-item:last-child{border-bottom:none;}
+.ref-item:hover{background:var(--accent-light);}
+#ref-selected{padding:6px 10px;font-family:sans-serif;font-size:12px;display:none;
+  background:var(--accent-light);border-bottom:1px solid var(--border);}
+#ref-selected-name{color:var(--accent);font-weight:bold;}
+#ref-clear-sel{background:none;border:none;color:var(--text-muted);cursor:pointer;
+  font-size:11px;font-family:sans-serif;float:right;}
+
+/* Relationskedjan */
+#rel-panel{flex:1;overflow-y:auto;}
+#rel-inner{padding:8px;}
+.rel-chain-empty{font-family:sans-serif;font-size:12px;color:var(--text-muted);
+  text-align:center;padding:20px 8px;line-height:1.6;}
+.rel-chain-label{font-family:sans-serif;font-size:11px;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;text-align:center;}
+.rel-degree{font-family:sans-serif;font-size:13px;color:var(--amber);font-weight:bold;
+  text-align:center;margin-bottom:8px;padding:4px;background:var(--amber-bg);
+  border-radius:6px;border:1px solid var(--amber);}
+.rel-node{display:flex;align-items:center;gap:6px;padding:4px 6px;margin-bottom:2px;
+  border-radius:6px;cursor:pointer;font-family:sans-serif;font-size:12px;}
+.rel-node:hover{background:var(--accent-light);}
+.rel-node.highlight{background:var(--accent-light);border:1px solid var(--accent-mid);}
+.rel-node.ref-person{background:var(--amber-bg);border:1px solid var(--amber);}
+.rel-node.main-person{background:var(--accent-light);border:1px solid var(--accent);}
+.rel-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.rel-dot.male{background:var(--male);}
+.rel-dot.female{background:var(--female);}
+.rel-dot.unknown{background:var(--text-muted);}
+.rel-name{flex:1;color:var(--text);}
+.rel-year{font-size:11px;color:var(--text-muted);}
+.rel-arrow{text-align:center;color:var(--text-muted);font-size:14px;margin:1px 0;padding-left:10px;}
+.rel-branch-btn{font-family:sans-serif;font-size:11px;color:var(--accent);background:none;
+  border:1px solid var(--accent-mid);border-radius:4px;padding:2px 6px;cursor:pointer;
+  display:block;margin:4px auto;width:fit-content;}
+.rel-node.common-anc{background:var(--female-bg);border:1px solid var(--female);border-left:3px solid var(--female);}
+.rel-anc-tag{font-size:10px;color:var(--female);margin-left:2px;flex-shrink:0;}
+.rel-pair-wrap{display:flex;flex-direction:column;gap:2px;}
+.rel-pair-node{font-size:11px;}
+.rel-led{font-size:11px;font-weight:bold;color:var(--text-muted);min-width:14px;
+  text-align:right;flex-shrink:0;font-family:sans-serif;}
+
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:3px;}
@@ -503,7 +556,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.0.10 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.09 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -533,7 +586,9 @@ input[type="file"]{display:none;}
         </div>
       </div>
     </div>
+    <!-- Referensperson visas nu via kryssruta i Block E -->
   </div>
+
 
   <!-- RIGHT -->
   <div id="right-col">
@@ -581,6 +636,10 @@ input[type="file"]{display:none;}
                 <div class="p-meta" id="person-sur-names" style="display:none"></div>
                 <div class="p-meta" id="person-years"></div>
                 <div class="p-meta" id="person-id" style="font-size:11px;color:var(--text-muted);font-family:sans-serif;"></div>
+                <label id="ref-checkbox-wrap" style="display:none;align-items:center;gap:5px;margin-top:4px;font-family:sans-serif;font-size:12px;color:var(--text-sec);cursor:pointer;">
+                  <input type="checkbox" id="ref-checkbox" onchange="toggleRefPerson(this)">
+                  Referensperson
+                </label>
               </div>
             </div>
             <ul class="event-list" id="event-list"></ul>
@@ -597,6 +656,20 @@ input[type="file"]{display:none;}
       <div class="panel" id="block-g">
         <div class="panel-head"><span id="ph-famg">Föräldrar &amp; Syskon</span></div>
         <div id="block-g-inner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK H — SLÄKTSKAP (längst till höger) -->
+  <div id="block-h">
+    <div class="panel" id="rel-panel">
+      <div class="panel-head" id="rel-panel-head">Släktskap</div>
+      <div id="rel-selected-ref" style="padding:5px 10px;font-size:11px;font-family:sans-serif;color:var(--text-sec);border-bottom:1px solid var(--border);display:none;">
+        Ref: <span id="rel-ref-name" style="color:var(--accent);font-weight:bold;"></span>
+        <button onclick="refClearSel()" style="float:right;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;">✕</button>
+      </div>
+      <div id="rel-inner">
+        <div class="rel-chain-empty">Välj en referensperson och klicka på en person i listan för att se släktskapet.</div>
       </div>
     </div>
   </div>
@@ -952,6 +1025,12 @@ function loadParsed(gedText,fileName){
       document.getElementById('info-count').innerHTML=`<strong>${cnt.toLocaleString('sv-SE')}</strong> ${'personer'}`;
       document.getElementById('info-file').textContent=fileName;
       buildList();clearSel();hideLoad();
+      // Töm sökruta och filter vid ny fil
+      const si=document.getElementById('search-input');
+      if(si){si.value='';updateSearchClear();}
+      const sfy=document.getElementById('sf-year');if(sfy)sfy.checked=false;
+      const sfp=document.getElementById('sf-place');if(sfp)sfp.checked=false;
+      const hitsEl=document.getElementById('search-hits');if(hitsEl)hitsEl.textContent='';
     }catch(err){hideLoad();alert('Fel vid tolkning: '+err.message);console.error(err);}
   },10);
 }
@@ -1132,6 +1211,8 @@ function sel(id,addHistory=true){
   S.curId=id;
   document.querySelectorAll('.person-item').forEach(el=>el.classList.toggle('selected',el.dataset.id===id));
   renderD(id);renderE(id);renderG(id);renderF(id);
+  syncRefCheckbox(id);
+  if(S.refId) renderRelChain();
   const el=document.querySelector(`.person-item[data-id="${id}"]`);
   if(el)el.scrollIntoView({block:'nearest'});
   updateBackBtn();
@@ -1933,10 +2014,490 @@ function toggleBlockD(){
 /* ══ Init ══ */
 checkIDB();
 
-/* ══ ONLINE/OFFLINE BANNER ══ */
+/* Kryssruta Referensperson i Block E */
+function toggleRefPerson(cb){
+  if(cb.checked){
+    // Kolla om referensperson redan är satt — fråga om byte
+    if(S.refId && S.refId !== S.curId){
+      const oldName=S.persons[S.refId]?S.persons[S.refId].name:'?';
+      const newName=S.persons[S.curId]?S.persons[S.curId].name:'?';
+      if(!confirm(`Byt referensperson?\n\n${oldName}\n→ ${newName}`)){
+        cb.checked=false;
+        return;
+      }
+    }
+    refSelect(S.curId);
+  } else {
+    refClearSel();
+  }
+}
+
+// Uppdatera ref-checkbox-synk när renderE körs
+function syncRefCheckbox(id){
+  const wrap=document.getElementById('ref-checkbox-wrap');
+  const cb=document.getElementById('ref-checkbox');
+  if(!wrap||!cb)return;
+  wrap.style.display='flex';
+  cb.checked=(S.refId===id);
+}
+
 window.addEventListener('online', ()=>document.getElementById('offline-banner').classList.remove('show'));
 window.addEventListener('offline',()=>document.getElementById('offline-banner').classList.add('show'));
 if(!navigator.onLine) document.getElementById('offline-banner').classList.add('show');
+
+/* ══════════════════════════════════════════
+   VISA SLÄKTSKAP — BFS + Block H
+══════════════════════════════════════════ */
+
+// Referenspersonens ID
+S.refId = null;
+// Alternativa vägar (index för vilken som visas)
+S._relPaths = [];
+S._relPathIdx = 0;
+
+/* --- Referenspersonssökning --- */
+function refSearch(q){
+  const res=document.getElementById('ref-results');
+  const clr=document.getElementById('ref-clear');
+  clr.style.display=q?'block':'none';
+  res.innerHTML='';
+  if(!q||!S.persons)return;
+  const ql=q.toLowerCase().split(/\s+/).filter(Boolean);
+  const hits=Object.entries(S.persons)
+    .filter(([,p])=>ql.every(w=>p.fullName&&p.fullName.toLowerCase().includes(w)))
+    .slice(0,12);
+  hits.forEach(([id,p])=>{
+    const d=document.createElement('div');
+    d.className='ref-item';
+    const dates=[yr(p.birt.date),yr(p.deat.date)].filter(Boolean).join('–');
+    d.textContent=p.name+(dates?' ('+dates+')':'');
+    d.onclick=()=>refSelect(id);
+    res.appendChild(d);
+  });
+}
+function refClear(){
+  const inp=document.getElementById('ref-input');
+  inp.value='';
+  document.getElementById('ref-results').innerHTML='';
+  document.getElementById('ref-clear').style.display='none';
+}
+function refSelect(id){
+  S.refId=id;
+  const p=S.persons[id];
+  const dates=[yr(p.birt.date),yr(p.deat.date)].filter(Boolean).join('–');
+  // Visa i Block H
+  const refBar=document.getElementById('rel-selected-ref');
+  const refName=document.getElementById('rel-ref-name');
+  if(refBar){refBar.style.display='block';}
+  if(refName){refName.textContent=p.name+(dates?' ('+dates+')':'');}
+  // Synka kryssrutan
+  const cb=document.getElementById('ref-checkbox');
+  if(cb&&S.curId===id) cb.checked=true;
+  // Uppdatera kedjan
+  if(S.curId&&S.curId!==id) renderRelChain();
+  else {
+    const inner=document.getElementById('rel-inner');
+    if(inner) inner.innerHTML='<div class="rel-chain-empty">Klicka på en person i listan för att se släktskapet.</div>';
+  }
+}
+function refClearSel(){
+  S.refId=null;
+  const refBar=document.getElementById('rel-selected-ref');
+  if(refBar) refBar.style.display='none';
+  const cb=document.getElementById('ref-checkbox');
+  if(cb) cb.checked=false;
+  const inner=document.getElementById('rel-inner');
+  if(inner) inner.innerHTML='<div class="rel-chain-empty">Markera en person som referensperson via kryssrutan i personkortet.</div>';
+}
+
+/* --- BFS: Bygg graf (bara förälder↔barn, inte syskon direkt) --- */
+function buildRelGraph(){
+  const graph={};
+  const persons=S.persons||{};
+  const families=S.families||{};
+  Object.keys(persons).forEach(id=>{graph[id]=[];});
+  Object.values(families).forEach(fam=>{
+    // ENBART förälder↔barn — inga partner-kopplingar
+    const parents=[];
+    if(fam.husb&&persons[fam.husb])parents.push(fam.husb);
+    if(fam.wife&&persons[fam.wife])parents.push(fam.wife);
+    fam.chil.forEach(c=>{
+      if(!persons[c])return;
+      if(!graph[c])graph[c]=[];
+      parents.forEach(p=>{
+        if(!graph[c].includes(p))graph[c].push(p);
+        if(!graph[p].includes(c))graph[p].push(c);
+      });
+    });
+  });
+  return graph;
+}
+
+/* --- Riktad BFS: sök bara uppåt (mot föräldrar) från båda håll --- */
+function relGetParents(id){
+  const p=S.persons[id];
+  if(!p||!p.famc||!p.famc.length)return[];
+  const parents=[];
+  p.famc.forEach(fc=>{
+    const fam=S.families[fc.id];
+    if(!fam)return;
+    if(fam.husb&&S.persons[fam.husb])parents.push(fam.husb);
+    if(fam.wife&&S.persons[fam.wife])parents.push(fam.wife);
+  });
+  return parents;
+}
+
+// BFS uppåt: returnerar Map ancId→[startId,...,ancId]
+function ancestorPaths(startId, maxDepth=30){
+  const result=new Map();
+  const queue=[[startId]];
+  while(queue.length){
+    const path=queue.shift();
+    if(path.length>maxDepth+1)continue;
+    const cur=path[path.length-1];
+    for(const par of relGetParents(cur)){
+      if(result.has(par))continue;
+      if(path.includes(par))continue;
+      const newPath=[...path,par];
+      result.set(par,newPath);
+      queue.push(newPath);
+    }
+  }
+  return result;
+}
+
+// Hitta kortaste vägar: fromId→...→gemAnc→...→toId
+function findRelPaths(fromId, toId){
+  if(fromId===toId)return[[fromId]];
+  const fromAnc=ancestorPaths(fromId);
+  const toAnc=ancestorPaths(toId);
+
+  // Hitta gemensamma anfäder och bygg kandidatvägar
+  let minLen=Infinity;
+  const candidates=[];
+  for(const [ancId,fromPath] of fromAnc){
+    if(!toAnc.has(ancId))continue;
+    const toPath=toAnc.get(ancId);
+    const fullPath=[...fromPath,...[...toPath].reverse().slice(1)];
+    const len=fullPath.length;
+    if(len<minLen){minLen=len;candidates.length=0;}
+    if(len===minLen) candidates.push(fullPath);
+  }
+
+  // Rak linje: from är direkt anfader till to (eller tvärtom)
+  // Bara giltigt om INGEN gemensam anfader hittades alls
+  if(!candidates.length){
+    if(fromAnc.has(toId)) return[fromAnc.get(toId)];
+    if(toAnc.has(fromId)) return[[...toAnc.get(fromId)].reverse()];
+    return[];
+  }
+  if(!candidates.length)return[];
+  function mergeAnPar(paths){
+    const merged=[];
+    const used=new Set();
+    for(let i=0;i<paths.length;i++){
+      if(used.has(i))continue;
+      const pa=paths[i];
+      let didMerge=false;
+      for(let j=i+1;j<paths.length;j++){
+        if(used.has(j))continue;
+        const pb=paths[j];
+        if(pa.length!==pb.length)continue;
+        const diffs=[];
+        for(let k=0;k<pa.length;k++){if(pa[k]!==pb[k])diffs.push(k);}
+        if(diffs.length===1){
+          const pos=diffs[0];
+          const a=pa[pos], b=pb[pos];
+          const arePair=Object.values(S.families||{}).some(fam=>
+            (fam.husb===a&&fam.wife===b)||(fam.husb===b&&fam.wife===a));
+          if(arePair){
+            // Representera anparet som [a,b] på den positionen
+            const mp=pa.map((id,k)=>k===pos?[a,b]:id);
+            merged.push(mp);
+            used.add(i);used.add(j);
+            didMerge=true;
+            break;
+          }
+        }
+      }
+      if(!didMerge) merged.push(pa);
+    }
+    return merged;
+  }
+
+  // Deduplicera enkla dubblettvarianter
+  function pathKey(path){
+    return path.map(n=>Array.isArray(n)?[...n].sort().join('|'):n).join(',');
+  }
+  const MAX_PATHS=20;
+  const seen=new Set();
+  const deduped=candidates.filter(p=>{const k=pathKey(p);if(seen.has(k))return false;seen.add(k);return true;});
+  const merged=mergeAnPar(deduped);
+  // Flagga om vi nådde taket (fler vägar kan finnas)
+  merged._hasMore=(candidates.length>=MAX_PATHS);
+  return merged.slice(0,MAX_PATHS);
+}
+
+/* --- Hitta gemensam(ma) anfader/anpar i en sökväg --- */
+function findCommonAncestors(path){
+  const families=S.families||{};
+  const commonIds=new Set();
+
+  function isParentOf(parentId, childId){
+    return Object.values(families).some(fam=>
+      (fam.husb===parentId||fam.wife===parentId)&&fam.chil.includes(childId)
+    );
+  }
+
+  // Vändpunkt: nod som är förälder till BÅDA sina grannar
+  for(let i=1;i<path.length-1;i++){
+    const prev=path[i-1], cur=path[i], next=path[i+1];
+    if(isParentOf(cur,prev)&&isParentOf(cur,next)){
+      commonIds.add(cur);
+      // Kolla om partnern också är gemensam anfader — kräver minst 2 barn i samma familj
+      Object.values(families).forEach(fam=>{
+        if(fam.husb===cur||fam.wife===cur){
+          const partner=fam.husb===cur?fam.wife:fam.husb;
+          if(!partner||!S.persons[partner])return;
+          const sharedKids=fam.chil.filter(c=>S.persons[c]);
+          if(sharedKids.length<2)return; // kräver minst 2 gemensamma barn
+          if(isParentOf(partner,prev)&&isParentOf(partner,next)){
+            commonIds.add(partner);
+          }
+          if(fam.chil.includes(prev)&&fam.chil.includes(next)){
+            commonIds.add(partner);
+          }
+        }
+      });
+    }
+  }
+
+  // Anpar sida vid sida i pathen: kräver gemensam familj med >=2 barn
+  for(let i=1;i<path.length-2;i++){
+    const a=path[i], b=path[i+1];
+    const prev=path[i-1], next=path[i+2];
+    const sharedFam=Object.values(families).find(fam=>
+      ((fam.husb===a&&fam.wife===b)||(fam.husb===b&&fam.wife===a))&&
+      fam.chil.filter(c=>S.persons[c]).length>=2
+    );
+    if(sharedFam){
+      const prevOk=sharedFam.chil.includes(prev)||isParentOf(a,prev)||isParentOf(b,prev);
+      const nextOk=sharedFam.chil.includes(next)||isParentOf(a,next)||isParentOf(b,next);
+      if(prevOk&&nextOk){ commonIds.add(a); commonIds.add(b); }
+    }
+  }
+
+  return commonIds;
+}
+
+/* --- Ledräknare: räkna led från anperson/anpar --- */
+function calcLedNr(path, commonAnc){
+  const ancIndices=[];
+  path.forEach((id,i)=>{ if(commonAnc.has(id)) ancIndices.push(i); });
+  if(!ancIndices.length) return {ledMap:{},fromLed:0,toLed:0};
+
+  const ancStart=ancIndices[0];
+  const ancEnd=ancIndices[ancIndices.length-1];
+
+  // Led räknas från anfadern/anparet
+  // Övre halvan (från ref mot anc): avstånd från ancStart
+  // Nedre halvan (från anc mot fokus): avstånd från ancEnd
+  const ledMap={};
+  path.forEach((id,i)=>{
+    if(commonAnc.has(id)) return;
+    if(i<ancStart) ledMap[id]=ancStart-i;       // övre sidan
+    else if(i>ancEnd) ledMap[id]=i-ancEnd;       // nedre sidan
+  });
+
+  // Led för ref och fokus
+  const fromLed=ledMap[path[0]]||0;
+  const toLed=ledMap[path[path.length-1]]||0;
+  return {ledMap, fromLed, toLed};
+}
+
+function relDescription(path, fromId, toId){
+  if(path.length===1)return'Samma person';
+  const persons=S.persons;
+  const families=S.families||{};
+  // Hitta gemensam anfader (split-punkt)
+  // Enkel heuristik: räkna hur många led upp från toId och fromId
+  const steps=path.length-1;
+  if(steps===1){
+    // Direkt: förälder/barn/syskon?
+    const a=persons[fromId],b=persons[toId];
+    // Kolla om toId är förälder till fromId
+    const fromFamc=a&&a.famc?[a.famc]:[];
+    // Kolla familjerna
+    let rel='Närstående';
+    for(const fam of Object.values(families)){
+      const inFam=[fam.husb,fam.wife,...fam.chil].filter(Boolean);
+      if(inFam.includes(fromId)&&inFam.includes(toId)){
+        const fromIsChild=fam.chil.includes(fromId);
+        const toIsChild=fam.chil.includes(toId);
+        const fromIsParent=fam.husb===fromId||fam.wife===fromId;
+        const toIsParent=fam.husb===toId||fam.wife===toId;
+        if(fromIsParent&&toIsChild){rel=(b&&b.sex==='M')?'Son':'Dotter';break;}
+        if(fromIsChild&&toIsParent){rel=(b&&b.sex==='M')?'Far':'Mor';break;}
+        if(fromIsChild&&toIsChild){rel='Syskon';break;}
+        if(fromIsParent&&toIsParent){rel='Partner';break;}
+      }
+    }
+    return rel;
+  }
+  // Längre kedjor — enkel stegbeskrivning
+  return`${steps} led`;
+}
+
+/* --- Rendera relationskedjan --- */
+function renderRelChain(){
+  const inner=document.getElementById('rel-inner');
+  if(!S.refId||!S.curId){
+    inner.innerHTML='<div class="rel-chain-empty">Markera en person som referensperson via kryssrutan i personkortet.</div>';
+    return;
+  }
+  if(S.refId===S.curId){
+    inner.innerHTML='<div class="rel-chain-empty">Referenspersonen och huvudpersonen är samma.</div>';
+    return;
+  }
+  inner.innerHTML='<div class="rel-chain-empty" style="font-size:11px">Beräknar…</div>';
+  setTimeout(()=>{
+    const paths=findRelPaths(S.refId,S.curId);
+    S._relHasMore=paths._hasMore||false;
+    S._relPaths=paths;
+    S._relPathIdx=0;
+    if(!paths||paths.length===0){
+      inner.innerHTML='<div class="rel-no-path">Inget känt släktskap hittades.</div>';
+      return;
+    }
+    drawRelPath(paths[0],paths.length);
+  },10);
+}
+
+function drawRelPath(path, totalPaths){
+  // path kan innehålla strängar (person-id) eller [a,b]-arrayer (anpar)
+  const inner=document.getElementById('rel-inner');
+  inner.innerHTML='';
+  const persons=S.persons;
+
+  // Hitta gemensamma anfäder (anpar = Array, ensam ana = sträng i commonAnc)
+  const commonAnc=findCommonAncestors(path);
+
+  // Hitta anc-positioner: Array-noder (anpar) ELLER noder i commonAnc (ensam ana)
+  const ancIndices=path.map((n,i)=>(Array.isArray(n)||(!Array.isArray(n)&&commonAnc.has(n)))?i:-1).filter(i=>i>=0);
+  const ancStart=ancIndices.length?ancIndices[0]:-1;
+  const ancEnd=ancIndices.length?ancIndices[ancIndices.length-1]:-1;
+
+  // Ledräkning: avstånd från närmaste anc-position
+  function getLed(idx){
+    if(ancStart<0) return null;
+    if(idx<ancStart) return ancStart-idx;
+    if(idx>ancEnd) return idx-ancEnd;
+    return null; // är anc
+  }
+
+  // Räkna led för ref och fokus
+  const fromLed=getLed(0)||0;
+  const toLed=getLed(path.length-1)||0;
+  const minLed=Math.min(fromLed,toLed);
+  const maxLed=Math.max(fromLed,toLed);
+  const diff=maxLed-minLed;
+
+  // Rubrik
+  const deg=document.createElement('div');
+  deg.className='rel-degree';
+  let rubrik='';
+  if(ancStart<0) rubrik='Direkt linje';
+  else if(maxLed===0) rubrik='Direkt förfader/efterkommande';
+  else if(minLed===1&&diff===0) rubrik='Syskon';
+  else if(minLed===1&&diff>0) rubrik='Halvsyskon (ojämn)';
+  else if(diff===0) rubrik=`${minLed}-männingar`;
+  else rubrik=`${minLed}-männing +${diff}`;
+  deg.textContent=rubrik;
+  inner.appendChild(deg);
+
+  if(totalPaths>1){
+    const lbl=document.createElement('div');
+    lbl.className='rel-chain-label';
+    lbl.textContent=`Väg ${S._relPathIdx+1} av ${totalPaths}`;
+    inner.appendChild(lbl);
+  }
+
+  // Rita kedjan
+  path.forEach((node,idx)=>{
+    if(Array.isArray(node)){
+      // Anpar: rita båda sida vid sida i ett block
+      const pairWrap=document.createElement('div');
+      pairWrap.className='rel-pair-wrap';
+      node.forEach(pid=>{
+        const pp=persons[pid]; if(!pp)return;
+        const el=document.createElement('div');
+        el.className='rel-node common-anc rel-pair-node';
+        const dot=document.createElement('div');
+        dot.className='rel-dot '+(pp.sex==='M'?'male':pp.sex==='F'?'female':'unknown');
+        el.appendChild(dot);
+        const nm=document.createElement('span');
+        nm.className='rel-name'; nm.textContent=pp.name; el.appendChild(nm);
+        const y=yr(pp.birt.date);
+        if(y){const ys=document.createElement('span');ys.className='rel-year';ys.textContent=y;el.appendChild(ys);}
+        el.onclick=()=>sel(pid);
+        pairWrap.appendChild(el);
+      });
+      inner.appendChild(pairWrap);
+    } else {
+      // Enskild person
+      const id=node;
+      const p=persons[id]; if(!p)return;
+      const el=document.createElement('div');
+      el.className='rel-node';
+      if(id===S.refId) el.classList.add('ref-person');
+      else if(id===S.curId) el.classList.add('main-person');
+      else if(commonAnc.has(id)) el.classList.add('common-anc');
+
+      const dot=document.createElement('div');
+      dot.className='rel-dot '+(p.sex==='M'?'male':p.sex==='F'?'female':'unknown');
+      el.appendChild(dot);
+
+      const nm=document.createElement('span');
+      nm.className='rel-name'; nm.textContent=p.name; el.appendChild(nm);
+
+      const y=yr(p.birt.date);
+      if(y){const ys=document.createElement('span');ys.className='rel-year';ys.textContent=y;el.appendChild(ys);}
+
+      const led=getLed(idx);
+      if(led!==null){
+        const ln=document.createElement('span');
+        ln.className='rel-led'; ln.textContent=led; el.appendChild(ln);
+      }
+
+      el.onclick=()=>sel(id);
+      inner.appendChild(el);
+    }
+
+    // Pil efter (ej sista)
+    if(idx<path.length-1){
+      const arr=document.createElement('div');
+      arr.className='rel-arrow'; arr.textContent='↓';
+      inner.appendChild(arr);
+    }
+  });
+
+  if(totalPaths>1){
+    const btn=document.createElement('button');
+    btn.className='rel-branch-btn';
+    btn.textContent=`Visa nästa väg (${S._relPathIdx+1}/${totalPaths}) →`;
+    btn.onclick=()=>{
+      S._relPathIdx=(S._relPathIdx+1)%S._relPaths.length;
+      drawRelPath(S._relPaths[S._relPathIdx],S._relPaths.length);
+    };
+    inner.appendChild(btn);
+  }
+  if(S._relHasMore){
+    const more=document.createElement('div');
+    more.style.cssText='font-size:11px;color:var(--text-muted);text-align:center;padding:6px 4px;font-family:sans-serif;font-style:italic;';
+    more.textContent='Fler släktskapsvägar kan finnas.';
+    inner.appendChild(more);
+  }
+}
 </script>
 </body>
 </html>
