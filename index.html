@@ -69,7 +69,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direc
 input[type="file"]{display:none;}
 
 /* ══ LAYOUT ══ */
-#main{display:grid;grid-template-columns:256px 1fr 220px;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);}
+#main{display:grid;grid-template-columns:256px 1fr;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);min-height:0;align-items:stretch;}
 #left-col{display:flex;flex-direction:column;gap:var(--gap);overflow:hidden;}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
 .panel-head{font-family:sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.9px;
@@ -218,7 +218,15 @@ input[type="file"]{display:none;}
 .rel-children{padding-left:24px;border-left:2px solid var(--border);margin:3px 0 3px 10px;}
 
 /* ══ BLOCK H — SLÄKTSKAP ══ */
-#block-h{display:flex;flex-direction:column;overflow:hidden;}
+#block-h{display:flex;flex-direction:column;overflow:hidden;transition:opacity .2s ease;}
+#block-h.collapsed{display:none;}
+#block-h-toggle{position:absolute;right:0;top:50%;transform:translateY(-50%);
+  z-index:10;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px 0 0 6px;padding:6px 4px;cursor:pointer;
+  color:var(--text-sec);font-size:13px;line-height:1;
+  box-shadow:-2px 0 6px rgba(0,0,0,.1);}
+#block-h-toggle:hover{background:var(--accent-light);color:var(--accent);}
+#right-col{position:relative;}
 #rel-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
 #rel-inner{flex:1;overflow-y:auto;padding:8px;}
 #ref-search-wrap{padding:6px 8px;border-bottom:1px solid var(--border);position:relative;}
@@ -558,7 +566,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.17 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.28 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -663,9 +671,15 @@ input[type="file"]{display:none;}
   </div>
 
   <!-- BLOCK H — SLÄKTSKAP (längst till höger) -->
-  <div id="block-h">
+  <button id="block-h-show-btn" onclick="toggleBlockH()" title="Dölj/visa Släktskap"
+    style="position:fixed;right:0;top:50%;transform:translateY(-50%);
+    z-index:100;background:var(--surface);border:1px solid var(--border);
+    border-radius:6px 0 0 6px;padding:8px 4px;cursor:pointer;
+    color:var(--text-sec);font-size:13px;line-height:1;
+    box-shadow:-2px 0 6px rgba(0,0,0,.15);">◀</button>
+  <div id="block-h" class="collapsed">
     <div class="panel" id="rel-panel">
-      <div class="panel-head" id="rel-panel-head">Släktskap</div>
+      <div class="panel-head">Släktskap</div>
       <div id="rel-selected-ref" style="padding:5px 10px;font-size:11px;font-family:sans-serif;color:var(--text-sec);border-bottom:1px solid var(--border);display:none;">
         Ref: <span id="rel-ref-name" style="color:var(--accent);font-weight:bold;"></span>
         <button onclick="refClearSel()" style="float:right;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;">✕</button>
@@ -1245,7 +1259,7 @@ function clearSel(){
    Höjdtabell (px): 3→160, 4→270, 5→351, 6→456
    = gen4 har gen5:s gamla höjd, gen5 har gen6:s gamla+30%
 ══════════════════════════════════════════ */
-const GEN_HEIGHTS={3:160,4:270,5:583};
+const GEN_HEIGHTS={3:160,4:297,5:583};
 function genHeight(n){return GEN_HEIGHTS[n]||160;}
 
 /* Vy-läge */
@@ -2017,6 +2031,18 @@ function toggleBlockD(){
 checkIDB();
 
 /* Kryssruta Referensperson i Block E */
+
+/* ══ BLOCK H KOLLAPS ══ */
+function toggleBlockH(){
+  const bh=document.getElementById('block-h');
+  const btn=document.getElementById('block-h-show-btn');
+  const main=document.getElementById('main');
+  const collapsed=bh.classList.toggle('collapsed');
+  btn.textContent=collapsed?'◀':'▶';
+  btn.title=collapsed?'Visa Släktskap':'Dölj Släktskap';
+  main.style.gridTemplateColumns=collapsed?'256px 1fr':'256px 1fr 220px';
+}
+
 function toggleRefPerson(cb){
   if(cb.checked){
     // Kolla om referensperson redan är satt — fråga om byte
@@ -2087,15 +2113,19 @@ function refSelect(id){
   S.refId=id;
   const p=S.persons[id];
   const dates=[yr(p.birt.date),yr(p.deat.date)].filter(Boolean).join('–');
-  // Visa i Block H
   const refBar=document.getElementById('rel-selected-ref');
   const refName=document.getElementById('rel-ref-name');
   if(refBar){refBar.style.display='block';}
   if(refName){refName.textContent=p.name+(dates?' ('+dates+')':'');}
-  // Synka kryssrutan
   const cb=document.getElementById('ref-checkbox');
   if(cb&&S.curId===id) cb.checked=true;
-  // Uppdatera kedjan
+  // Visa Block H automatiskt
+  const bh=document.getElementById('block-h');
+  if(bh&&bh.classList.contains('collapsed')){
+    bh.classList.remove('collapsed');
+    document.getElementById('block-h-show-btn').textContent='▶';
+    document.getElementById('main').style.gridTemplateColumns='256px 1fr 220px';
+  }
   if(S.curId&&S.curId!==id) renderRelChain();
   else {
     const inner=document.getElementById('rel-inner');
@@ -2110,6 +2140,13 @@ function refClearSel(){
   if(cb) cb.checked=false;
   const inner=document.getElementById('rel-inner');
   if(inner) inner.innerHTML='<div class="rel-chain-empty">Markera en person som referensperson via kryssrutan i personkortet.</div>';
+  // Dölj Block H automatiskt
+  const bh=document.getElementById('block-h');
+  if(bh&&!bh.classList.contains('collapsed')){
+    bh.classList.add('collapsed');
+    document.getElementById('block-h-show-btn').textContent='◀';
+    document.getElementById('main').style.gridTemplateColumns='256px 1fr';
+  }
 }
 
 /* --- BFS: Bygg graf (bara förälder↔barn, inte syskon direkt) --- */
@@ -2150,31 +2187,36 @@ function relGetParents(id){
 }
 
 // BFS uppåt: returnerar Map ancId→[[startId,...,ancId], ...] (alla kortaste vägar)
-function ancestorPaths(startId, maxDepth=30){
-  const result=new Map(); // ancId → [path1, path2, ...]
-  const queue=[[startId]];
-  const depthSeen=new Map(); // ancId → kortaste djup hittills
+function ancestorPaths(startId, maxDepth=20){
+  // Enkel BFS uppåt — bara en (kortaste) väg per anfader
+  // Ingen kopiering, bara parent-pekare
+  const dist=new Map();
+  const parent=new Map(); // id → närmaste barn i BFS-trädet
+  dist.set(startId,0);
+  const queue=[startId];
   while(queue.length){
-    const path=queue.shift();
-    if(path.length>maxDepth+1)continue;
-    const cur=path[path.length-1];
+    const cur=queue.shift();
+    const d=dist.get(cur);
+    if(d>=maxDepth)continue;
     for(const par of relGetParents(cur)){
-      if(path.includes(par))continue;
-      const newPath=[...path,par];
-      const d=newPath.length;
-      const best=depthSeen.get(par);
-      if(best===undefined||d<best){
-        depthSeen.set(par,d);
-        result.set(par,[newPath]);
-        queue.push(newPath);
-      } else if(d===best){
-        result.get(par).push(newPath);
-        queue.push(newPath);
-      }
-      // d>best: hoppa över
+      if(dist.has(par))continue; // redan besökt
+      dist.set(par,d+1);
+      parent.set(par,cur);
+      queue.push(par);
     }
   }
-  console.log(`ancestorPaths(${startId}): ${result.size} anfäder`);
+  // Bygg result: Map<ancId, [path]> där path rekonstrueras via parent-kedjan
+  const result=new Map();
+  for(const [id,] of dist){
+    if(id===startId)continue;
+    const path=[];
+    let cur=id;
+    while(cur!==undefined){
+      path.unshift(cur);
+      cur=parent.get(cur);
+    }
+    result.set(id,[path]);
+  }
   return result;
 }
 
@@ -2184,96 +2226,86 @@ function findRelPaths(fromId, toId){
   const fromAnc=ancestorPaths(fromId);
   const toAnc=ancestorPaths(toId);
 
-  // Hitta gemensamma anfäder och bygg kandidatvägar
-  // Samla ALLA vägar, sedan filtrerar vi på kortaste + upp till 4 extra led
-  const allCandidates=[];
-  let minLen=Infinity;
-  let ancCount=0;
-  for(const [ancId,fromPaths] of fromAnc){
-    if(!toAnc.has(ancId))continue;
-    ancCount++;
-    const toPaths=toAnc.get(ancId);
-    for(const fromPath of fromPaths){
-      for(const toPath of toPaths){
-        const toReversed=[...toPath].reverse();
-        const fullPath=[...fromPath,...toReversed.slice(1)];
-        const len=fullPath.length;
-        if(len<minLen) minLen=len;
-        allCandidates.push(fullPath);
+  // Rak linje: hitta ALLA kortaste raka vägar via en riktad sökning
+  function straightLines(startId, targetId, ancMap){
+    // targetId är känd anfader till startId — hitta alla kortaste vägar
+    if(!ancMap.has(targetId))return[];
+    const targetDist=ancMap.get(targetId)[0].length-1; // avstånd
+    // BFS nedåt (mot barn) är fel — vi måste hitta alla uppåt-vägar
+    // Använd DFS med djupbegränsning
+    const results=[];
+    function dfs(cur, path, depth){
+      if(depth>targetDist+1)return;
+      if(cur===targetId){results.push([...path]);return;}
+      if(results.length>=5)return;
+      for(const par of relGetParents(cur)){
+        if(path.includes(par))continue;
+        path.push(par);
+        dfs(par,path,depth+1);
+        path.pop();
       }
     }
+    dfs(startId,[startId],1);
+    return results;
   }
-  // Behåll bara kortaste vägar
-  const candidates=allCandidates.filter(p=>p.length===minLen);
-  console.log(`findRelPaths: gemAnc=${ancCount}, allCandidates=${allCandidates.length}, minLen=${minLen}, candidates=${candidates.length}`);
 
-  // Rak linje: kolla om from/to är direkt anfader till den andre
-  const straightPaths=[];
+  // Kolla rak linje
   if(fromAnc.has(toId)){
-    const paths=fromAnc.get(toId);
-    if(paths&&paths.length) straightPaths.push(paths[0]);
+    const lines=straightLines(fromId,toId,fromAnc);
+    if(lines.length) return lines.slice(0,5);
+    return[fromAnc.get(toId)[0]];
   }
   if(toAnc.has(fromId)){
-    const paths=toAnc.get(fromId);
-    if(paths&&paths.length) straightPaths.push([...paths[0]].reverse());
+    const lines=straightLines(toId,fromId,toAnc);
+    if(lines.length) return lines.map(p=>[...p].reverse()).slice(0,5);
+    return[[...toAnc.get(fromId)[0]].reverse()];
   }
 
-  // Om rak linje finns och är kortare än omvägar — visa bara rak linje
-  if(straightPaths.length){
-    const straightLen=straightPaths[0].length;
-    if(straightLen<=minLen) return straightPaths.slice(0,1);
+  // Hitta gemensamma anfäder
+  let minLen=Infinity;
+  const candidates=[];
+  for(const [ancId,fromPaths] of fromAnc){
+    if(!toAnc.has(ancId))continue;
+    const toPath=toAnc.get(ancId)[0];
+    const fromPath=fromPaths[0];
+    const full=[...fromPath,...[...toPath].reverse().slice(1)];
+    if(full.length<minLen){minLen=full.length;candidates.length=0;}
+    if(full.length===minLen) candidates.push(full);
   }
+  if(!candidates.length)return[];
 
-  if(!candidates.length) return[];
-  function mergeAnPar(paths){
-    const merged=[];
-    const used=new Set();
-    for(let i=0;i<paths.length;i++){
-      if(used.has(i))continue;
-      const pa=paths[i];
-      let didMerge=false;
-      for(let j=i+1;j<paths.length;j++){
-        if(used.has(j))continue;
-        const pb=paths[j];
-        if(pa.length!==pb.length)continue;
-        const diffs=[];
-        for(let k=0;k<pa.length;k++){if(pa[k]!==pb[k])diffs.push(k);}
-        if(diffs.length===1){
-          const pos=diffs[0];
-          const a=pa[pos], b=pb[pos];
-          const arePair=Object.values(S.families||{}).some(fam=>
-            (fam.husb===a&&fam.wife===b)||(fam.husb===b&&fam.wife===a));
-          if(arePair){
-            // Representera anparet som [a,b] på den positionen
-            const mp=pa.map((id,k)=>k===pos?[a,b]:id);
-            merged.push(mp);
-            used.add(i);used.add(j);
-            didMerge=true;
-            break;
-          }
+  function pathKey(p){return p.map(n=>Array.isArray(n)?[...n].sort().join('|'):n).join(',');}
+  const seen=new Set();
+  const deduped=candidates.filter(p=>{const k=pathKey(p);if(seen.has(k))return false;seen.add(k);return true;});
+
+  const used=new Set();
+  const merged=[];
+  for(let i=0;i<deduped.length;i++){
+    if(used.has(i))continue;
+    const pa=deduped[i];
+    let didMerge=false;
+    for(let j=i+1;j<deduped.length;j++){
+      if(used.has(j))continue;
+      const pb=deduped[j];
+      if(pa.length!==pb.length)continue;
+      const diffs=[];
+      for(let k=0;k<pa.length;k++){if(pa[k]!==pb[k])diffs.push(k);}
+      if(diffs.length===1){
+        const pos=diffs[0],a=pa[pos],b=pb[pos];
+        const arePair=Object.values(S.families||{}).some(fam=>
+          (fam.husb===a&&fam.wife===b)||(fam.husb===b&&fam.wife===a));
+        if(arePair){
+          merged.push(pa.map((id,k)=>k===pos?[a,b]:id));
+          used.add(i);used.add(j);didMerge=true;break;
         }
       }
-      if(!didMerge) merged.push(pa);
     }
-    return merged;
+    if(!didMerge)merged.push(pa);
   }
 
-  // Deduplicera enkla dubblettvarianter
-  function pathKey(path){
-    return path.map(n=>Array.isArray(n)?[...n].sort().join('|'):n).join(',');
-  }
   const MAX_PATHS=20;
-  const seen=new Set();
-  const safeCandidates=candidates.slice(0,200);
-  const deduped=safeCandidates.filter(p=>{const k=pathKey(p);if(seen.has(k))return false;seen.add(k);return true;});
-  const merged=mergeAnPar(deduped);
-  // Lägg rak linje(r) FÖRST, sedan omvägar via gemensam anfader
-  const straightKeys=new Set(straightPaths.map(p=>pathKey(p)));
-  const mergedWithout=merged.filter(p=>!straightKeys.has(pathKey(p)));
-  const allPaths=[...straightPaths,...mergedWithout];
-  console.log(`findRelPaths: deduped=${deduped.length}, merged=${merged.length}, straight=${straightPaths.length}, total=${allPaths.length}`);
-  allPaths._hasMore=(allCandidates.length>=200||allPaths.length>=MAX_PATHS);
-  return allPaths.slice(0,MAX_PATHS);
+  merged._hasMore=(candidates.length>=MAX_PATHS);
+  return merged.slice(0,MAX_PATHS);
 }
 
 /* --- Hitta gemensam(ma) anfader/anpar i en sökväg --- */
@@ -2461,6 +2493,9 @@ function drawRelPath(path, totalPaths){
 
   // Scrolla till toppen när ny väg visas
   inner.scrollTop=0;
+
+  // Rita kedjan
+  path.forEach((node,idx)=>{
     if(Array.isArray(node)){
       // Anpar: rita båda sida vid sida i ett block
       const pairWrap=document.createElement('div');
