@@ -558,7 +558,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.12 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.17 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -2174,6 +2174,7 @@ function ancestorPaths(startId, maxDepth=30){
       // d>best: hoppa över
     }
   }
+  console.log(`ancestorPaths(${startId}): ${result.size} anfäder`);
   return result;
 }
 
@@ -2184,29 +2185,46 @@ function findRelPaths(fromId, toId){
   const toAnc=ancestorPaths(toId);
 
   // Hitta gemensamma anfäder och bygg kandidatvägar
+  // Samla ALLA vägar, sedan filtrerar vi på kortaste + upp till 4 extra led
+  const allCandidates=[];
   let minLen=Infinity;
-  const candidates=[];
+  let ancCount=0;
   for(const [ancId,fromPaths] of fromAnc){
     if(!toAnc.has(ancId))continue;
+    ancCount++;
     const toPaths=toAnc.get(ancId);
     for(const fromPath of fromPaths){
       for(const toPath of toPaths){
-        // OBS: använd [...toPath].reverse() för att inte mutera originalet
         const toReversed=[...toPath].reverse();
         const fullPath=[...fromPath,...toReversed.slice(1)];
         const len=fullPath.length;
-        if(len<minLen){minLen=len;candidates.length=0;}
-        if(len===minLen) candidates.push(fullPath);
+        if(len<minLen) minLen=len;
+        allCandidates.push(fullPath);
       }
     }
   }
+  // Behåll bara kortaste vägar
+  const candidates=allCandidates.filter(p=>p.length===minLen);
+  console.log(`findRelPaths: gemAnc=${ancCount}, allCandidates=${allCandidates.length}, minLen=${minLen}, candidates=${candidates.length}`);
 
-  // Rak linje: bara om INGEN gemensam anfader hittades
-  if(!candidates.length){
-    if(fromAnc.has(toId)) return[fromAnc.get(toId)[0]];
-    if(toAnc.has(fromId)) return[[...toAnc.get(fromId)[0]].reverse()];
-    return[];
+  // Rak linje: kolla om from/to är direkt anfader till den andre
+  const straightPaths=[];
+  if(fromAnc.has(toId)){
+    const paths=fromAnc.get(toId);
+    if(paths&&paths.length) straightPaths.push(paths[0]);
   }
+  if(toAnc.has(fromId)){
+    const paths=toAnc.get(fromId);
+    if(paths&&paths.length) straightPaths.push([...paths[0]].reverse());
+  }
+
+  // Om rak linje finns och är kortare än omvägar — visa bara rak linje
+  if(straightPaths.length){
+    const straightLen=straightPaths[0].length;
+    if(straightLen<=minLen) return straightPaths.slice(0,1);
+  }
+
+  if(!candidates.length) return[];
   function mergeAnPar(paths){
     const merged=[];
     const used=new Set();
@@ -2246,13 +2264,16 @@ function findRelPaths(fromId, toId){
   }
   const MAX_PATHS=20;
   const seen=new Set();
-  // Säkerhetsgräns på candidates innan dedup
   const safeCandidates=candidates.slice(0,200);
   const deduped=safeCandidates.filter(p=>{const k=pathKey(p);if(seen.has(k))return false;seen.add(k);return true;});
   const merged=mergeAnPar(deduped);
-  // Flagga om vi nådde taket (fler vägar kan finnas)
-  merged._hasMore=(candidates.length>=MAX_PATHS);
-  return merged.slice(0,MAX_PATHS);
+  // Lägg rak linje(r) FÖRST, sedan omvägar via gemensam anfader
+  const straightKeys=new Set(straightPaths.map(p=>pathKey(p)));
+  const mergedWithout=merged.filter(p=>!straightKeys.has(pathKey(p)));
+  const allPaths=[...straightPaths,...mergedWithout];
+  console.log(`findRelPaths: deduped=${deduped.length}, merged=${merged.length}, straight=${straightPaths.length}, total=${allPaths.length}`);
+  allPaths._hasMore=(allCandidates.length>=200||allPaths.length>=MAX_PATHS);
+  return allPaths.slice(0,MAX_PATHS);
 }
 
 /* --- Hitta gemensam(ma) anfader/anpar i en sökväg --- */
@@ -2426,7 +2447,6 @@ function drawRelPath(path, totalPaths){
   if(ancStart<0) rubrik='Direkt linje';
   else if(maxLed===0) rubrik='Direkt förfader/efterkommande';
   else if(minLed===1&&diff===0) rubrik='Syskon';
-  else if(minLed===1&&diff>0) rubrik='Halvsyskon (ojämn)';
   else if(diff===0) rubrik=`${minLed}-männingar`;
   else rubrik=`${minLed}-männing +${diff}`;
   deg.textContent=rubrik;
@@ -2439,8 +2459,8 @@ function drawRelPath(path, totalPaths){
     inner.appendChild(lbl);
   }
 
-  // Rita kedjan
-  path.forEach((node,idx)=>{
+  // Scrolla till toppen när ny väg visas
+  inner.scrollTop=0;
     if(Array.isArray(node)){
       // Anpar: rita båda sida vid sida i ett block
       const pairWrap=document.createElement('div');
@@ -2501,7 +2521,7 @@ function drawRelPath(path, totalPaths){
   if(totalPaths>1){
     const btn=document.createElement('button');
     btn.className='rel-branch-btn';
-    btn.textContent=`Visa nästa väg (${S._relPathIdx+1}/${totalPaths}) →`;
+    btn.textContent=`Visa alternativ släktväg (${S._relPathIdx+1}/${totalPaths}) →`;
     btn.onclick=()=>{
       S._relPathIdx=(S._relPathIdx+1)%S._relPaths.length;
       drawRelPath(S._relPaths[S._relPathIdx],S._relPaths.length);
