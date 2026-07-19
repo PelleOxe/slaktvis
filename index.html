@@ -69,7 +69,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direc
 input[type="file"]{display:none;}
 
 /* ══ LAYOUT ══ */
-#main{display:grid;grid-template-columns:256px 1fr;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);min-height:0;align-items:stretch;}
+#main{display:grid;grid-template-columns:256px 1fr 220px;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);min-height:0;align-items:stretch;}
 #left-col{display:flex;flex-direction:column;gap:var(--gap);overflow:hidden;}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
 .panel-head{font-family:sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.9px;
@@ -301,9 +301,12 @@ input[type="file"]{display:none;}
 
 /* Tablet landskap (1024px och under) */
 @media (max-width:1024px){
-  #main{grid-template-columns:180px 1fr 180px;}
+  #main{grid-template-columns:160px 1fr 160px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
   #person-name-block h2{font-size:15px;}
+  #search-input{font-size:12px;}
+  .person-item{font-size:12px;}
+  #ancestor-chart{min-height:320px !important;}
 }
 
 /* Tablet stående / stor telefon landskap (768px och under) */
@@ -358,6 +361,9 @@ input[type="file"]{display:none;}
 
 /* iPad Pro och liknande (1024–1180px) */
 @media (min-width:769px) and (max-width:1180px){
+  #main{grid-template-columns:160px 1fr 160px;}
+  #bottom-row{grid-template-columns:4fr 3fr 3fr;}
+}
   #main{grid-template-columns:180px 1fr 180px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
 }
@@ -490,7 +496,7 @@ input[type="file"]{display:none;}
 <body data-theme="parchment">
 
 
-<div id="offline-banner">📴 Offline-läge — arbetar utan nätverksanslutning</div>
+
 
 <div id="resume-bar">
   <span>💾 Sparat dataset hittades: <strong id="resume-filename"></strong></span>
@@ -566,7 +572,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.28 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.32 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -2033,15 +2039,24 @@ checkIDB();
 /* Kryssruta Referensperson i Block E */
 
 /* ══ BLOCK H KOLLAPS ══ */
+function setBlockHGrid(collapsed){
+  const main=document.getElementById('main');
+  if(!main)return;
+  // Räkna ut kolumnbredd baserat på skärmbredd
+  const w=window.innerWidth;
+  const side=w<=1024?160:220;
+  main.style.gridTemplateColumns=collapsed?`256px 1fr`:`256px 1fr ${side}px`;
+}
 function toggleBlockH(){
   const bh=document.getElementById('block-h');
   const btn=document.getElementById('block-h-show-btn');
-  const main=document.getElementById('main');
   const collapsed=bh.classList.toggle('collapsed');
   btn.textContent=collapsed?'◀':'▶';
   btn.title=collapsed?'Visa Släktskap':'Dölj Släktskap';
-  main.style.gridTemplateColumns=collapsed?'256px 1fr':'256px 1fr 220px';
+  setBlockHGrid(collapsed);
 }
+// Sätt korrekt startläge (Block H är dolt från start)
+document.addEventListener('DOMContentLoaded',()=>setBlockHGrid(true));
 
 function toggleRefPerson(cb){
   if(cb.checked){
@@ -2071,7 +2086,6 @@ function syncRefCheckbox(id){
 
 window.addEventListener('online', ()=>document.getElementById('offline-banner').classList.remove('show'));
 window.addEventListener('offline',()=>document.getElementById('offline-banner').classList.add('show'));
-if(!navigator.onLine) document.getElementById('offline-banner').classList.add('show');
 
 /* ══════════════════════════════════════════
    VISA SLÄKTSKAP — BFS + Block H
@@ -2124,7 +2138,7 @@ function refSelect(id){
   if(bh&&bh.classList.contains('collapsed')){
     bh.classList.remove('collapsed');
     document.getElementById('block-h-show-btn').textContent='▶';
-    document.getElementById('main').style.gridTemplateColumns='256px 1fr 220px';
+    setBlockHGrid(false);
   }
   if(S.curId&&S.curId!==id) renderRelChain();
   else {
@@ -2145,7 +2159,7 @@ function refClearSel(){
   if(bh&&!bh.classList.contains('collapsed')){
     bh.classList.add('collapsed');
     document.getElementById('block-h-show-btn').textContent='◀';
-    document.getElementById('main').style.gridTemplateColumns='256px 1fr';
+    setBlockHGrid(true);
   }
 }
 
