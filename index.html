@@ -293,7 +293,7 @@ input[type="file"]{display:none;}
 
 /* Tablet landskap (1024px och under) */
 @media (max-width:1024px){
-  #main{grid-template-columns:200px 1fr;}
+  #main{grid-template-columns:180px 1fr 180px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
   #person-name-block h2{font-size:15px;}
 }
@@ -305,7 +305,7 @@ input[type="file"]{display:none;}
   #header h1{font-size:15px;}
   #info-block{display:none;}
   #copyright{display:none;}
-    #main{
+  #main{
     display:flex;flex-direction:column;
     overflow:visible;padding:4px;gap:4px;
     height:auto;min-height:100vh;
@@ -325,6 +325,8 @@ input[type="file"]{display:none;}
     overflow:visible;min-height:0;
   }
   #block-e,#block-g,#block-f{min-height:200px;max-height:none;}
+  /* Block H under på smal skärm */
+  #block-h{min-height:200px;}
 }
 
 /* Stamtavla: dölj datum i smalt läge */
@@ -346,9 +348,9 @@ input[type="file"]{display:none;}
   .event-type{width:55px;font-size:11px;}
 }
 
-/* iPad Pro och liknande (1024–1180px) specifik fix */
+/* iPad Pro och liknande (1024–1180px) */
 @media (min-width:769px) and (max-width:1180px){
-  #main{grid-template-columns:180px 1fr;}
+  #main{grid-template-columns:180px 1fr 180px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
 }
 
@@ -556,7 +558,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.09 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.12 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- resume-bar already in offline_html -->
@@ -2147,20 +2149,29 @@ function relGetParents(id){
   return parents;
 }
 
-// BFS uppåt: returnerar Map ancId→[startId,...,ancId]
+// BFS uppåt: returnerar Map ancId→[[startId,...,ancId], ...] (alla kortaste vägar)
 function ancestorPaths(startId, maxDepth=30){
-  const result=new Map();
+  const result=new Map(); // ancId → [path1, path2, ...]
   const queue=[[startId]];
+  const depthSeen=new Map(); // ancId → kortaste djup hittills
   while(queue.length){
     const path=queue.shift();
     if(path.length>maxDepth+1)continue;
     const cur=path[path.length-1];
     for(const par of relGetParents(cur)){
-      if(result.has(par))continue;
       if(path.includes(par))continue;
       const newPath=[...path,par];
-      result.set(par,newPath);
-      queue.push(newPath);
+      const d=newPath.length;
+      const best=depthSeen.get(par);
+      if(best===undefined||d<best){
+        depthSeen.set(par,d);
+        result.set(par,[newPath]);
+        queue.push(newPath);
+      } else if(d===best){
+        result.get(par).push(newPath);
+        queue.push(newPath);
+      }
+      // d>best: hoppa över
     }
   }
   return result;
@@ -2175,23 +2186,27 @@ function findRelPaths(fromId, toId){
   // Hitta gemensamma anfäder och bygg kandidatvägar
   let minLen=Infinity;
   const candidates=[];
-  for(const [ancId,fromPath] of fromAnc){
+  for(const [ancId,fromPaths] of fromAnc){
     if(!toAnc.has(ancId))continue;
-    const toPath=toAnc.get(ancId);
-    const fullPath=[...fromPath,...[...toPath].reverse().slice(1)];
-    const len=fullPath.length;
-    if(len<minLen){minLen=len;candidates.length=0;}
-    if(len===minLen) candidates.push(fullPath);
+    const toPaths=toAnc.get(ancId);
+    for(const fromPath of fromPaths){
+      for(const toPath of toPaths){
+        // OBS: använd [...toPath].reverse() för att inte mutera originalet
+        const toReversed=[...toPath].reverse();
+        const fullPath=[...fromPath,...toReversed.slice(1)];
+        const len=fullPath.length;
+        if(len<minLen){minLen=len;candidates.length=0;}
+        if(len===minLen) candidates.push(fullPath);
+      }
+    }
   }
 
-  // Rak linje: from är direkt anfader till to (eller tvärtom)
-  // Bara giltigt om INGEN gemensam anfader hittades alls
+  // Rak linje: bara om INGEN gemensam anfader hittades
   if(!candidates.length){
-    if(fromAnc.has(toId)) return[fromAnc.get(toId)];
-    if(toAnc.has(fromId)) return[[...toAnc.get(fromId)].reverse()];
+    if(fromAnc.has(toId)) return[fromAnc.get(toId)[0]];
+    if(toAnc.has(fromId)) return[[...toAnc.get(fromId)[0]].reverse()];
     return[];
   }
-  if(!candidates.length)return[];
   function mergeAnPar(paths){
     const merged=[];
     const used=new Set();
@@ -2231,7 +2246,9 @@ function findRelPaths(fromId, toId){
   }
   const MAX_PATHS=20;
   const seen=new Set();
-  const deduped=candidates.filter(p=>{const k=pathKey(p);if(seen.has(k))return false;seen.add(k);return true;});
+  // Säkerhetsgräns på candidates innan dedup
+  const safeCandidates=candidates.slice(0,200);
+  const deduped=safeCandidates.filter(p=>{const k=pathKey(p);if(seen.has(k))return false;seen.add(k);return true;});
   const merged=mergeAnPar(deduped);
   // Flagga om vi nådde taket (fler vägar kan finnas)
   merged._hasMore=(candidates.length>=MAX_PATHS);
