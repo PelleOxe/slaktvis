@@ -429,7 +429,7 @@ input[type="file"]{display:none;}
   cursor:pointer;margin-left:auto;padding:0 4px;}
 
 /* ══ STAMTAVLA ══ */
-#stam-chart{width:100%;height:583px;display:none;overflow-y:auto;overflow-x:hidden;padding:8px 4px;}
+#stam-chart{width:100%;height:583px;display:none;overflow-y:auto;overflow-x:auto;padding:8px 4px;}
 .stam-node{margin:0;display:block;}
 .stam-person-row{
   display:inline-flex;align-items:center;gap:6px;
@@ -577,7 +577,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.44 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.45 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- OM SLÄKTVIS MODAL -->
@@ -1398,19 +1398,6 @@ S.dView='antavla';
 
 function isIpad(){return window.innerWidth<=1180;}
 
-function setRightColRows(mode){
-  const rc=document.getElementById('right-col');
-  if(!rc)return;
-  if(!isIpad()){
-    rc.style.gridTemplateRows='auto 1fr';
-    return;
-  }
-  // iPad: justera split per vy
-  if(mode==='fan')  rc.style.gridTemplateRows='55fr 45fr';
-  else if(mode==='stam') rc.style.gridTemplateRows='60fr 40fr';
-  else rc.style.gridTemplateRows='auto 1fr'; // antavla: auto
-}
-
 function setDView(mode,btn){
   S.dView=mode;
   document.querySelectorAll('.view-btn').forEach(b=>b.classList.toggle('active',b===btn));
@@ -1419,16 +1406,31 @@ function setDView(mode,btn){
   const chart=document.getElementById('ancestor-chart');
   const fan=document.getElementById('fan-chart');
   const stam=document.getElementById('stam-chart');
+  const rc=document.getElementById('right-col');
   chart.style.display='none'; fan.style.display='none'; stam.style.display='none';
   if(mode==='antavla'){
     chart.style.display='flex';
     chart.style.height=genHeight(S.genCount)+'px';
+    if(rc) rc.style.gridTemplateRows='auto 1fr';
   } else if(mode==='fan'){
     fan.style.display='block';
+    // iPad: Block D tar 55% av tillgänglig höjd
+    if(isIpad()&&rc){
+      rc.style.gridTemplateRows='55fr 45fr';
+      fan.style.height='';
+    } else {
+      if(rc) rc.style.gridTemplateRows='auto 1fr';
+    }
   } else if(mode==='stam'){
     stam.style.display='block';
+    // iPad: Block D tar 60% av tillgänglig höjd
+    if(isIpad()&&rc){
+      rc.style.gridTemplateRows='60fr 40fr';
+      stam.style.height='100%';
+    } else {
+      if(rc) rc.style.gridTemplateRows='auto 1fr';
+    }
   }
-  setRightColRows(mode);
   if(S.curId)renderD(S.curId);
 }
 
