@@ -108,7 +108,7 @@ input[type="file"]{display:none;}
 #block-d{overflow:hidden;min-height:0;transition:max-height .35s ease;}
 #block-d.collapsed #block-d-inner{display:none;}
 #block-d.collapsed{max-height:36px !important;}
-#block-d-inner{overflow:auto;padding:6px 10px 8px;}
+#block-d-inner{overflow:auto;padding:6px 10px 8px;flex:1;min-height:0;display:flex;flex-direction:column;}
 /* Kollaps-knapp */
 .d-collapse-wrap{display:flex;align-items:center;gap:3px;margin-left:4px;cursor:pointer;}
 .d-collapse-btn{
@@ -121,7 +121,7 @@ input[type="file"]{display:none;}
 }
 
 #ancestor-chart{display:flex;align-items:stretch;height:270px;transition:height .3s ease;}
-#fan-chart{width:100%;height:583px;display:none;position:relative;}
+#fan-chart{width:100%;height:583px;flex:1;display:none;position:relative;}
 #fan-chart svg{width:100%;height:100%;}
 /* Vy-lägesväljare */
 .view-btns{display:flex;gap:2px;margin-right:8px;}
@@ -429,7 +429,7 @@ input[type="file"]{display:none;}
   cursor:pointer;margin-left:auto;padding:0 4px;}
 
 /* ══ STAMTAVLA ══ */
-#stam-chart{width:100%;height:583px;display:none;overflow-y:auto;overflow-x:auto;padding:8px 4px;}
+#stam-chart{width:100%;height:583px;flex:1;display:none;overflow-y:auto;overflow-x:auto;padding:8px 4px;}
 .stam-node{margin:0;display:block;}
 .stam-person-row{
   display:inline-flex;align-items:center;gap:6px;
@@ -577,7 +577,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.45 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.46 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- OM SLÄKTVIS MODAL -->
@@ -1603,15 +1603,43 @@ function renderFan(id){
   window.addEventListener('mouseup',()=>{if(dragging){dragging=false;svg.style.cursor='grab';}});
 
   // Touch pan
-  let lastTouchX=0,lastTouchY=0,touching=false;
-  svg.addEventListener('touchstart',e=>{if(e.touches.length===1){touching=true;lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;}},{passive:true});
+  let lastTouchX=0,lastTouchY=0,touching=false,lastPinchDist=0;
+  svg.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){
+      touching=true;lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;
+    } else if(e.touches.length===2){
+      touching=false;
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      lastPinchDist=Math.sqrt(dx*dx+dy*dy);
+    }
+  },{passive:true});
   svg.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(lastPinchDist>0){
+        const factor=dist/lastPinchDist;
+        const rect=svg.getBoundingClientRect();
+        const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-rect.left;
+        const my=(e.touches[0].clientY+e.touches[1].clientY)/2-rect.top;
+        const newZoom=Math.min(8,Math.max(0.3,zoom*factor));
+        panX=mx-(mx-panX)*(newZoom/zoom);
+        panY=my-(my-panY)*(newZoom/zoom);
+        zoom=newZoom;
+        applyTransform();
+      }
+      lastPinchDist=dist;
+      e.preventDefault();
+      return;
+    }
     if(!touching||e.touches.length!==1)return;
     panX+=e.touches[0].clientX-lastTouchX; panY+=e.touches[0].clientY-lastTouchY;
     lastTouchX=e.touches[0].clientX; lastTouchY=e.touches[0].clientY;
     applyTransform(); e.preventDefault();
   },{passive:false});
-  svg.addEventListener('touchend',()=>{touching=false;});
+  svg.addEventListener('touchend',()=>{touching=false;lastPinchDist=0;});
 
   // ── Texthjälp: ren svart text, fetstil ──
   function makeTxt(txt,x,y,fs,bold,muted){
