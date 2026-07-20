@@ -577,7 +577,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.43 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.44 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- OM SLÄKTVIS MODAL -->
@@ -1396,6 +1396,21 @@ function genHeight(n){return GEN_HEIGHTS[n]||160;}
 /* Vy-läge */
 S.dView='antavla';
 
+function isIpad(){return window.innerWidth<=1180;}
+
+function setRightColRows(mode){
+  const rc=document.getElementById('right-col');
+  if(!rc)return;
+  if(!isIpad()){
+    rc.style.gridTemplateRows='auto 1fr';
+    return;
+  }
+  // iPad: justera split per vy
+  if(mode==='fan')  rc.style.gridTemplateRows='55fr 45fr';
+  else if(mode==='stam') rc.style.gridTemplateRows='60fr 40fr';
+  else rc.style.gridTemplateRows='auto 1fr'; // antavla: auto
+}
+
 function setDView(mode,btn){
   S.dView=mode;
   document.querySelectorAll('.view-btn').forEach(b=>b.classList.toggle('active',b===btn));
@@ -1413,16 +1428,18 @@ function setDView(mode,btn){
   } else if(mode==='stam'){
     stam.style.display='block';
   }
+  setRightColRows(mode);
   if(S.curId)renderD(S.curId);
 }
 
 function changeGen(delta){
-  const n=Math.min(5,Math.max(3,S.genCount+delta));
+  const maxGen=isIpad()?4:5; // iPad: max 4 gen
+  const n=Math.min(maxGen,Math.max(3,S.genCount+delta));
   if(n===S.genCount)return;
   S.genCount=n;
   document.getElementById('gen-count').textContent=n;
   document.getElementById('gen-minus').disabled=(n<=3);
-  document.getElementById('gen-plus').disabled=(n>=5);
+  document.getElementById('gen-plus').disabled=(n>=maxGen);
   document.getElementById('ancestor-chart').style.height=genHeight(n)+'px';
   if(S.curId)renderD(S.curId);
 }
