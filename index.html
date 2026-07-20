@@ -71,6 +71,7 @@ input[type="file"]{display:none;}
 /* ══ LAYOUT ══ */
 #main{display:grid;grid-template-columns:256px 1fr 220px;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);min-height:0;align-items:stretch;}
 #left-col{display:flex;flex-direction:column;gap:var(--gap);overflow:hidden;}
+#left-col.collapsed{display:none;}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
 .panel-head{font-family:sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.9px;
   color:var(--text-sec);padding:5px 10px 5px 12px;border-bottom:1px solid var(--border);
@@ -574,7 +575,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.39 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.41 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- DELA-MODAL -->
@@ -601,6 +602,12 @@ input[type="file"]{display:none;}
 <!-- resume-bar already in offline_html -->
 <div id="main">
   <!-- LEFT -->
+  <button id="left-col-toggle" onclick="toggleLeftCol()" title="Dölj/visa sökning"
+    style="position:fixed;left:0;top:50%;transform:translateY(-50%);
+    z-index:100;background:var(--surface);border:1px solid var(--border);
+    border-radius:0 6px 6px 0;padding:8px 4px;cursor:pointer;
+    color:var(--text-sec);font-size:13px;line-height:1;
+    box-shadow:2px 0 6px rgba(0,0,0,.15);">◀</button>
   <div id="left-col">
     <div class="panel" style="flex-shrink:0">
       <div id="search-box" style="position:relative">
@@ -2061,15 +2068,35 @@ checkIDB();
 
 /* Kryssruta Referensperson i Block E */
 
-/* ══ BLOCK H KOLLAPS ══ */
+/* ══ LEFT-COL KOLLAPS ══ */
+function toggleLeftCol(){
+  const lc=document.getElementById('left-col');
+  const btn=document.getElementById('left-col-toggle');
+  const collapsed=lc.classList.toggle('collapsed');
+  btn.textContent=collapsed?'▶':'◀';
+  btn.title=collapsed?'Visa sökning':'Dölj sökning';
+  setBlockHGrid(document.getElementById('block-h').classList.contains('collapsed'));
+}
+
+
 function setBlockHGrid(collapsed){
   const main=document.getElementById('main');
   if(!main)return;
-  // Räkna ut kolumnbredd baserat på skärmbredd
   const w=window.innerWidth;
-  const side=w<=1024?144:220;
-  const left=window.innerWidth<=1180?'205px':'256px';
-  main.style.gridTemplateColumns=collapsed?`${left} 1fr`:`${left} 1fr ${side}px`;
+  const side=w<=1180?144:220;
+  const lcEl=document.getElementById('left-col');
+  const lcCollapsed=lcEl&&lcEl.classList.contains('collapsed');
+  const rightCol=document.getElementById('right-col');
+
+  if(lcCollapsed){
+    // Vänster dold: right-col tar all plats
+    main.style.gridTemplateColumns=collapsed?'1fr':`1fr ${side}px`;
+    if(rightCol) rightCol.style.gridColumn='';
+  } else {
+    const left=w<=1180?'205px':'256px';
+    main.style.gridTemplateColumns=collapsed?`${left} 1fr`:`${left} 1fr ${side}px`;
+    if(rightCol) rightCol.style.gridColumn='';
+  }
 }
 function toggleBlockH(){
   const bh=document.getElementById('block-h');
