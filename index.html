@@ -571,13 +571,108 @@ input[type="file"]{display:none;}
   </div>
   <button class="theme-btn" onclick="document.getElementById('dela-modal').style.display='flex'"
     style="margin-left:4px;" title="Dela Släktvis">🔗 Dela</button>
+  <button class="theme-btn" onclick="document.getElementById('om-modal').style.display='flex'"
+    style="margin-left:4px;" title="Om Släktvis">ℹ️ Om</button>
   <div id="info-block">
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.41 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.43 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
+<!-- OM SLÄKTVIS MODAL -->
+<div id="om-modal" onclick="if(event.target===this)this.style.display='none'"
+  style="display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.65);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:14px;padding:28px 28px 22px;
+    max-width:560px;width:94%;max-height:88vh;overflow-y:auto;
+    box-shadow:0 10px 40px rgba(0,0,0,.5);border:1px solid var(--border);position:relative;">
+    <button onclick="document.getElementById('om-modal').style.display='none'"
+      style="position:absolute;top:12px;right:16px;background:none;border:none;
+      font-size:20px;cursor:pointer;color:var(--text-muted);">✕</button>
+
+    <div style="font-family:sans-serif;text-align:center;margin-bottom:18px;">
+      <div style="font-size:22px;font-weight:bold;color:var(--accent);letter-spacing:1px;">
+        Släkt<span style="color:var(--text);">vis</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">v1.1 · © 2026 Per Andersson</div>
+    </div>
+
+    <div style="font-family:sans-serif;font-size:13px;color:var(--text);line-height:1.7;">
+
+      <p style="color:var(--text-sec);font-style:italic;margin:0 0 16px;">
+        Släktvis är ett modernt genealogiprogram byggt som en enda HTML-fil — utan installation,
+        utan server, utan abonnemang. Öppna filen i webbläsaren och börja utforska ditt släktträd.
+      </p>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">📂 Filhantering</div>
+      <ul style="margin:0 0 14px;padding-left:18px;">
+        <li>Läser GEDCOM-filer exporterade från Disgen</li>
+        <li>Stöd för ZIP-filer med porträttbilder</li>
+        <li>Offline-läge via IndexedDB — fungerar utan internet</li>
+        <li>Miniatyrbilder sparas lokalt för snabb visning</li>
+      </ul>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">🔍 Sökning</div>
+      <ul style="margin:0 0 14px;padding-left:18px;">
+        <li>Ordningsoberoende sökning på alla för- och efternamn</li>
+        <li>Filter för födelseår, dödsår och orter</li>
+        <li>Träffräknare i realtid</li>
+        <li>Debounced sökning för smidig inmatning</li>
+      </ul>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">🌳 Förfädervyer</div>
+      <ul style="margin:0 0 14px;padding-left:18px;">
+        <li><b>Antavla</b> — klassisk förfädertavla, 3–5 generationer</li>
+        <li><b>Solfjäder</b> — radiell SVG-grafik med pan och zoom</li>
+        <li><b>Stamtavla</b> — ättlingstavla med obegränsat djup</li>
+      </ul>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">👤 Personinformation</div>
+      <ul style="margin:0 0 14px;padding-left:18px;">
+        <li>Porträttbild, tilltalsnamn, alla namn och efternamn</li>
+        <li>Fullständig händelselista: Född, Döpt, Bostad, Yrke, Död, Begraven</li>
+        <li>Partner med äktenskapsdatum och eventuell skilsmässa</li>
+        <li>Barn, föräldrar och syskon med klickbara kort</li>
+        <li>Foster- och adoptivbarn markerade</li>
+      </ul>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">🔗 Visa Släktskap — unikt!</div>
+      <ul style="margin:0 0 14px;padding-left:18px;">
+        <li>Välj en referensperson — se släktskapet i realtid till vem som helst</li>
+        <li>Beräknar kortaste vägen via gemensam anfader/anpar</li>
+        <li>Visar ledräkning: 3-männingar, 4-männing +1, Syskon etc</li>
+        <li>Gemensamt anpar visas tillsammans med lila markering</li>
+        <li>Bläddra bland alternativa släktvägar — upp till 20 visas</li>
+        <li>Hittar multipla släktband (endogama familjer)</li>
+        <li>Aldrig via giftermål — bara biologiska band</li>
+      </ul>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">🎨 Design & tillgänglighet</div>
+      <ul style="margin:0 0 14px;padding-left:18px;">
+        <li>Tre teman: Ljust, Mörkt och Pergament</li>
+        <li>Responsiv layout för PC, Mac, iPad och iPhone</li>
+        <li>Block B/C och Block H kan fällas in för mer utrymme</li>
+        <li>PWA-stöd — kan installeras som app på mobil</li>
+        <li>Inget nätverk krävs efter första laddningen</li>
+      </ul>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">⚡ Teknik</div>
+      <ul style="margin:0 0 6px;padding-left:18px;">
+        <li>Single-file HTML — hela appen i en enda fil</li>
+        <li>Ingen installation, ingen server, inga abonnemang</li>
+        <li>Vanilla JavaScript, CSS custom properties, SVG</li>
+        <li>BFS/DFS-algoritmer för släktskapsberäkning</li>
+        <li>Testad med träd upp till 12 000 personer</li>
+      </ul>
+
+    </div>
+
+    <div style="text-align:center;margin-top:18px;font-family:sans-serif;font-size:11px;color:var(--text-muted);">
+      Utvecklad med ❤️ av Per Andersson · pelleoxe.github.io/slaktvis
+    </div>
+  </div>
+</div>
 <!-- DELA-MODAL -->
 <div id="dela-modal" onclick="if(event.target===this)this.style.display='none'"
   style="display:none;position:fixed;inset:0;z-index:500;
@@ -611,7 +706,7 @@ input[type="file"]{display:none;}
   <div id="left-col">
     <div class="panel" style="flex-shrink:0">
       <div id="search-box" style="position:relative">
-        <input type="text" id="search-input" oninput="filterPersons(this.value);updateSearchClear()">
+        <input type="text" id="search-input" oninput="debouncedSearch(this.value);updateSearchClear()">
         <button id="search-clear" onclick="clearSearch()" title="Rensa sökning"
           style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);
           background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;
@@ -2068,7 +2163,14 @@ checkIDB();
 
 /* Kryssruta Referensperson i Block E */
 
-/* ══ LEFT-COL KOLLAPS ══ */
+/* ══ DEBOUNCED SÖK ══ */
+let _searchTimer=null;
+function debouncedSearch(val){
+  clearTimeout(_searchTimer);
+  _searchTimer=setTimeout(()=>filterPersons(val), 300);
+}
+
+
 function toggleLeftCol(){
   const lc=document.getElementById('left-col');
   const btn=document.getElementById('left-col-toggle');
