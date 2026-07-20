@@ -301,7 +301,7 @@ input[type="file"]{display:none;}
 
 /* Tablet landskap (1024px och under) */
 @media (max-width:1180px){
-  #main{grid-template-columns:102px 1fr 144px;}
+  #main{grid-template-columns:205px 1fr 144px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
   #person-name-block h2{font-size:15px;}
   #search-input{font-size:12px;}
@@ -361,10 +361,10 @@ input[type="file"]{display:none;}
 
 /* iPad Pro och liknande (1024–1180px) */
 @media (min-width:769px) and (max-width:1200px){
-  #main{grid-template-columns:102px 1fr 144px;}
+  #main{grid-template-columns:205px 1fr 144px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
 }
-  #main{grid-template-columns:102px 1fr 144px;}
+  #main{grid-template-columns:205px 1fr 144px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
 }
 
@@ -574,7 +574,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.38 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.39 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- DELA-MODAL -->
@@ -2068,7 +2068,7 @@ function setBlockHGrid(collapsed){
   // Räkna ut kolumnbredd baserat på skärmbredd
   const w=window.innerWidth;
   const side=w<=1024?144:220;
-  const left=window.innerWidth<=1180?'102px':'256px';
+  const left=window.innerWidth<=1180?'205px':'256px';
   main.style.gridTemplateColumns=collapsed?`${left} 1fr`:`${left} 1fr ${side}px`;
 }
 function toggleBlockH(){
