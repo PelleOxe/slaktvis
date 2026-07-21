@@ -105,10 +105,12 @@ input[type="file"]{display:none;}
 #right-col{display:grid;grid-template-rows:auto 1fr;gap:var(--gap);overflow:hidden;}
 
 /* ══ BLOCK D ══ */
-#block-d{overflow:hidden;min-height:0;transition:max-height .35s ease;}
+#block-d{overflow:hidden;min-height:0;transition:max-height .35s ease;display:flex;flex-direction:column;}
 #block-d.collapsed #block-d-inner{display:none;}
 #block-d.collapsed{max-height:36px !important;}
 #block-d-inner{overflow:auto;padding:6px 10px 8px;flex:1;min-height:0;display:flex;flex-direction:column;}
+#ancestor-chart{width:100%;display:none;flex-shrink:0;}
+#fan-chart{width:100%;flex:1;min-height:200px;display:none;position:relative;}
 /* Kollaps-knapp */
 .d-collapse-wrap{display:flex;align-items:center;gap:3px;margin-left:4px;cursor:pointer;}
 .d-collapse-btn{
@@ -121,8 +123,7 @@ input[type="file"]{display:none;}
 }
 
 #ancestor-chart{display:flex;align-items:stretch;height:270px;transition:height .3s ease;}
-#fan-chart{width:100%;height:583px;flex:1;display:none;position:relative;}
-#fan-chart svg{width:100%;height:100%;}
+
 /* Vy-lägesväljare */
 .view-btns{display:flex;gap:2px;margin-right:8px;}
 .view-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:5px;
@@ -577,7 +578,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.46 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.1.47 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- OM SLÄKTVIS MODAL -->
@@ -1528,11 +1529,11 @@ function renderFan(id){
 
   // ── Yttre wrapper: position:relative för zoom-knappar ──
   const wrap=document.createElement('div');
-  wrap.style.cssText='position:relative;width:100%;height:100%;overflow:hidden;';
+  wrap.style.cssText='position:relative;width:100%;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;';
 
   const svg=document.createElementNS(ns,'svg');
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  svg.style.cssText='display:block;width:100%;height:100%;cursor:grab;user-select:none;';
+  svg.style.cssText='display:block;width:100%;flex:1;min-height:0;cursor:grab;user-select:none;';
 
   // ── Pan & zoom state ──
   let zoom=1, panX=0, panY=0, dragging=false, dragStartX=0, dragStartY=0, dragPanX=0, dragPanY=0;
