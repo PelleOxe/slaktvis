@@ -303,7 +303,7 @@ input[type="file"]{display:none;}
 
 /* Tablet landskap (1024px och under) */
 @media (max-width:1180px){
-  #main{grid-template-columns:205px 1fr 144px;}
+  #main{grid-template-columns:189px 1fr 160px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
   #person-name-block h2{font-size:15px;}
   #search-input{font-size:12px;}
@@ -363,10 +363,10 @@ input[type="file"]{display:none;}
 
 /* iPad Pro och liknande (1024–1180px) */
 @media (min-width:769px) and (max-width:1200px){
-  #main{grid-template-columns:205px 1fr 144px;}
+  #main{grid-template-columns:189px 1fr 160px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
 }
-  #main{grid-template-columns:205px 1fr 144px;}
+  #main{grid-template-columns:189px 1fr 160px;}
   #bottom-row{grid-template-columns:4fr 3fr 3fr;}
 }
 
@@ -571,6 +571,28 @@ input[type="file"]{display:none;}
 .pro-change-old{color:var(--text-muted);text-decoration:line-through;margin-left:8px;}
 .pro-change-new{color:#8b2be2;margin-left:4px;}
 
+/* ── Släktberättelse ── */
+#story-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.65);align-items:center;justify-content:center;}
+#story-modal.show{display:flex;}
+#story-box{background:var(--surface);border-radius:14px;padding:32px 36px 24px;max-width:680px;width:96%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.5);border:1px solid var(--border);position:relative;}
+#story-box h2{font-size:20px;color:var(--accent);font-family:serif;margin-bottom:4px;}
+#story-box .story-dates{font-size:13px;color:var(--text-muted);font-family:sans-serif;margin-bottom:20px;}
+#story-box .story-section{margin-bottom:18px;}
+#story-box .story-section h3{font-size:14px;font-family:sans-serif;color:var(--amber);margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:3px;}
+#story-box .story-para{font-size:14px;font-family:serif;line-height:1.75;color:var(--text);text-align:justify;}
+#story-box .story-para + .story-para{margin-top:10px;}
+.story-modal-btns{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;}
+
+@media print{
+  body > *:not(#story-print-area){display:none!important;}
+  #story-print-area{display:block!important;padding:20mm;font-family:serif;font-size:12pt;line-height:1.8;color:#000;}
+  #story-print-area h1{font-size:20pt;margin-bottom:4pt;}
+  #story-print-area .sp-dates{font-size:10pt;color:#555;margin-bottom:16pt;}
+  #story-print-area h2{font-size:14pt;margin-top:16pt;margin-bottom:4pt;color:#333;}
+  #story-print-area p{margin-bottom:8pt;text-align:justify;}
+}
+#story-print-area{display:none;}
+
 /* Pro datepicker */
 #pro-datepicker{
   display:none;position:fixed;z-index:800;
@@ -700,12 +722,13 @@ input[type="file"]{display:none;}
     style="margin-left:4px;" title="Dela Släktvis">🔗 Dela</button>
   <button class="theme-btn" onclick="document.getElementById('om-modal').style.display='flex'"
     style="margin-left:4px;" title="Om Släktvis">ℹ️ Om</button>
+  <button class="theme-btn" onclick="storyOpen()" title="Generera släktberättelse för markerad person" style="margin-left:4px;">📖 Berättelse</button>
   <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
   <div id="info-block">
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.2.21 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.2.29 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- PRO MODAL -->
@@ -750,6 +773,19 @@ input[type="file"]{display:none;}
     </div>
   </div>
 </div>
+
+<!-- SLÄKTBERÄTTELSE MODAL -->
+<div id="story-modal" onclick="if(event.target===this)storyClose()">
+  <div id="story-box">
+    <button onclick="storyClose()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">✕</button>
+    <div id="story-content"></div>
+    <div class="story-modal-btns">
+      <button class="pro-modal-btn primary" onclick="storyPrint()" style="background:#2a4a7a;">🖨 Skriv ut / Spara PDF</button>
+      <button class="pro-modal-btn secondary" onclick="storyClose()">Stäng</button>
+    </div>
+  </div>
+</div>
+<div id="story-print-area"></div>
 
 <!-- PRO DATEPICKER -->
 <div id="pro-datepicker">
@@ -3369,6 +3405,17 @@ function proInjectEditBadges(personId){
     b.onclick=fn;
     relDiv.appendChild(b);
   });
+
+  // Radera-knapp för Pro-nya personer
+  if(p._proNew){
+    const delBtn=document.createElement('button');
+    delBtn.className='pro-edit-badge';
+    delBtn.style.cssText='font-size:11px;padding:3px 9px;border-color:#c03030;color:#c03030;margin-left:auto;';
+    delBtn.textContent='🗑 Radera person';
+    delBtn.onclick=()=>proDeleteNewPerson(personId);
+    relDiv.appendChild(delBtn);
+  }
+
   panel.appendChild(relDiv);
 
   // Lägg in panelen i Block E
@@ -4017,6 +4064,43 @@ function proReapplyEdits(){
   });
 }
 
+/* ──── Pro: radera ny person ──── */
+function proDeleteNewPerson(id){
+  const p=S.persons[id];
+  if(!p||!p._proNew){ alert('Kan bara radera Pro-tillagda personer.'); return; }
+  const name=p.name||id;
+  if(!confirm('Radera '+name+' permanent? Alla kopplingar till personen tas också bort.')) return;
+
+  // Ta bort ur alla FAM-kopplingar
+  (p.fams||[]).forEach(famId=>{
+    const fam=S.families[famId];
+    if(!fam) return;
+    // Ta bort som make/maka
+    if(fam.husb===id) fam.husb='';
+    if(fam.wife===id) fam.wife='';
+    // Om familjen nu är tom — ta bort den
+    if(!fam.husb&&!fam.wife&&!fam.chil.length) delete S.families[famId];
+    // Ta bort familjekopplingen från den kvarvarande partnern
+    [fam.husb,fam.wife].filter(Boolean).forEach(pid=>{
+      const pp=S.persons[pid];
+      if(pp) pp.fams=pp.fams.filter(f=>f!==famId);
+    });
+  });
+  (p.famc||[]).forEach(fc=>{
+    const fam=S.families[fc.id];
+    if(fam) fam.chil=fam.chil.filter(c=>c!==id);
+  });
+
+  // Ta bort personen
+  delete S.persons[id];
+  delete PRO_EDITS[id];
+
+  proSaveEdits();
+  buildList();
+  clearSel();
+  updateProBadge();
+}
+
 /* ──── Pro: bryt kopplingar ──── */
 function proUnlinkPartner(personId, famId){
   const fam=S.families[famId];
@@ -4174,6 +4258,351 @@ function proExportGed(){
   a.click();
   URL.revokeObjectURL(url);
 }
+
+/* ══════════════════════════════════════════
+   SLÄKTBERÄTTELSE
+══════════════════════════════════════════ */
+
+function storyOpen(){
+  const id=S.curId;
+  if(!id){ alert('Välj en person först.'); return; }
+  try{
+    const html=storyGenerate(id);
+    document.getElementById('story-content').innerHTML=html;
+    document.getElementById('story-modal').classList.add('show');
+  }catch(e){
+    alert('Fel vid generering av berättelse: '+e.message);
+    console.error(e);
+  }
+}
+
+function storyClose(){
+  document.getElementById('story-modal').classList.remove('show');
+}
+
+function storyPrint(){
+  const content=document.getElementById('story-content').innerHTML;
+  document.getElementById('story-print-area').innerHTML=content
+    .replace(/<h2/g,'<h1').replace(/<\/h2>/g,'<\/h1>')
+    .replace(/<h3/g,'<h2').replace(/<\/h3>/g,'<\/h2>')
+    .replace(/class="story-para"/g,'')
+    .replace(/class="story-section"/g,'')
+    .replace(/class="story-dates"/g,'class="sp-dates"');
+  window.print();
+}
+
+// Hjälpfunktioner
+
+// Välj tempus baserat på om personen har dödsdag
+function storyTense(personObj){
+  // 'past' om dödsdag finns, annars 'present'
+  return (personObj&&personObj.deat&&personObj.deat.date)?'past':'present';
+}
+function storyVar(personObj){ return storyTense(personObj)==='past'?'var':'är'; }
+function storyArb(personObj){ return storyTense(personObj)==='past'?'arbetade':'arbetar'; }
+function storyGifte(personObj){ return storyTense(personObj)==='past'?'gifte sig':'gifter sig'; }
+function storyLever(personObj){ return storyTense(personObj)==='past'?'levde':'lever'; }
+
+function storyName(id){
+  if(!id) return null;
+  const p=S.persons[id];
+  return p?p.name:null;
+}
+
+function storyYr(dateStr){
+  if(!dateStr) return null;
+  const m=dateStr.match(/\d{4}/);
+  return m?m[0]:null;
+}
+
+function storyFmtDate(dateStr){
+  if(!dateStr) return null;
+  // "12 MAR 1847" → "12 mars 1847"
+  const months={JAN:'januari',FEB:'februari',MAR:'mars',APR:'april',
+    MAY:'maj',MAJ:'maj',JUN:'juni',JUL:'juli',AUG:'augusti',
+    SEP:'september',OCT:'oktober',OKT:'oktober',NOV:'november',DEC:'december'};
+  return dateStr.replace(/([A-Z]{3})/g,m=>months[m]||m).toLowerCase()
+    .replace(/^(\d)/,c=>c.toUpperCase());
+}
+
+function storyAge(birt,deat){
+  const y1=storyYr(birt), y2=storyYr(deat);
+  if(y1&&y2){ const a=parseInt(y2)-parseInt(y1); return a>0?a:null; }
+  return null;
+}
+
+function storyGetParents(id){
+  const p=S.persons[id]; if(!p) return {far:null,mor:null};
+  for(const fc of (p.famc||[])){
+    const fam=S.families[fc.id]; if(!fam) continue;
+    return {far:fam.husb||null, mor:fam.wife||null};
+  }
+  return {far:null,mor:null};
+}
+
+function storyGetSpousesAndChildren(id){
+  const p=S.persons[id]; if(!p) return [];
+  return (p.fams||[]).map(famId=>{
+    const fam=S.families[famId]; if(!fam) return null;
+    const spId=fam.husb===id?fam.wife:fam.husb;
+    return {spId:spId||null, children:fam.chil||[], famId};
+  }).filter(Boolean);
+}
+
+function storyPronoun(sex, form){
+  // form: 'nom'=han/hon, 'gen'=hans/hennes, 'obj'=honom/henne
+  if(sex==='F'){
+    return {nom:'Hon',gen:'Hennes',obj:'henne',nom_l:'hon',gen_l:'hennes',obj_l:'henne'}[form]||'hen';
+  }
+  return {nom:'Han',gen:'Hans',obj:'honom',nom_l:'han',gen_l:'hans',obj_l:'honom'}[form]||'hen';
+}
+
+function storyOrdinal(n){
+  const ord=['första','andra','tredje','fjärde','femte','sjätte','sjunde','åttonde','nionde','tionde'];
+  return ord[n-1]||n+'.';
+}
+
+function storyListNames(ids){
+  const names=ids.map(id=>storyName(id)).filter(Boolean);
+  if(!names.length) return '';
+  if(names.length===1) return names[0];
+  return names.slice(0,-1).join(', ')+' och '+names[names.length-1];
+}
+
+function storyGenerate(id){
+  if(!S||!S.persons) return '<p>Inget träd laddat.</p>';
+  const p=S.persons[id]; if(!p) return '<p>Ingen person vald.</p>';
+  const sex=p.sex||'U';
+  const pro=f=>storyPronoun(sex,f);
+
+  let sections=[];
+
+  // ── 1. FOKUSPERSONEN ──
+  let s1='';
+  const bDate=storyFmtDate(p.birt&&p.birt.date);
+  const bPlac=p.birt&&p.birt.place;
+  const dDate=storyFmtDate(p.deat&&p.deat.date);
+  const dPlac=p.deat&&p.deat.place;
+  const age=storyAge(p.birt&&p.birt.date, p.deat&&p.deat.date);
+
+  // Födelsetext
+  s1+=p.name;
+  if(bDate&&bPlac) s1+=' föddes den '+bDate+' i '+bPlac+'.';
+  else if(bDate) s1+=' föddes den '+bDate+'.';
+  else if(bPlac) s1+=' föddes i '+bPlac+'.';
+  else s1+='.';
+
+  // Föräldrar
+  const {far,mor}=storyGetParents(id);
+  if(far||mor){
+    s1+=' '+pro('nom')+' var';
+    if(far&&mor) s1+=' son till '+storyName(far)+' och '+storyName(mor)+'.';
+    else if(far) s1+=' son till '+storyName(far)+'.';
+    else s1+=' '+( sex==='F'?'dotter':'son')+' till '+storyName(mor)+'.';
+    // Rätta grammatik: son/dotter
+    s1=s1.replace(' var son till ',' '+storyVar(p)+' '+(sex==='F'?'dotter':'son')+' till ');
+  }
+
+  // Yrke
+  if(p.occu) s1+=' '+pro('nom')+' '+storyArb(p)+' som '+p.occu.toLowerCase()+'.';
+
+  // Dödstext
+  if(dDate&&dPlac) s1+=' '+pro('nom')+' avled den '+dDate+' i '+dPlac+(age?' och blev '+age+' år gammal':'')+'.';
+  else if(dDate) s1+=' '+pro('nom')+' avled den '+dDate+(age?', '+age+' år gammal':'')+'.';
+  else if(dPlac) s1+=' '+pro('nom')+' avled i '+dPlac+'.';
+
+  // Anteckning
+  if(p.bio) s1+=' '+p.bio;
+
+  sections.push({title:null, paras:[s1]});
+
+  // ── 2. PARTNER OCH BARN ──
+  const families=storyGetSpousesAndChildren(id);
+  families.forEach((fam,fi)=>{
+    const sp=fam.spId?S.persons[fam.spId]:null;
+    let s2='';
+    const ordinal=families.length>1?storyOrdinal(fi+1):'';
+    const famObj=S.families[fam.famId];
+    const marrDate=famObj&&famObj.marr&&famObj.marr.date;
+    const marrPlac=famObj&&famObj.marr&&famObj.marr.place;
+    const divDate=famObj&&famObj.divr&&famObj.divr.date;
+    const hasMarr=!!(marrDate||marrPlac);
+
+
+    if(sp){
+      const spBorn=storyYr(sp.birt&&sp.birt.date);
+      const spDied=storyYr(sp.deat&&sp.deat.date);
+      const spFrom=sp.birt&&sp.birt.place;
+      if(hasMarr){
+        s2+=pro('nom')+' '+(storyTense(p)==='past'?'gifte sig':'gifter sig')+' med '+sp.name;
+        if(marrDate) s2+=' den '+storyFmtDate(marrDate);
+        if(marrPlac) s2+=' i '+marrPlac;
+      } else {
+        s2+=pro('nom')+' '+(storyTense(p)==='past'?'levde':'lever')+' tillsammans med '+sp.name;
+      }
+      if(spFrom) s2+=', från '+spFrom;
+      if(spBorn&&spDied) s2+=' ('+spBorn+'–'+spDied+')';
+      else if(spBorn) s2+=' (f. '+spBorn+')';
+      if(ordinal){
+        s2+=' ('+ordinal+(hasMarr?' äktenskapet':' förhållandet')+').';
+      } else {
+        s2+='.';
+      }
+      if(divDate) s2+=' De separerade '+storyYr(divDate)+'.';
+      if(sp.occu) s2+=' '+sp.name.split(' ')[0]+' '+storyVar(sp)+' '+sp.occu.toLowerCase()+'.';
+    }
+
+    if(fam.children.length){
+      const childNames=fam.children.map(cid=>{
+        const ch=S.persons[cid]; if(!ch) return null;
+        const by=storyYr(ch.birt&&ch.birt.date);
+        return ch.name+(by?' ('+by+')':'');
+      }).filter(Boolean);
+
+      if(s2) s2+=' ';
+      if(fam.children.length===1){
+        s2+='De fick ett barn: '+childNames[0]+'.';
+      } else {
+        s2+='Tillsammans fick de '+fam.children.length+' barn: '+
+          childNames.slice(0,-1).join(', ')+' och '+childNames[childNames.length-1]+'.';
+      }
+    } else if(s2){
+      s2+=' Inga barn är kända från detta '+(hasMarr?'äktenskap':'förhållande')+'.';
+    }
+
+    if(s2) sections.push({title:sp?'Familj med '+sp.name:'Familj', paras:[s2]});
+  });
+
+  // ── 3. FÖRÄLDRAR ──
+  if(far||mor){
+    const farP=far?S.persons[far]:null;
+    const morP=mor?S.persons[mor]:null;
+    let s3='';
+
+    if(farP){
+      s3+='Fadern '+farP.name;
+      const fb=storyFmtDate(farP.birt&&farP.birt.date);
+      const fp=farP.birt&&farP.birt.place;
+      const fd=storyFmtDate(farP.deat&&farP.deat.date);
+      if(fb&&fp) s3+=' föddes den '+fb+' i '+fp;
+      else if(fb) s3+=' föddes den '+fb;
+      else if(fp) s3+=' kom från '+fp;
+      if(fd) s3+=' och avled den '+fd;
+      s3+='.';
+      if(farP.occu) s3+=' Han '+storyVar(farP)+' '+farP.occu.toLowerCase()+'.';
+      // Farföräldrarna
+      const {far:ff,mor:fm}=storyGetParents(far);
+      if(ff||fm){
+        s3+=' '+farP.name.split(' ')[0]+' '+storyVar(farP)+' son till '+
+          (ff&&fm?storyName(ff)+' och '+storyName(fm):storyName(ff||fm))+'.';
+      }
+    }
+
+    if(morP){
+      if(s3) s3+=' ';
+      s3+='Modern '+morP.name;
+      const mb=storyFmtDate(morP.birt&&morP.birt.date);
+      const mp=morP.birt&&morP.birt.place;
+      const md=storyFmtDate(morP.deat&&morP.deat.date);
+      if(mb&&mp) s3+=' föddes den '+mb+' i '+mp;
+      else if(mb) s3+=' föddes den '+mb;
+      else if(mp) s3+=' kom från '+mp;
+      if(md) s3+=' och avled den '+md;
+      s3+='.';
+      if(morP.occu) s3+=' Hon '+storyVar(morP)+' '+morP.occu.toLowerCase()+'.';
+      // Morföräldrarna
+      const {far:mf,mor:mm}=storyGetParents(mor);
+      if(mf||mm){
+        s3+=' '+morP.name.split(' ')[0]+' '+storyVar(morP)+' dotter till '+
+          (mf&&mm?storyName(mf)+' och '+storyName(mm):storyName(mf||mm))+'.';
+      }
+    }
+
+    if(s3) sections.push({title:'Föräldrar', paras:[s3]});
+  }
+
+  // ── 4. FARFÖRÄLDRAR ──
+  function storyGrandSection(gId, label){
+    const gp=gId?S.persons[gId]:null; if(!gp) return null;
+    let s=label+' '+gp.name;
+    const gb=storyFmtDate(gp.birt&&gp.birt.date);
+    const gpl=gp.birt&&gp.birt.place;
+    const gd=storyFmtDate(gp.deat&&gp.deat.date);
+    if(gb&&gpl) s+=' föddes den '+gb+' i '+gpl;
+    else if(gb) s+=' föddes den '+gb;
+    else if(gpl) s+=' kom från '+gpl;
+    if(gd) s+=' och avled den '+gd;
+    s+='.';
+    if(gp.occu) s+=' '+(gp.sex==='F'?'Hon':'Han')+' '+storyVar(gp)+' '+gp.occu.toLowerCase()+'.';
+    const {far:ggf,mor:ggm}=storyGetParents(gId);
+    if(ggf||ggm){
+      s+=' '+gp.name.split(' ')[0]+' '+storyVar(gp)+' '+(gp.sex==='F'?'dotter':'son')+' till '+
+        (ggf&&ggm?storyName(ggf)+' och '+storyName(ggm):storyName(ggf||ggm))+'.';
+    }
+    return s;
+  }
+
+  const {far:ff,mor:fm}=far?storyGetParents(far):{far:null,mor:null};
+  const {far:mf,mor:mm}=mor?storyGetParents(mor):{far:null,mor:null};
+
+  const farGrand=[
+    storyGrandSection(ff,'Farfadern'),
+    storyGrandSection(fm,'Farmoden')
+  ].filter(Boolean);
+  if(farGrand.length) sections.push({title:'Farföräldrar', paras:farGrand});
+
+  const morGrand=[
+    storyGrandSection(mf,'Morfadern'),
+    storyGrandSection(mm,'Mormoden')
+  ].filter(Boolean);
+  if(morGrand.length) sections.push({title:'Morföräldrar', paras:morGrand});
+
+  // ── 5. GENERATION 5 (Farfars föräldrar, Farmors föräldrar osv.) ──
+  function storyGen5(ggId, label){
+    const gg=ggId?S.persons[ggId]:null; if(!gg) return null;
+    let s=label+' '+gg.name;
+    const b=storyFmtDate(gg.birt&&gg.birt.date);
+    const pl=gg.birt&&gg.birt.place;
+    const d=storyFmtDate(gg.deat&&gg.deat.date);
+    if(b&&pl) s+=' föddes den '+b+' i '+pl;
+    else if(b) s+=' föddes den '+b;
+    else if(pl) s+=' kom från '+pl;
+    if(d) s+=' och avled den '+d;
+    s+='.';
+    return s;
+  }
+
+  const gen5=[];
+  [[ff,'Farfars far','Farfars mor'],[fm,'Farmors far','Farmors mor'],
+   [mf,'Morfars far','Morfars mor'],[mm,'Mormors far','Mormors mor']]
+  .forEach(([gid,lf,lm])=>{
+    if(!gid) return;
+    const {far:gf,mor:gm}=storyGetParents(gid);
+    const a=storyGen5(gf,lf); if(a) gen5.push(a);
+    const b=storyGen5(gm,lm); if(b) gen5.push(b);
+  });
+  if(gen5.length) sections.push({title:'Femte generationen', paras:gen5});
+
+  // ── Bygg HTML ──
+  const byr=storyYr(p.birt&&p.birt.date);
+  const dyr=storyYr(p.deat&&p.deat.date);
+  const lifespan=(byr||dyr)?'('+( byr||'?')+( dyr?'–'+dyr:'')+ ')':'';
+
+  let html=`<h2>${esc(p.name)}</h2>`;
+  html+=`<div class="story-dates">${esc(lifespan)}${bPlac?' · '+esc(bPlac):''}</div>`;
+
+  sections.forEach(sec=>{
+    html+='<div class="story-section">';
+    if(sec.title) html+=`<h3>${esc(sec.title)}</h3>`;
+    sec.paras.forEach(para=>{
+      html+=`<p class="story-para">${esc(para).replace(/\n/g,'<br>')}</p>`;
+    });
+    html+='</div>';
+  });
+
+  return html;
+}
+
 </script>
 </body>
 </html>
