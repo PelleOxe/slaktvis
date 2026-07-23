@@ -598,6 +598,14 @@ input[type="file"]{display:none;}
 .pro-dp-year-inp{flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff;color:#222;text-align:center;}
 .pro-dp-clear{font-size:11px;color:var(--text-muted);text-align:center;cursor:pointer;text-decoration:underline;margin-top:2px;}
 
+/* Pro bryt-koppling */
+.pro-unlink-btn{
+  display:none;background:none;border:1px solid #c03030;color:#c03030;
+  font-size:10px;border-radius:4px;padding:1px 5px;cursor:pointer;
+  margin-left:auto;flex-shrink:0;font-family:sans-serif;white-space:nowrap;
+}
+.pro-active .pro-unlink-btn{display:inline-block;}
+
 /* Pro add-person modal */
 #pro-add-modal{display:none;position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.65);align-items:center;justify-content:center;}
 #pro-add-modal.show{display:flex;}
@@ -697,7 +705,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.2.17 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.2.21 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- PRO MODAL -->
@@ -708,11 +716,12 @@ input[type="file"]{display:none;}
     <div id="pro-code-ok" style="font-family:sans-serif;font-size:13px;color:var(--text);text-align:center;margin-bottom:14px;">
       <div style="font-size:28px;margin-bottom:8px;">✓</div>
       <b style="color:var(--amber);">Pro-läge är aktiverat</b>
-      <p style="font-size:12px;color:var(--text-sec);margin-top:8px;">Du kan nu redigera uppgifter direkt i personkortet.<br>Ändringar markeras i lila och sparas lokalt.<br><br><span onclick="proCloseModal();setTimeout(proImportGedTrigger,100)" style="cursor:pointer;color:var(--amber);text-decoration:underline;">📂 Ladda in tidigare sparade ändringar (_r.ged)</span></p>
+      <p style="font-size:12px;color:var(--text-sec);margin-top:8px;"><span onclick="proCloseModal();setTimeout(proImportGedTrigger,100)" style="cursor:pointer;color:var(--amber);text-decoration:underline;">📂 Ladda in tidigare sparade ändringar (_r.ged)</span></p>
     </div>
     <div id="pro-code-form">
       <p style="font-family:sans-serif;font-size:13px;color:var(--text-sec);text-align:center;margin-bottom:14px;">Ange kod för Pro-version.</p>
-      <input type="password" id="pro-code-input" placeholder="Pro-kod" maxlength="20"
+      <input type="password" id="pro-code-input" placeholder="Pro-kod" maxlength="8"
+        inputmode="numeric" pattern="[0-9]*" autocomplete="off"
         onkeydown="if(event.key==='Enter')proVerifyCode()">
       <div id="pro-code-error">❌ Fel kod. Försök igen.</div>
     </div>
@@ -733,6 +742,7 @@ input[type="file"]{display:none;}
     <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
       <button class="pro-modal-btn primary" onclick="proNavStart()" style="background:#6a2ab0;">🔍 Visa ändringar</button>
       <button class="pro-modal-btn primary" onclick="proExportGed()" style="background:#2a7a3a;">⬇ Exportera GEDCOM</button>
+      <button class="pro-modal-btn secondary" onclick="proResetEdits()" style="border-color:#c03030;color:#c03030;" title="Radera alla sparade ändringar">🗑 Nollställ ändringar</button>
       <button class="pro-modal-btn primary" onclick="proShareGed()" style="background:#1a6a9a;" id="pro-share-btn">📤 Dela fil</button>
       <button class="pro-modal-btn primary" onclick="proImportGedTrigger()" style="background:#555;" title="Ladda in en tidigare exporterad _r.ged-fil">📂 Ladda _r.ged</button>
       <button class="pro-modal-btn secondary" onclick="document.getElementById('pro-changes-modal').classList.remove('show')">Stäng</button>
@@ -1405,6 +1415,7 @@ function loadParsed(gedText,fileName){
       document.getElementById('info-count').innerHTML=`<strong>${cnt.toLocaleString('sv-SE')}</strong> ${'personer'}`;
       document.getElementById('info-file').textContent=fileName;
       S.fileName=fileName;
+      proReapplyEdits(); // återbygg Pro-nya personer och FAM-kopplingar
       buildList();clearSel();hideLoad();
       // Töm sökruta och filter vid ny fil
       const si=document.getElementById('search-input');
@@ -2206,8 +2217,15 @@ function renderE(id){
   if(edits['NAME'])         { ep.name=edits['NAME']; ep._proName=true; }
   if(edits['BIRT.DATE'])    { ep.birt.date=edits['BIRT.DATE']; ep._proBirtDate=true; }
   if(edits['BIRT.PLAC'])    { ep.birt.place=edits['BIRT.PLAC']; ep._proBirtPlac=true; }
+  if(edits['CHR.DATE'])     { ep.chr=ep.chr||{}; ep.chr.date=edits['CHR.DATE']; ep._proChrDate=true; }
+  if(edits['CHR.PLAC'])     { ep.chr=ep.chr||{}; ep.chr.place=edits['CHR.PLAC']; ep._proChrPlac=true; }
   if(edits['DEAT.DATE'])    { ep.deat.date=edits['DEAT.DATE']; ep._proDeatDate=true; }
   if(edits['DEAT.PLAC'])    { ep.deat.place=edits['DEAT.PLAC']; ep._proDeatPlac=true; }
+  if(edits['BURI.DATE'])    { ep.buri=ep.buri||{}; ep.buri.date=edits['BURI.DATE']; ep._proBuriDate=true; }
+  if(edits['BURI.PLAC'])    { ep.buri=ep.buri||{}; ep.buri.place=edits['BURI.PLAC']; ep._proBuriPlac=true; }
+  if(edits['OCCU'])         { ep.occu=edits['OCCU']; ep._proOccu=true; }
+  if(edits['EMIG.DATE'])    { ep.emig=ep.emig||[{}]; ep.emig[0].date=edits['EMIG.DATE']; ep._proEmigDate=true; }
+  if(edits['EMIG.PLAC'])    { ep.emig=ep.emig||[{}]; ep.emig[0].place=edits['EMIG.PLAC']; ep._proEmigPlac=true; }
   if(edits['NOTE'])         { ep.bio=edits['NOTE']; ep._proNote=true; }
   document.getElementById('no-selection').style.display='none';
   document.getElementById('person-details').style.display='block';
@@ -2256,8 +2274,8 @@ function renderE(id){
 
   const evs=[];
   if(ep.birt.date||ep.birt.place)evs.push({date:ep.birt.date,type:'Född',desc:ep.birt.place,_proDate:ep._proBirtDate,_proDesc:ep._proBirtPlac});
-  if(p.chr.date||p.chr.place)evs.push({date:p.chr.date,type:'Döpt',desc:p.chr.place});
-  if(p.occu)evs.push({date:'',type:'Yrke',desc:p.occu});
+  if(ep.chr&&(ep.chr.date||ep.chr.place))evs.push({date:ep.chr.date,type:'Döpt',desc:ep.chr.place,_proDate:ep._proChrDate,_proDesc:ep._proChrPlac});
+  if(ep.occu)evs.push({date:'',type:'Yrke',desc:ep.occu,_proDesc:ep._proOccu});
   // Bostäder: kombinera RESI och IMMI, sortera kronologiskt
   const allResi=[
     ...p.resi.map(r=>({date:r.date||'',type:'Bostad',desc:r.place})),
@@ -2278,7 +2296,8 @@ function renderE(id){
     evs.push(r);
   }
   if(ep.deat.date||ep.deat.place)evs.push({date:ep.deat.date,type:'Död',desc:ep.deat.place,_proDate:ep._proDeatDate,_proDesc:ep._proDeatPlac});
-  if(p.buri.date||p.buri.place)evs.push({date:p.buri.date,type:'Begr.',desc:p.buri.place});
+  if(ep.buri&&(ep.buri.date||ep.buri.place))evs.push({date:ep.buri.date,type:'Begr.',desc:ep.buri.place,_proDate:ep._proBuriDate,_proDesc:ep._proBuriPlac});
+  if(ep.emig&&ep.emig[0]&&(ep.emig[0].date||ep.emig[0].place))evs.push({date:ep.emig[0].date,type:'Emigr.',desc:ep.emig[0].place,_proDate:ep._proEmigDate,_proDesc:ep._proEmigPlac});
 
   const ul=document.getElementById('event-list');
   ul.innerHTML=evs.length?evs.map(ev=>{
@@ -2357,6 +2376,8 @@ function renderF(id){
   const p=S.persons[id];
   const inner=document.getElementById('block-f-inner');
   inner.innerHTML='';if(!p)return;
+  if(proIsActive()) inner.classList.add('pro-active');
+  else inner.classList.remove('pro-active');
   const lbl0=document.createElement('div');lbl0.className='sec-label';lbl0.textContent='Fokusperson';
   inner.appendChild(lbl0);inner.appendChild(miniCard(id,'self'));
   for(const famId of p.fams){
@@ -2388,6 +2409,13 @@ function renderF(id){
       const row=document.createElement('div');row.className='rel-row';
       const toggleBtn=document.createElement('button');toggleBtn.className='rel-toggle';toggleBtn.textContent='▼';
       row.appendChild(toggleBtn);row.appendChild(miniCard(spId,''));
+      // Pro: bryt partner-koppling
+      const unlinkSp=document.createElement('button');
+      unlinkSp.className='pro-unlink-btn';
+      unlinkSp.textContent='✕ Bryt';
+      unlinkSp.title='Bryt koppling till denna partner';
+      unlinkSp.onclick=(e)=>{ e.stopPropagation(); proUnlinkPartner(id, famId); };
+      row.appendChild(unlinkSp);
       grp.appendChild(row);
       const childDiv=document.createElement('div');childDiv.className='rel-children';
       childDiv.style.display='none';
@@ -2397,6 +2425,14 @@ function renderF(id){
         for(const cid of children){
           const mc=miniCard(cid,'');
           const pLabel=getPediLabel(cid);if(pLabel){const lb=document.createElement('span');lb.style.cssText='font-size:11px;color:var(--text-muted);font-style:italic;margin-left:4px;font-family:sans-serif;';lb.textContent=pLabel;mc.appendChild(lb);}
+          // Pro: bryt barn-koppling
+          const unlinkCh=document.createElement('button');
+          unlinkCh.className='pro-unlink-btn';unlinkCh.textContent='✕ Bryt';
+          unlinkCh.title='Bryt koppling till detta barn';
+          const _cid=cid,_fid=famId;
+          unlinkCh.onclick=(e)=>{e.stopPropagation();proUnlinkChild(id,_cid,_fid);};
+          mc.style.display='flex';mc.style.alignItems='center';
+          mc.appendChild(unlinkCh);
           childDiv.appendChild(mc);
         }
       }else childDiv.innerHTML=`<div style="font-family:sans-serif;font-size:11px;color:var(--text-muted);padding:3px">${'Inga registrerade barn'}</div>`;
@@ -3248,14 +3284,20 @@ document.addEventListener('DOMContentLoaded', function initPro(){
 
 // Fält som kan redigeras: { fieldKey, label, getter }
 function proEditableFields(p){
-  // p = personobjekt från S.persons
   return [
-    { key:'NAME', label:'Namn (tilltalsnamn + efternamn)', get:()=>p.name||'', multiword:true },
-    { key:'BIRT.DATE', label:'Födelsedag', get:()=>p.birt&&p.birt.date||'' },
-    { key:'BIRT.PLAC', label:'Födelseort', get:()=>p.birt&&p.birt.place||'' },
-    { key:'DEAT.DATE', label:'Dödsdag', get:()=>p.deat&&p.deat.date||'' },
-    { key:'DEAT.PLAC', label:'Dödsort', get:()=>p.deat&&p.deat.place||'' },
-    { key:'NOTE', label:'Anteckning', get:()=>p.bio||'', textarea:true },
+    { key:'NAME',      label:'Namn',        get:()=>p.name||'' },
+    { key:'BIRT.DATE', label:'Födelsedag',  get:()=>p.birt&&p.birt.date||'',  isDate:true },
+    { key:'BIRT.PLAC', label:'Födelseort',  get:()=>p.birt&&p.birt.place||'' },
+    { key:'CHR.DATE',  label:'Dopdag',      get:()=>p.chr&&p.chr.date||'',    isDate:true },
+    { key:'CHR.PLAC',  label:'Dopplats',    get:()=>p.chr&&p.chr.place||'' },
+    { key:'DEAT.DATE', label:'Dödsdag',     get:()=>p.deat&&p.deat.date||'',  isDate:true },
+    { key:'DEAT.PLAC', label:'Dödsort',     get:()=>p.deat&&p.deat.place||'' },
+    { key:'BURI.DATE', label:'Begr.dag',    get:()=>p.buri&&p.buri.date||'',  isDate:true },
+    { key:'BURI.PLAC', label:'Begr.plats',  get:()=>p.buri&&p.buri.place||'' },
+    { key:'OCCU',      label:'Yrke',        get:()=>p.occu||'' },
+    { key:'EMIG.DATE', label:'Emigr.datum', get:()=>(p.emig&&p.emig[0]&&p.emig[0].date)||'', isDate:true },
+    { key:'EMIG.PLAC', label:'Emigr.ort',   get:()=>(p.emig&&p.emig[0]&&p.emig[0].place)||'' },
+    { key:'NOTE',      label:'Anteckning',  get:()=>p.bio||'', textarea:true },
   ];
 }
 
@@ -3348,7 +3390,7 @@ function proStartEdit(personId, key, label, getter, textarea, targetEl, badge){
   wrap.className='pro-field-wrap';
   wrap.style.marginTop='4px';
 
-  const isDateField=(key==='BIRT.DATE'||key==='DEAT.DATE');
+  const isDateField=(key==='BIRT.DATE'||key==='DEAT.DATE'||key==='CHR.DATE'||key==='BURI.DATE'||key==='EMIG.DATE');
   let inp;
   if(textarea){
     inp=document.createElement('textarea');
@@ -3688,7 +3730,23 @@ function proImportGed(input){
       alert('Inga ändringar hittades i filen.');
       return;
     }
-    const merge=confirm(result.count+' ändring(ar) i '+file.name+'. Slå samman med befintliga? Avbryt=ersätt alla.');
+    // Koll 1: filnamnet ska matcha det laddade trädet (olle_r.ged → olle.zip)
+    const loadedBase=(S.fileName||'').replace(/\.(zip|ged|gedcom)$/i,'').toLowerCase();
+    const importBase=file.name.replace(/_r\.ged$/i,'').toLowerCase();
+    if(loadedBase && importBase && importBase!==loadedBase){
+      const ok=confirm('⚠️ Filnamnsvarning:\n\nLaddat träd: '+S.fileName+'\nVald fil:    '+file.name+'\n\nDessa verkar inte höra ihop. Fortsätta ändå?');
+      if(!ok) return;
+    }
+    // Koll 2: kontrollera att person-ID:n matchar det öppna trädet
+    const editIds=Object.keys(result.edits);
+    const matchCount=editIds.filter(id=>S.persons[id]).length;
+    const newCount=editIds.filter(id=>result.edits[id]._isNew).length;
+    const knownCount=matchCount - newCount;
+    if(knownCount===0 && editIds.filter(id=>!result.edits[id]._isNew).length>0){
+      alert('⚠️ Träd-matchfel:\n\nIngen av personerna i filen hittades i det laddade trädet.\nKontrollera att du valt rätt _r.ged-fil.');
+      return;
+    }
+    const merge=confirm(result.count+' ändring(ar) i '+file.name+' — '+knownCount+' person(er) matchade. Slå samman med befintliga? Avbryt=ersätt alla.');
     if(!merge){
       PRO_EDITS={};
     }
@@ -3895,6 +3953,138 @@ async function proShareGed(){
   }
 }
 
+/* ──── Pro: återapplicera ändringar efter filladdning ──── */
+function proReapplyEdits(){
+  if(!Object.keys(PRO_EDITS).length) return;
+
+  // Kontrollera att PRO_EDITS hör till detta träd
+  const existingIds=Object.keys(PRO_EDITS).filter(id=>!PRO_EDITS[id]._isNew);
+  const matchCount=existingIds.filter(id=>S.persons[id]).length;
+  if(existingIds.length>0 && matchCount===0){
+    // Fel träd laddat — rör inte PRO_EDITS
+    return;
+  }
+
+  // Återskapa Pro-nya personer
+  Object.entries(PRO_EDITS).forEach(([id, changes])=>{
+    if(!changes._isNew) return;
+    if(S.persons[id]) return; // redan finns
+    const name=(changes.NAME||'').replace(/\/([^/]+)\//,'$1').trim();
+    S.persons[id]={
+      name, nameGiven:'', nameSur:'', allSurnames:'',
+      callname:'', sex:changes.SEX||'U',
+      birt:{date:changes['BIRT.DATE']||'', place:changes['BIRT.PLAC']||''},
+      deat:{date:changes['DEAT.DATE']||'', place:changes['DEAT.PLAC']||''},
+      chr:{date:changes['CHR.DATE']||'', place:changes['CHR.PLAC']||''},
+      buri:{date:changes['BURI.DATE']||'', place:changes['BURI.PLAC']||''},
+      occu:changes['OCCU']||'', bio:changes['NOTE']||'',
+      resi:[], immi:[], fams:[], famc:[], _proNew:true
+    };
+  });
+
+  // Återskapa FAM-kopplingar för Pro-nya
+  Object.entries(PRO_EDITS).forEach(([id, changes])=>{
+    if(!changes._isNew || !changes._famId) return;
+    const famId=changes._famId;
+    const refId=changes._refId;
+    const mode=changes._relation;
+    const newP=S.persons[id];
+    const refP=S.persons[refId];
+    if(!newP || !refP) return;
+
+    // Skapa FAM om den inte finns
+    if(!S.families[famId]){
+      S.families[famId]={husb:'',wife:'',chil:[],chilPedi:{}};
+    }
+    const fam=S.families[famId];
+
+    if(mode==='partner'){
+      if(refP.sex==='F'){ fam.wife=refId; fam.husb=id; }
+      else{ fam.husb=refId; fam.wife=id; }
+      if(!refP.fams.includes(famId)) refP.fams.push(famId);
+      if(!newP.fams.includes(famId)) newP.fams.push(famId);
+    } else if(mode==='barn'){
+      if(refP.sex==='F') fam.wife=refId; else fam.husb=refId;
+      if(!fam.chil.includes(id)) fam.chil.push(id);
+      if(!refP.fams.includes(famId)) refP.fams.push(famId);
+      if(!newP.famc.find(fc=>fc.id===famId)) newP.famc.push({id:famId,pedi:'birth'});
+    } else if(mode==='foraldrar'){
+      if(newP.sex==='F') fam.wife=id; else fam.husb=id;
+      if(!fam.chil.includes(refId)) fam.chil.push(refId);
+      if(!newP.fams.includes(famId)) newP.fams.push(famId);
+      if(!refP.famc.find(fc=>fc.id===famId)) refP.famc.push({id:famId,pedi:'birth'});
+    }
+  });
+}
+
+/* ──── Pro: bryt kopplingar ──── */
+function proUnlinkPartner(personId, famId){
+  const fam=S.families[famId];
+  if(!fam) return;
+  const spId=(fam.husb===personId)?fam.wife:fam.husb;
+  const spName=spId&&S.persons[spId]?S.persons[spId].name:'okänd';
+  if(!confirm('Bryt koppling till '+spName+'? Familjeposten tas bort.')) return;
+  // Ta bort FAM från båda personernas fams-lista
+  const p=S.persons[personId];
+  if(p) p.fams=p.fams.filter(f=>f!==famId);
+  const sp=S.persons[spId];
+  if(sp) sp.fams=sp.fams.filter(f=>f!==famId);
+  // Flytta barn till ingen familj (behåll dem som lösa)
+  (fam.chil||[]).forEach(cid=>{
+    const ch=S.persons[cid];
+    if(ch) ch.famc=ch.famc.filter(fc=>fc.id!==famId);
+  });
+  delete S.families[famId];
+  // Spara i PRO_EDITS som borttagning
+  if(!PRO_EDITS[personId]) PRO_EDITS[personId]={_orig:{}};
+  if(!PRO_EDITS[personId]._unlinks) PRO_EDITS[personId]._unlinks=[];
+  PRO_EDITS[personId]._unlinks.push({type:'partner', famId, spId});
+  proSaveEdits();
+  sel(personId);
+  updateProBadge();
+}
+
+function proUnlinkChild(parentId, childId, famId){
+  const fam=S.families[famId];
+  const chName=S.persons[childId]?S.persons[childId].name:'okänt barn';
+  if(!confirm('Bryt koppling till '+chName+'?')) return;
+  // Ta bort barnet ur familjen
+  if(fam) fam.chil=(fam.chil||[]).filter(c=>c!==childId);
+  // Ta bort familjekopplingen från barnet
+  const ch=S.persons[childId];
+  if(ch) ch.famc=ch.famc.filter(fc=>fc.id!==famId);
+  // Spara
+  if(!PRO_EDITS[parentId]) PRO_EDITS[parentId]={_orig:{}};
+  if(!PRO_EDITS[parentId]._unlinks) PRO_EDITS[parentId]._unlinks=[];
+  PRO_EDITS[parentId]._unlinks.push({type:'child', famId, childId});
+  proSaveEdits();
+  sel(parentId);
+  updateProBadge();
+}
+
+/* ──── Nollställ alla ändringar ──── */
+function proResetEdits(){
+  const n=proCountChanges();
+  if(n===0){ alert('Inga ändringar att nollställa.'); return; }
+  if(!confirm('Radera alla '+n+' ändringar permanent? Detta kan inte ångras.')) return;
+  // Ta bort Pro-nya personer ur S.persons
+  Object.keys(PRO_EDITS).forEach(id=>{
+    if(PRO_EDITS[id]._isNew && S.persons[id]){
+      // Ta bort FAM-kopplingar
+      const p=S.persons[id];
+      (p.fams||[]).forEach(fid=>{ delete S.families[fid]; });
+      delete S.persons[id];
+    }
+  });
+  PRO_EDITS={};
+  proSaveEdits();
+  document.getElementById('pro-changes-modal').classList.remove('show');
+  if(S.curId) sel(S.curId);
+  buildList();
+  updateProBadge();
+  alert('Alla ändringar har raderats.');
+}
+
 /* ──── Export GEDCOM (_r.ged) ──── */
 function proGetGedLines(){
   const lines=['0 HEAD','1 CHAR UTF-8','1 SOUR Slaktvis Pro','1 GEDC','2 VERS 5.5.1'];
@@ -3919,6 +4109,20 @@ function proGetGedLines(){
         if(!deatWritten){ lines.push('1 DEAT'); deatWritten=true; }
         if(field==='DEAT.DATE') lines.push('2 DATE '+val);
         if(field==='DEAT.PLAC') lines.push('2 PLAC '+val);
+      } else if(field.startsWith('CHR.')){
+        if(!lines.some(l=>l==='1 CHR')) lines.push('1 CHR');
+        if(field==='CHR.DATE') lines.push('2 DATE '+val);
+        if(field==='CHR.PLAC') lines.push('2 PLAC '+val);
+      } else if(field.startsWith('BURI.')){
+        if(!lines.some(l=>l==='1 BURI')) lines.push('1 BURI');
+        if(field==='BURI.DATE') lines.push('2 DATE '+val);
+        if(field==='BURI.PLAC') lines.push('2 PLAC '+val);
+      } else if(field.startsWith('EMIG.')){
+        if(!lines.some(l=>l==='1 EMIG')) lines.push('1 EMIG');
+        if(field==='EMIG.DATE') lines.push('2 DATE '+val);
+        if(field==='EMIG.PLAC') lines.push('2 PLAC '+val);
+      } else if(field==='OCCU'){
+        lines.push('1 OCCU '+val);
       } else if(field==='NOTE'){
         const nl=val.split('\n');
         lines.push('1 NOTE '+nl[0]);
