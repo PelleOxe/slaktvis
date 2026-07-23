@@ -493,12 +493,130 @@ input[type="file"]{display:none;}
   border-radius:6px;font-size:12px;cursor:pointer;font-family:sans-serif;
 }
 #stam-toast .stam-toast-cancel{background:var(--bg);color:var(--text);border:1px solid var(--border);}
+
+/* ══ PRO ══ */
+#pro-btn{
+  background:linear-gradient(135deg,#7b4a1a,#c47a2a);
+  color:#fff8e8;border:1px solid #c47a2a;
+  padding:5px 12px;border-radius:7px;
+  font-size:12px;cursor:pointer;font-family:sans-serif;
+  white-space:nowrap;font-weight:bold;letter-spacing:.5px;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);transition:opacity .15s;
+}
+#pro-btn:hover{opacity:.9;}
+#pro-btn.active{
+  background:linear-gradient(135deg,#7b4a1a,#c47a2a);
+  color:#00ee55 !important;
+  border:1px solid #c47a2a;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);
+  text-shadow:0 0 8px rgba(0,238,85,.7) !important;
+}
+#pro-mode-bar{
+  display:none;background:linear-gradient(90deg,#7b4a1a22,#c47a2a33,#7b4a1a22);
+  border-bottom:2px solid var(--amber);padding:3px 12px;
+  font-family:sans-serif;font-size:11px;color:var(--amber);
+  text-align:center;letter-spacing:.5px;font-weight:bold;flex-shrink:0;
+}
+#pro-mode-bar.show{display:block;}
+#pro-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.65);align-items:center;justify-content:center;}
+#pro-modal.show{display:flex;}
+#pro-modal-box{background:var(--surface);border-radius:14px;padding:28px 28px 22px;max-width:420px;width:94%;box-shadow:0 10px 40px rgba(0,0,0,.5);border:1px solid var(--border);position:relative;}
+#pro-modal-box h3{font-size:16px;color:var(--amber);margin-bottom:14px;font-family:sans-serif;text-align:center;letter-spacing:.5px;}
+#pro-code-input{width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:16px;letter-spacing:3px;text-align:center;background:var(--bg);color:var(--text);font-family:monospace;margin-bottom:10px;}
+#pro-code-input:focus{outline:none;border-color:var(--amber);}
+#pro-code-error{color:#e05050;font-family:sans-serif;font-size:12px;text-align:center;margin-bottom:10px;display:none;}
+.pro-modal-btns{display:flex;gap:8px;justify-content:center;margin-top:4px;}
+.pro-modal-btn{padding:7px 20px;border-radius:8px;border:none;font-size:13px;cursor:pointer;font-family:sans-serif;}
+.pro-modal-btn.primary{background:var(--amber);color:#fff;}
+.pro-modal-btn.secondary{background:var(--bg);border:1px solid var(--border);color:var(--text);}
+.pro-modal-btn:hover{opacity:.88;}
+.pro-edit-badge{display:inline-block;font-size:10px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:1px 5px;margin-left:5px;cursor:pointer;font-family:sans-serif;vertical-align:middle;transition:background .12s;}
+.pro-edit-badge:hover{background:var(--amber);color:#fff;}
+.pro-field-wrap{display:inline-flex;align-items:center;gap:4px;width:100%;}
+.pro-inline-input{flex:1;padding:4px 8px;border:2px solid var(--amber);border-radius:5px;font-size:12px;background:#fff;color:#222;font-family:sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.15);}
+.pro-save-btn,.pro-cancel-btn{font-size:11px;padding:2px 7px;border-radius:4px;border:none;cursor:pointer;font-family:sans-serif;}
+.pro-save-btn{background:var(--amber);color:#fff;}
+.pro-cancel-btn{background:var(--bg);color:var(--text);border:1px solid var(--border);}
+.pro-modified{color:#8b2be2 !important;font-style:italic;font-weight:600;}
+.pro-badge-count{display:inline-flex;align-items:center;justify-content:center;background:#8b2be2;color:#fff;font-size:10px;font-family:sans-serif;border-radius:9px;padding:0 5px;min-width:17px;height:15px;margin-left:4px;vertical-align:middle;}
+#pro-changes-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.65);align-items:center;justify-content:center;}
+#pro-changes-modal.show{display:flex;}
+#pro-changes-box{background:var(--surface);border-radius:14px;padding:24px 28px 20px;max-width:560px;width:94%;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.5);border:1px solid var(--border);position:relative;}
+#pro-changes-box h3{font-size:15px;color:var(--amber);margin-bottom:14px;font-family:sans-serif;}
+
+/* Pro nav-bar — flytande navigering */
+#pro-nav-bar{
+  display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  z-index:700;background:var(--surface);border:2px solid var(--amber);
+  border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.4);
+  padding:10px 16px;font-family:sans-serif;min-width:320px;max-width:92vw;
+}
+#pro-nav-bar.show{display:block;}
+#pro-nav-header{font-size:11px;color:var(--amber);font-weight:bold;margin-bottom:6px;letter-spacing:.3px;}
+#pro-nav-person{font-size:13px;font-weight:bold;color:var(--text);margin-bottom:3px;}
+#pro-nav-field{font-size:11px;color:var(--text-muted);margin-bottom:2px;}
+#pro-nav-old{font-size:12px;color:var(--text-muted);text-decoration:line-through;margin-bottom:1px;}
+#pro-nav-new{font-size:13px;color:#8b2be2;font-weight:bold;margin-bottom:8px;}
+#pro-nav-btns{display:flex;gap:6px;align-items:center;}
+.pro-nav-btn{padding:5px 14px;border-radius:7px;border:none;font-size:12px;
+  cursor:pointer;font-family:sans-serif;background:var(--amber);color:#fff;}
+.pro-nav-btn:hover{opacity:.88;}
+.pro-nav-btn.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);}
+.pro-nav-btn.disabled{opacity:.35;pointer-events:none;}
+#pro-nav-counter{font-size:11px;color:var(--text-muted);margin-left:auto;}
+.pro-change-row{padding:7px 0;border-bottom:1px solid var(--border);font-family:sans-serif;font-size:12px;color:var(--text);}
+.pro-change-row:last-child{border-bottom:none;}
+.pro-change-person{font-weight:bold;color:var(--accent);}
+.pro-change-field{color:var(--amber);margin-left:8px;}
+.pro-change-old{color:var(--text-muted);text-decoration:line-through;margin-left:8px;}
+.pro-change-new{color:#8b2be2;margin-left:4px;}
+
+/* Pro datepicker */
+#pro-datepicker{
+  display:none;position:fixed;z-index:800;
+  background:var(--surface);border:2px solid var(--amber);
+  border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.4);
+  padding:12px;font-family:sans-serif;width:240px;
+  user-select:none;
+}
+#pro-datepicker.show{display:block;}
+.pro-dp-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.pro-dp-nav button{background:none;border:none;cursor:pointer;font-size:16px;color:var(--amber);padding:2px 6px;border-radius:5px;}
+.pro-dp-nav button:hover{background:var(--amber);color:#fff;}
+.pro-dp-nav span{font-size:13px;font-weight:bold;color:var(--text);cursor:pointer;}
+.pro-dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
+.pro-dp-head{font-size:10px;color:var(--text-muted);text-align:center;padding:2px 0;}
+.pro-dp-day{font-size:12px;text-align:center;padding:4px 2px;border-radius:5px;cursor:pointer;color:var(--text);}
+.pro-dp-day:hover{background:var(--amber);color:#fff;}
+.pro-dp-day.empty{cursor:default;}
+.pro-dp-day.today{font-weight:bold;color:var(--amber);}
+.pro-dp-day.selected{background:var(--amber);color:#fff;}
+.pro-dp-months{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px;}
+.pro-dp-month{font-size:11px;text-align:center;padding:5px 2px;border-radius:5px;cursor:pointer;color:var(--text);}
+.pro-dp-month:hover,.pro-dp-month.sel{background:var(--amber);color:#fff;}
+.pro-dp-year-row{display:flex;align-items:center;gap:4px;margin-bottom:6px;}
+.pro-dp-year-inp{flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff;color:#222;text-align:center;}
+.pro-dp-clear{font-size:11px;color:var(--text-muted);text-align:center;cursor:pointer;text-decoration:underline;margin-top:2px;}
+
+/* Pro add-person modal */
+#pro-add-modal{display:none;position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.65);align-items:center;justify-content:center;}
+#pro-add-modal.show{display:flex;}
+#pro-add-box{background:var(--surface);border-radius:14px;padding:24px 24px 18px;max-width:440px;width:94%;box-shadow:0 10px 40px rgba(0,0,0,.5);border:1px solid var(--border);position:relative;max-height:90vh;overflow-y:auto;}
+#pro-add-box h3{font-size:15px;color:var(--amber);margin-bottom:14px;font-family:sans-serif;}
+.pro-add-row{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;font-family:sans-serif;}
+.pro-add-label{font-size:11px;color:var(--text-muted);}
+.pro-add-input{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:#fff;color:#222;font-family:sans-serif;}
+.pro-add-input:focus{outline:none;border-color:var(--amber);}
+.pro-add-sex{display:flex;gap:8px;}
+.pro-add-sex label{font-size:12px;font-family:sans-serif;color:var(--text);display:flex;align-items:center;gap:3px;cursor:pointer;}
 </style>
 </head>
 <body data-theme="parchment">
 
 
 
+
+<div id="pro-mode-bar">✦ PRO-LÄGE AKTIVT — klicka på ✎ i personkortet för att redigera &nbsp;<span onclick="proDeactivate()" style="cursor:pointer;text-decoration:underline;opacity:.8;">[Avsluta]</span></div>
 
 <div id="resume-bar">
   <span>💾 Sparat dataset hittades: <strong id="resume-filename"></strong></span>
@@ -574,11 +692,125 @@ input[type="file"]{display:none;}
     style="margin-left:4px;" title="Dela Släktvis">🔗 Dela</button>
   <button class="theme-btn" onclick="document.getElementById('om-modal').style.display='flex'"
     style="margin-left:4px;" title="Om Släktvis">ℹ️ Om</button>
+  <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
   <div id="info-block">
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.1.47 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.2.17 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+</div>
+
+<!-- PRO MODAL -->
+<div id="pro-modal" onclick="if(event.target===this)proCloseModal()">
+  <div id="pro-modal-box">
+    <button onclick="proCloseModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">✕</button>
+    <h3>✦ Släktvis Pro</h3>
+    <div id="pro-code-ok" style="font-family:sans-serif;font-size:13px;color:var(--text);text-align:center;margin-bottom:14px;">
+      <div style="font-size:28px;margin-bottom:8px;">✓</div>
+      <b style="color:var(--amber);">Pro-läge är aktiverat</b>
+      <p style="font-size:12px;color:var(--text-sec);margin-top:8px;">Du kan nu redigera uppgifter direkt i personkortet.<br>Ändringar markeras i lila och sparas lokalt.<br><br><span onclick="proCloseModal();setTimeout(proImportGedTrigger,100)" style="cursor:pointer;color:var(--amber);text-decoration:underline;">📂 Ladda in tidigare sparade ändringar (_r.ged)</span></p>
+    </div>
+    <div id="pro-code-form">
+      <p style="font-family:sans-serif;font-size:13px;color:var(--text-sec);text-align:center;margin-bottom:14px;">Ange kod för Pro-version.</p>
+      <input type="password" id="pro-code-input" placeholder="Pro-kod" maxlength="20"
+        onkeydown="if(event.key==='Enter')proVerifyCode()">
+      <div id="pro-code-error">❌ Fel kod. Försök igen.</div>
+    </div>
+    <div class="pro-modal-btns">
+      <button id="pro-deactivate-btn" class="pro-modal-btn secondary" onclick="proDeactivate()" style="display:none;">Avaktivera Pro</button>
+      <button id="pro-verify-btn" class="pro-modal-btn primary" onclick="proVerifyCode()">Aktivera</button>
+      <button class="pro-modal-btn secondary" onclick="proCloseModal()">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRO CHANGES MODAL -->
+<div id="pro-changes-modal" onclick="if(event.target===this)document.getElementById('pro-changes-modal').classList.remove('show')">
+  <div id="pro-changes-box">
+    <button onclick="document.getElementById('pro-changes-modal').classList.remove('show')" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">✕</button>
+    <h3>✦ Mina ändringar</h3>
+    <div id="pro-changes-list"></div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+      <button class="pro-modal-btn primary" onclick="proNavStart()" style="background:#6a2ab0;">🔍 Visa ändringar</button>
+      <button class="pro-modal-btn primary" onclick="proExportGed()" style="background:#2a7a3a;">⬇ Exportera GEDCOM</button>
+      <button class="pro-modal-btn primary" onclick="proShareGed()" style="background:#1a6a9a;" id="pro-share-btn">📤 Dela fil</button>
+      <button class="pro-modal-btn primary" onclick="proImportGedTrigger()" style="background:#555;" title="Ladda in en tidigare exporterad _r.ged-fil">📂 Ladda _r.ged</button>
+      <button class="pro-modal-btn secondary" onclick="document.getElementById('pro-changes-modal').classList.remove('show')">Stäng</button>
+      <input type="file" id="pro-import-input" accept=".ged,.gedcom" style="display:none" onchange="proImportGed(this)">
+    </div>
+  </div>
+</div>
+
+<!-- PRO DATEPICKER -->
+<div id="pro-datepicker">
+  <div class="pro-dp-nav">
+    <button onclick="proDpNav(-1)" id="pro-dp-prev">◀</button>
+    <span id="pro-dp-title" onclick="proDpToggleMode()"></span>
+    <button onclick="proDpNav(1)" id="pro-dp-next">▶</button>
+  </div>
+  <div id="pro-dp-body"></div>
+  <div class="pro-dp-clear" onclick="proDpClear()">Rensa datum</div>
+</div>
+
+<!-- PRO ADD PERSON MODAL -->
+<div id="pro-add-modal" onclick="if(event.target===this)proAddClose()">
+  <div id="pro-add-box">
+    <button onclick="proAddClose()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">✕</button>
+    <h3 id="pro-add-title">Lägg till person</h3>
+    <div class="pro-add-row">
+      <span class="pro-add-label">Förnamn (tilltalsnamn understruket)</span>
+      <input class="pro-add-input" id="pro-add-given" placeholder="t.ex. Anna Lisa" autocomplete="off">
+    </div>
+    <div class="pro-add-row">
+      <span class="pro-add-label">Efternamn</span>
+      <input class="pro-add-input" id="pro-add-sur" placeholder="t.ex. Svensson" autocomplete="off">
+    </div>
+    <div class="pro-add-row">
+      <span class="pro-add-label">Kön</span>
+      <div class="pro-add-sex">
+        <label><input type="radio" name="pro-add-sex" value="M" checked> Man</label>
+        <label><input type="radio" name="pro-add-sex" value="F"> Kvinna</label>
+        <label><input type="radio" name="pro-add-sex" value="U"> Okänt</label>
+      </div>
+    </div>
+    <div class="pro-add-row">
+      <span class="pro-add-label">Födelsedag</span>
+      <input class="pro-add-input" id="pro-add-bdate" placeholder="välj datum →" autocomplete="off" readonly
+        onclick="proDpOpen('pro-add-bdate',this)" style="cursor:pointer;background:#fffbe8;">
+    </div>
+    <div class="pro-add-row">
+      <span class="pro-add-label">Födelseort</span>
+      <input class="pro-add-input" id="pro-add-bplac" placeholder="" autocomplete="off">
+    </div>
+    <div class="pro-add-row">
+      <span class="pro-add-label">Dödsdag</span>
+      <input class="pro-add-input" id="pro-add-ddate" placeholder="välj datum →" autocomplete="off" readonly
+        onclick="proDpOpen('pro-add-ddate',this)" style="cursor:pointer;background:#fffbe8;">
+    </div>
+    <div class="pro-add-row">
+      <span class="pro-add-label">Dödsort</span>
+      <input class="pro-add-input" id="pro-add-dplac" placeholder="" autocomplete="off">
+    </div>
+    <div class="pro-modal-btns" style="margin-top:6px;">
+      <button class="pro-modal-btn primary" onclick="proAddSave()">Spara</button>
+      <button class="pro-modal-btn secondary" onclick="proAddClose()">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRO NAV BAR -->
+<div id="pro-nav-bar">
+  <div id="pro-nav-header">✦ PRO — ÄNDRING <span id="pro-nav-idx">1</span> AV <span id="pro-nav-total">1</span></div>
+  <div id="pro-nav-person"></div>
+  <div id="pro-nav-field"></div>
+  <div id="pro-nav-old"></div>
+  <div id="pro-nav-new"></div>
+  <div id="pro-nav-btns">
+    <button class="pro-nav-btn secondary" onclick="proNavStep(-1)" id="pro-nav-prev">◀ Föregående</button>
+    <button class="pro-nav-btn" onclick="proNavStep(1)" id="pro-nav-next">Nästa ▶</button>
+    <button class="pro-nav-btn secondary" onclick="proNavClose()" style="margin-left:4px;">✕ Stäng</button>
+    <span id="pro-nav-counter"></span>
+  </div>
 </div>
 
 <!-- OM SLÄKTVIS MODAL -->
@@ -596,7 +828,7 @@ input[type="file"]{display:none;}
       <div style="font-size:22px;font-weight:bold;color:var(--accent);letter-spacing:1px;">
         Släkt<span style="color:var(--text);">vis</span>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">v1.1 · © 2026 Per Andersson</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">v1.2 · © 2026 Per Andersson</div>
     </div>
 
     <div style="font-family:sans-serif;font-size:13px;color:var(--text);line-height:1.7;">
@@ -1172,6 +1404,7 @@ function loadParsed(gedText,fileName){
       const cnt=Object.keys(persons).length;
       document.getElementById('info-count').innerHTML=`<strong>${cnt.toLocaleString('sv-SE')}</strong> ${'personer'}`;
       document.getElementById('info-file').textContent=fileName;
+      S.fileName=fileName;
       buildList();clearSel();hideLoad();
       // Töm sökruta och filter vid ny fil
       const si=document.getElementById('search-input');
@@ -1344,7 +1577,8 @@ function renderList(ids){
       const cp=p.callname.split(' ');
       cp.forEach(w=>{nh=nh.replace(esc(w),`<span class="callname">${esc(w)}</span>`);});
     }
-    el.innerHTML=`<div>${nh}</div>${dates?`<div class="p-dates">${dates}</div>`:''}`;
+    const proNew=p._proNew?'<span style="color:#8b2be2;font-size:10px;margin-left:4px;">✦NY</span>':'';
+    el.innerHTML=`<div>${nh}${proNew}</div>${dates?`<div class="p-dates">${dates}</div>`:''}`;
     el.onclick=()=>sel(id);
     frag.appendChild(el);
   }
@@ -1361,6 +1595,8 @@ function sel(id,addHistory=true){
   renderD(id);renderE(id);renderG(id);renderF(id);
   syncRefCheckbox(id);
   if(S.refId) renderRelChain();
+  // Pro: injicera redigerbara fält
+  setTimeout(()=>proInjectEditBadges(id),0);
   const el=document.querySelector(`.person-item[data-id="${id}"]`);
   if(el)el.scrollIntoView({block:'nearest'});
   updateBackBtn();
@@ -1961,6 +2197,18 @@ function getAvatarUrl(p){
 
 function renderE(id){
   const p=S.persons[id];if(!p)return;
+  // Pro: skapa ett modifierat person-objekt om det finns redigeringar
+  const edits=PRO_EDITS[id]||{};
+  const ep={...p,
+    birt:{...(p.birt||{})},
+    deat:{...(p.deat||{})},
+  };
+  if(edits['NAME'])         { ep.name=edits['NAME']; ep._proName=true; }
+  if(edits['BIRT.DATE'])    { ep.birt.date=edits['BIRT.DATE']; ep._proBirtDate=true; }
+  if(edits['BIRT.PLAC'])    { ep.birt.place=edits['BIRT.PLAC']; ep._proBirtPlac=true; }
+  if(edits['DEAT.DATE'])    { ep.deat.date=edits['DEAT.DATE']; ep._proDeatDate=true; }
+  if(edits['DEAT.PLAC'])    { ep.deat.place=edits['DEAT.PLAC']; ep._proDeatPlac=true; }
+  if(edits['NOTE'])         { ep.bio=edits['NOTE']; ep._proNote=true; }
   document.getElementById('no-selection').style.display='none';
   document.getElementById('person-details').style.display='block';
   const s=sc(p);
@@ -1968,9 +2216,11 @@ function renderE(id){
   av.className=s||'';av.innerHTML='';
   const imgUrl=getAvatarUrl(p);
   if(imgUrl){const img=document.createElement('img');img.src=imgUrl;av.appendChild(img);}
-  else av.textContent=initials(p.name);
+  else av.textContent=initials(ep.name);
 
-  const nh=document.getElementById('person-name');nh.textContent=p.name;nh.className=s;
+  const nh=document.getElementById('person-name');
+  nh.textContent=ep.name;nh.className=s;
+  if(ep._proName) nh.classList.add('pro-modified'); else nh.classList.remove('pro-modified');
   const pidEl=document.getElementById('person-id');if(pidEl)pidEl.textContent='#'+id;
   // Förnamn-rad: visa alla förnamn, markera tilltalsnamnet
   const givenEl=document.getElementById('person-given-names');
@@ -1998,14 +2248,14 @@ function renderE(id){
     const surFormatted=allSur.split(' ').filter(Boolean).join(', ');
     surEl.innerHTML=`<span class="name-label">Efternamn:</span> ${esc(surFormatted)}`;
   } else surEl.style.display='none';
-  const y1=yr(p.birt.date),y2=yr(p.deat.date);
+  const y1=yr(ep.birt.date),y2=yr(ep.deat.date);
   const yrsEl=document.getElementById('person-years');
   if(y1||y2){const age=(y1&&y2)?` (${parseInt(y2)-parseInt(y1)} ${'år'})`:'';
     yrsEl.textContent='Född'+': '+(y1||'?')+(y2?' – '+'Död'+': '+y2+age:'');}
   else yrsEl.textContent='';
 
   const evs=[];
-  if(p.birt.date||p.birt.place)evs.push({date:p.birt.date,type:'Född',desc:p.birt.place});
+  if(ep.birt.date||ep.birt.place)evs.push({date:ep.birt.date,type:'Född',desc:ep.birt.place,_proDate:ep._proBirtDate,_proDesc:ep._proBirtPlac});
   if(p.chr.date||p.chr.place)evs.push({date:p.chr.date,type:'Döpt',desc:p.chr.place});
   if(p.occu)evs.push({date:'',type:'Yrke',desc:p.occu});
   // Bostäder: kombinera RESI och IMMI, sortera kronologiskt
@@ -2027,18 +2277,22 @@ function renderE(id){
     lastPlace=r.desc;
     evs.push(r);
   }
-  if(p.deat.date||p.deat.place)evs.push({date:p.deat.date,type:'Död',desc:p.deat.place});
+  if(ep.deat.date||ep.deat.place)evs.push({date:ep.deat.date,type:'Död',desc:ep.deat.place,_proDate:ep._proDeatDate,_proDesc:ep._proDeatPlac});
   if(p.buri.date||p.buri.place)evs.push({date:p.buri.date,type:'Begr.',desc:p.buri.place});
 
   const ul=document.getElementById('event-list');
-  ul.innerHTML=evs.length?evs.map(ev=>`<li class="event-item">
-    <span class="event-date">${esc(ev.date)}</span>
+  ul.innerHTML=evs.length?evs.map(ev=>{
+    const dc=ev._proDate?'pro-modified':'';
+    const pc=ev._proDesc?'pro-modified':'';
+    return `<li class="event-item">
+    <span class="event-date ${dc}">${esc(ev.date)}</span>
     <span class="event-type">${esc(ev.type)}</span>
-    <span class="event-desc">${esc(ev.desc||'')}</span>
-  </li>`).join(''):`<li style="padding:8px;font-family:sans-serif;font-size:13px;color:var(--text-muted)">—</li>`;
+    <span class="event-desc ${pc}">${esc(ev.desc||'')}</span>
+  </li>`;}).join(''):`<li style="padding:8px;font-family:sans-serif;font-size:13px;color:var(--text-muted)">—</li>`;
   const bioEl=document.getElementById('bio-text');
-  if(p.bio){bioEl.style.display='block';bioEl.textContent=p.bio;}
-  else{bioEl.style.display='none';bioEl.textContent='';}
+  if(ep.bio){bioEl.style.display='block';bioEl.textContent=ep.bio;
+    if(ep._proNote) bioEl.classList.add('pro-modified'); else bioEl.classList.remove('pro-modified');}
+  else{bioEl.style.display='none';bioEl.textContent='';bioEl.classList.remove('pro-modified');}
 }
 
 /* ══════════════════════════════════════════
@@ -2215,7 +2469,8 @@ checkIDB();
 let _searchTimer=null;
 function debouncedSearch(val){
   clearTimeout(_searchTimer);
-  _searchTimer=setTimeout(()=>filterPersons(val), 300);
+  const delay=('ontouchstart' in window)?300:100;
+  _searchTimer=setTimeout(()=>filterPersons(val), delay);
 }
 
 
@@ -2784,6 +3039,936 @@ function drawRelPath(path, totalPaths){
     more.textContent='Fler släktskapsvägar kan finnas.';
     inner.appendChild(more);
   }
+}
+
+/* ══════════════════════════════════════════
+   PRO — REDIGERINGSLÄGE v1.2
+══════════════════════════════════════════ */
+
+// Pro-koden är ett valfritt 6-siffrigt primtal — valideras matematiskt, inget hårdkodat värde
+
+function proIsPrime(n){
+  if(n<100000||n>999999) return false;
+  if(n%2===0) return false;
+  if(n%3===0) return false;
+  for(let i=5;i*i<=n;i+=6){
+    if(n%i===0||n%(i+2)===0) return false;
+  }
+  return true;
+}
+
+// Spara/läsa Pro-status lokalt — vi lagrar koden i klartext, säkerheten ligger i att
+// koden aldrig syns i källkoden (den väljs fritt av användaren)
+function proIsActive(){
+  try{
+    const stored=localStorage.getItem('slaktvis_pro');
+    if(!stored) return false;
+    const n=parseInt(stored,10);
+    return proIsPrime(n);
+  }catch(e){return false;}
+}
+function proSetActive(v, code){
+  try{
+    if(v) localStorage.setItem('slaktvis_pro', String(code));
+    else localStorage.removeItem('slaktvis_pro');
+  }catch(e){}
+}
+
+// Pro-redigeringsdata: { '@I123@': { 'NAME': 'Nya Värdet', 'BIRT.DATE': '1900' } }
+// Sparas i IndexedDB (pro_edits-store) eller localStorage som fallback
+let PRO_EDITS = {};
+
+function proEditsKey(){ return 'slaktvis_pro_edits'; }
+
+function proLoadEdits(){
+  try{
+    const raw = localStorage.getItem(proEditsKey());
+    PRO_EDITS = raw ? JSON.parse(raw) : {};
+  }catch(e){ PRO_EDITS={}; }
+}
+
+function proSaveEdits(){
+  try{ localStorage.setItem(proEditsKey(), JSON.stringify(PRO_EDITS)); }catch(e){}
+  updateProBadge();
+}
+
+function proGetEdit(id, field){
+  if(!PRO_EDITS[id]) return null;
+  return PRO_EDITS[id][field] !== undefined ? PRO_EDITS[id][field] : null;
+}
+
+function proSetEdit(id, field, value, origValue){
+  if(!PRO_EDITS[id]) PRO_EDITS[id]={'_orig':{}};
+  // Spara originalvärdet första gången
+  if(PRO_EDITS[id]['_orig'][field] === undefined){
+    PRO_EDITS[id]['_orig'][field] = origValue;
+  }
+  if(value === PRO_EDITS[id]['_orig'][field]){
+    // Värdet återställt — ta bort ändringen
+    delete PRO_EDITS[id][field];
+    if(Object.keys(PRO_EDITS[id]).filter(k=>k!=='_orig').length===0){
+      delete PRO_EDITS[id];
+    }
+  } else {
+    PRO_EDITS[id][field] = value;
+  }
+  proSaveEdits();
+}
+
+function proCountChanges(){
+  return Object.values(PRO_EDITS).reduce((s,obj)=>s+Object.keys(obj).filter(k=>k!=='_orig').length,0);
+}
+
+// Uppdatera Pro-knappens badge
+function updateProBadge(){
+  const btn = document.getElementById('pro-btn');
+  if(!btn) return;
+  const active = proIsActive();
+  const n = proCountChanges();
+
+  // Sätt utseende via inline style — fungerar alltid oavsett CSS-kaskad
+  if(active){
+    btn.textContent = '✦ Pro ✓';
+    btn.style.color = '#00cc44';
+    btn.style.fontWeight = 'bold';
+    btn.style.textShadow = '0 0 6px #00cc44';
+    btn.style.border = '2px solid #00cc44';
+  } else {
+    btn.textContent = '✦ Pro';
+    btn.style.color = '#fff8e8';
+    btn.style.fontWeight = 'bold';
+    btn.style.textShadow = '';
+    btn.style.border = '1px solid #c47a2a';
+  }
+  btn.classList.toggle('active', active);
+
+  // Badge: antal ändringar
+  const oldBadge = btn.querySelector('.pro-badge-count');
+  if(oldBadge) oldBadge.remove();
+  if(active && n>0){
+    const span=document.createElement('span');
+    span.className='pro-badge-count';
+    span.textContent=n;
+    btn.appendChild(span);
+  }
+
+  // "Ändringar"-knapp
+  let chBtn = document.getElementById('pro-changes-btn');
+  if(n>0 && active){
+    if(!chBtn){
+      chBtn=document.createElement('button');
+      chBtn.id='pro-changes-btn';
+      chBtn.className='theme-btn';
+      chBtn.style.marginLeft='4px';
+      chBtn.onclick=proShowChanges;
+      btn.insertAdjacentElement('afterend', chBtn);
+    }
+    chBtn.textContent='✏️ Ändringar ('+n+')';
+  } else if(chBtn){
+    chBtn.remove();
+  }
+
+  // Pro-mode-bar
+  const bar=document.getElementById('pro-mode-bar');
+  if(bar){ bar.style.display = active ? 'block' : 'none'; }
+}
+
+// Modal
+function proToggle(){
+  if(proIsActive()){
+    proDeactivate();
+  } else {
+    proOpenModal();
+  }
+}
+
+function proOpenModal(){
+  const modal=document.getElementById('pro-modal');
+  const form=document.getElementById('pro-code-form');
+  const ok=document.getElementById('pro-code-ok');
+  const err=document.getElementById('pro-code-error');
+  const verBtn=document.getElementById('pro-verify-btn');
+  const deBtn=document.getElementById('pro-deactivate-btn');
+  const inp=document.getElementById('pro-code-input');
+  if(proIsActive()){
+    form.style.display='none';
+    ok.style.display='block';
+    verBtn.style.display='none';
+    deBtn.style.display='';
+  } else {
+    form.style.display='block';
+    ok.style.display='none';
+    verBtn.style.display='';
+    deBtn.style.display='none';
+    inp.value='';
+    err.style.display='none';
+  }
+  modal.classList.add('show');
+  if(!proIsActive()) setTimeout(()=>inp.focus(),80);
+}
+
+function proCloseModal(){
+  document.getElementById('pro-modal').classList.remove('show');
+}
+
+function proVerifyCode(){
+  const inp=document.getElementById('pro-code-input');
+  const err=document.getElementById('pro-code-error');
+  const val=inp.value.trim();
+  const n=parseInt(val,10);
+  if(String(n)===val && proIsPrime(n)){
+    proSetActive(true, n);
+    err.style.display='none';
+    updateProBadge();
+    proCloseModal();
+    if(S.curId) sel(S.curId);
+  } else {
+    err.style.display='block';
+    inp.value='';
+    inp.focus();
+  }
+}
+
+function proDeactivate(){
+  proSetActive(false);
+  proCloseModal();
+  if(S.curId) sel(S.curId);
+  updateProBadge();
+}
+
+// Initiera Pro vid sidladdning
+document.addEventListener('DOMContentLoaded', function initPro(){
+  // Pro-läge alltid AV vid start
+  try{ localStorage.removeItem('slaktvis_pro'); }catch(e){}
+  proLoadEdits();
+  updateProBadge();
+});
+
+/* ──── PRO: redigerbara fält i personkortet ──── */
+
+// Fält som kan redigeras: { fieldKey, label, getter }
+function proEditableFields(p){
+  // p = personobjekt från S.persons
+  return [
+    { key:'NAME', label:'Namn (tilltalsnamn + efternamn)', get:()=>p.name||'', multiword:true },
+    { key:'BIRT.DATE', label:'Födelsedag', get:()=>p.birt&&p.birt.date||'' },
+    { key:'BIRT.PLAC', label:'Födelseort', get:()=>p.birt&&p.birt.place||'' },
+    { key:'DEAT.DATE', label:'Dödsdag', get:()=>p.deat&&p.deat.date||'' },
+    { key:'DEAT.PLAC', label:'Dödsort', get:()=>p.deat&&p.deat.place||'' },
+    { key:'NOTE', label:'Anteckning', get:()=>p.bio||'', textarea:true },
+  ];
+}
+
+// Injicera ✎-redigeringspanel i Block E efter rendrering
+function proInjectEditBadges(personId){
+  // Ta alltid bort gammal panel oavsett Pro-status
+  const old=document.getElementById('pro-edit-panel');
+  if(old) old.remove();
+  if(!proIsActive()) return;
+  const p = S.persons[personId];
+  if(!p) return;
+
+  const fields = proEditableFields(p);
+  const panel = document.createElement('div');
+  panel.id='pro-edit-panel';
+  panel.style.cssText='border-top:1px solid var(--border);margin-top:8px;padding-top:8px;';
+
+  // Pro-läge-indikator (liten banner)
+  const banner=document.createElement('div');
+  banner.style.cssText='font-family:sans-serif;font-size:11px;color:var(--amber);font-weight:bold;margin-bottom:6px;letter-spacing:.3px;';
+  banner.textContent='✦ Pro-läge — klicka ✎ för att redigera';
+  panel.appendChild(banner);
+
+  fields.forEach(({key, label, get, textarea})=>{
+    const edited = proGetEdit(personId, key);
+    const currentVal = edited !== null ? edited : get();
+
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:4px;font-family:sans-serif;font-size:12px;';
+
+    const lbl=document.createElement('span');
+    lbl.style.cssText='color:var(--text-muted);min-width:90px;flex-shrink:0;';
+    lbl.textContent=label.split(' ')[0]+':'; // t.ex. "Namn:", "Födelsedag:"
+
+    const val=document.createElement('span');
+    val.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    val.textContent=currentVal||'—';
+    if(edited!==null) val.classList.add('pro-modified');
+
+    const badge=document.createElement('button');
+    badge.className='pro-edit-badge';
+    badge.textContent='✎';
+    badge.title='Redigera: '+label;
+    badge.onclick=(e)=>{
+      e.stopPropagation();
+      proStartEdit(personId, key, label, get, textarea, val, badge);
+    };
+
+    row.appendChild(lbl);
+    row.appendChild(val);
+    row.appendChild(badge);
+    panel.appendChild(row);
+  });
+
+  // ── Relationsknappar ──
+  const relDiv=document.createElement('div');
+  relDiv.style.cssText='border-top:1px solid var(--border);margin-top:8px;padding-top:8px;display:flex;flex-wrap:wrap;gap:5px;';
+
+  const relBtns=[
+    {label:'+ Partner', fn:()=>proAddOpen('partner', personId)},
+    {label:'+ Barn',    fn:()=>proAddOpen('barn',    personId)},
+    {label:'+ Förälder',fn:()=>proAddOpen('foraldrar',personId)},
+  ];
+  relBtns.forEach(({label,fn})=>{
+    const b=document.createElement('button');
+    b.className='pro-edit-badge';
+    b.style.cssText='font-size:11px;padding:3px 9px;';
+    b.textContent=label;
+    b.onclick=fn;
+    relDiv.appendChild(b);
+  });
+  panel.appendChild(relDiv);
+
+  // Lägg in panelen i Block E
+  const details=document.getElementById('person-details');
+  if(details) details.appendChild(panel);
+}
+
+function proStartEdit(personId, key, label, getter, textarea, targetEl, badge){
+  // Ta bort eventuell existerande inline-editor
+  const existing=document.getElementById('pro-edit-inline');
+  if(existing) existing.remove();
+
+  const currentVal = proGetEdit(personId, key) !== null
+    ? proGetEdit(personId, key)
+    : getter();
+
+  const wrap=document.createElement('div');
+  wrap.id='pro-edit-inline';
+  wrap.className='pro-field-wrap';
+  wrap.style.marginTop='4px';
+
+  const isDateField=(key==='BIRT.DATE'||key==='DEAT.DATE');
+  let inp;
+  if(textarea){
+    inp=document.createElement('textarea');
+    inp.rows=3;
+    inp.style.resize='vertical';
+  } else {
+    inp=document.createElement('input');
+    inp.type='text';
+  }
+  inp.className='pro-inline-input';
+  inp.value=currentVal;
+  inp.placeholder=label;
+  if(isDateField){
+    inp.readOnly=true;
+    inp.style.cursor='pointer';
+    inp.style.background='#fffbe8';
+    inp.title='Klicka för att välja datum';
+    inp.onclick=()=>proDpOpen('pro-edit-date-inp', inp);
+    inp.id='pro-edit-date-inp';
+  }
+
+  const saveBtn=document.createElement('button');
+  saveBtn.className='pro-save-btn';
+  saveBtn.textContent='Spara';
+
+  const cancelBtn=document.createElement('button');
+  cancelBtn.className='pro-cancel-btn';
+  cancelBtn.textContent='Avbryt';
+
+  const btnWrap=document.createElement('div');
+  btnWrap.style.cssText='display:flex;flex-direction:column;gap:3px;';
+  btnWrap.appendChild(saveBtn);
+  btnWrap.appendChild(cancelBtn);
+
+  wrap.appendChild(inp);
+  wrap.appendChild(btnWrap);
+
+  // Sätt in direkt efter targetEl
+  targetEl.insertAdjacentElement('afterend', wrap);
+  inp.focus();
+
+  saveBtn.onclick=()=>{
+    proSetEdit(personId, key, inp.value.trim(), getter());
+    wrap.remove();
+    // Rendera om personkortet (S.curId är den aktuella personen)
+    if(S.curId===personId) sel(personId);
+  };
+  cancelBtn.onclick=()=>wrap.remove();
+  inp.onkeydown=(e)=>{
+    if(e.key==='Enter'&&!textarea) saveBtn.click();
+    if(e.key==='Escape') cancelBtn.click();
+  };
+}
+
+/* ──── Pro: lägg till partner / barn / föräldrar ──── */
+
+/* ──── Pro datepicker ──── */
+const PRO_DP_MONTHS_SV=['JAN','FEB','MAR','APR','MAJ','JUN','JUL','AUG','SEP','OKT','NOV','DEC'];
+const PRO_DP_MONTHS_EN=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const PRO_DP_DAYS_SV=['Må','Ti','On','To','Fr','Lö','Sö'];
+
+let _dpTargetId=null;   // id på input-fältet som ska fyllas
+let _dpYear=new Date().getFullYear();
+let _dpMonth=new Date().getMonth(); // 0-11
+let _dpSelDay=null;
+let _dpMode='day'; // 'day' | 'month'
+
+function proDpOpen(targetId, triggerEl){
+  _dpTargetId=targetId;
+  _dpMode='day';
+  // Försök läsa befintligt värde
+  const existing=(document.getElementById(targetId).value||'').trim();
+  if(existing){
+    const parts=existing.split(' ');
+    if(parts.length===3){
+      _dpSelDay=parseInt(parts[0]);
+      const mi=PRO_DP_MONTHS_EN.indexOf(parts[1].toUpperCase());
+      if(mi>=0){ _dpMonth=mi; _dpYear=parseInt(parts[2])||_dpYear; }
+    }
+  } else {
+    _dpSelDay=null;
+    _dpMonth=new Date().getMonth();
+    _dpYear=new Date().getFullYear();
+  }
+  proDpRender();
+  // Positionera nära trigger
+  const dp=document.getElementById('pro-datepicker');
+  const rect=triggerEl.getBoundingClientRect();
+  dp.style.top=(rect.bottom+6+window.scrollY)+'px';
+  dp.style.left=Math.min(rect.left, window.innerWidth-260)+'px';
+  dp.classList.add('show');
+  // Stäng vid klick utanför
+  setTimeout(()=>document.addEventListener('click',proDpOutside,{once:true,capture:true}),10);
+}
+
+function proDpOutside(e){
+  const dp=document.getElementById('pro-datepicker');
+  if(!dp.contains(e.target)) dp.classList.remove('show');
+  else setTimeout(()=>document.addEventListener('click',proDpOutside,{once:true,capture:true}),10);
+}
+
+function proDpRender(){
+  const dp=document.getElementById('pro-datepicker');
+  const title=document.getElementById('pro-dp-title');
+  const body=document.getElementById('pro-dp-body');
+
+  if(_dpMode==='month'){
+    title.textContent=_dpYear;
+    // Månadsvy
+    let html='<div class="pro-dp-months">';
+    PRO_DP_MONTHS_SV.forEach((m,i)=>{
+      const sel=i===_dpMonth?' sel':'';
+      html+=`<div class="pro-dp-month${sel}" onclick="proDpSelMonth(${i})">${m}</div>`;
+    });
+    html+='</div>';
+    html+='<div class="pro-dp-year-row"><button class="pro-dp-nav" onclick="proDpNav(-1)" style="background:none;border:none;cursor:pointer;color:var(--amber);font-size:16px;">◀</button><input class="pro-dp-year-inp" id="pro-dp-year-inp" type="number" value="'+_dpYear+'" onchange="proDpSetYear(this.value)"><button class="pro-dp-nav" onclick="proDpNav(1)" style="background:none;border:none;cursor:pointer;color:var(--amber);font-size:16px;">▶</button></div>';
+    body.innerHTML=html;
+  } else {
+    // Dagvy
+    title.textContent=PRO_DP_MONTHS_SV[_dpMonth]+' '+_dpYear;
+    const firstDay=(new Date(_dpYear,_dpMonth,1).getDay()+6)%7; // Måndag=0
+    const daysInMonth=new Date(_dpYear,_dpMonth+1,0).getDate();
+    let html='<div class="pro-dp-grid">';
+    PRO_DP_DAYS_SV.forEach(d=>{ html+=`<div class="pro-dp-head">${d}</div>`; });
+    for(let i=0;i<firstDay;i++) html+='<div class="pro-dp-day empty"></div>';
+    for(let d=1;d<=daysInMonth;d++){
+      const sel=(d===_dpSelDay)?' selected':'';
+      html+=`<div class="pro-dp-day${sel}" onclick="proDpSelDay(${d})">${d}</div>`;
+    }
+    html+='</div>';
+    body.innerHTML=html;
+  }
+}
+
+function proDpToggleMode(){
+  _dpMode=(_dpMode==='day')?'month':'day';
+  proDpRender();
+}
+
+function proDpNav(dir){
+  if(_dpMode==='month'){
+    _dpYear+=dir; proDpRender();
+  } else {
+    _dpMonth+=dir;
+    if(_dpMonth>11){_dpMonth=0;_dpYear++;}
+    if(_dpMonth<0){_dpMonth=11;_dpYear--;}
+    proDpRender();
+  }
+}
+
+function proDpSetYear(v){
+  const y=parseInt(v);
+  if(y>0&&y<2200){_dpYear=y;proDpRender();}
+}
+
+function proDpSelMonth(m){
+  _dpMonth=m;_dpMode='day';proDpRender();
+}
+
+function proDpSelDay(d){
+  _dpSelDay=d;
+  // Bygg Disgen-format: "12 MAR 1845" med engelska månadsnamn
+  const dateStr=String(d).padStart(2,'0')+' '+PRO_DP_MONTHS_EN[_dpMonth]+' '+_dpYear;
+  const inp=document.getElementById(_dpTargetId);
+  if(inp){ inp.value=dateStr; }
+  document.getElementById('pro-datepicker').classList.remove('show');
+}
+
+function proDpClear(){
+  const inp=document.getElementById(_dpTargetId);
+  if(inp) inp.value='';
+  _dpSelDay=null;
+  document.getElementById('pro-datepicker').classList.remove('show');
+}
+
+let _proAddMode=null;   // 'partner' | 'barn' | 'foraldrar'
+let _proAddRefId=null;  // person som relationen gäller
+
+// Generera nytt Pro-ID
+function proNextId(){
+  // ID-format utan @-tecken i S.persons-nycklar för nya Pro-poster
+  const existing=Object.keys(S.persons).concat(Object.keys(PRO_EDITS));
+  let n=1;
+  while(existing.includes('@PRO'+String(n).padStart(4,'0')+'@') ||
+        existing.includes('PRO'+String(n).padStart(4,'0'))) n++;
+  return '@PRO'+String(n).padStart(4,'0')+'@';
+}
+
+function proAddOpen(mode, refId){
+  _proAddMode=mode;
+  _proAddRefId=refId;
+  const titles={'partner':'Lägg till partner','barn':'Lägg till barn','foraldrar':'Lägg till förälder'};
+  document.getElementById('pro-add-title').textContent=titles[mode]||'Lägg till person';
+  // Förvalda kön beroende på läge och nuvarande persons kön
+  const p=S.persons[refId];
+  const refSex=p?p.sex:'U';
+  let defaultSex='U';
+  if(mode==='partner') defaultSex=(refSex==='M'?'F':refSex==='F'?'M':'U');
+  document.querySelectorAll('input[name="pro-add-sex"]').forEach(r=>{ r.checked=(r.value===defaultSex); });
+  // Rensa fält
+  ['pro-add-given','pro-add-sur','pro-add-bdate','pro-add-bplac','pro-add-ddate','pro-add-dplac']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('pro-add-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('pro-add-given').focus(), 80);
+}
+
+function proAddClose(){
+  document.getElementById('pro-add-modal').classList.remove('show');
+  _proAddMode=null; _proAddRefId=null;
+}
+
+function proAddSave(){
+  try{
+    const given=(document.getElementById('pro-add-given').value||'').trim();
+    const sur=(document.getElementById('pro-add-sur').value||'').trim();
+    if(!given && !sur){ alert('Ange minst ett namn.'); return; }
+
+    const sexEl=document.querySelector('input[name="pro-add-sex"]:checked');
+    const sex=sexEl?sexEl.value:'U';
+    const bdate=(document.getElementById('pro-add-bdate').value||'').trim();
+    const bplac=(document.getElementById('pro-add-bplac').value||'').trim();
+    const ddate=(document.getElementById('pro-add-ddate').value||'').trim();
+    const dplac=(document.getElementById('pro-add-dplac').value||'').trim();
+
+    const savedRefId=_proAddRefId;
+    const savedMode=_proAddMode;
+    const newId=proNextId();
+    const fullName=(given+(sur?' /'+sur+'/':'')).trim();
+
+    // 1. Skapa PRO_EDITS-post FÖRST (proAddRelation behöver den)
+    PRO_EDITS[newId]={_orig:{},
+      NAME:fullName, SEX:sex, _isNew:true,
+      _refId:savedRefId, _relation:savedMode
+    };
+    if(bdate) PRO_EDITS[newId]['BIRT.DATE']=bdate;
+    if(bplac) PRO_EDITS[newId]['BIRT.PLAC']=bplac;
+    if(ddate) PRO_EDITS[newId]['DEAT.DATE']=ddate;
+    if(dplac) PRO_EDITS[newId]['DEAT.PLAC']=dplac;
+
+    // 2. Skapa ny person i S.persons
+    S.persons[newId]={
+      name:(given+(sur?' '+sur:'')).trim(),
+      nameGiven:given, nameSur:sur, allSurnames:sur,
+      callname:'', sex,
+      birt:{date:bdate, place:bplac},
+      deat:{date:ddate, place:dplac},
+      chr:{date:'',place:''}, buri:{date:'',place:''},
+      occu:'', bio:'', resi:[], immi:[],
+      fams:[], famc:[], _proNew:true
+    };
+
+    // 3. Skapa FAM-koppling
+    proAddRelation(newId, savedRefId, savedMode, sex);
+
+    proSaveEdits();
+    proAddClose();
+
+    // 4. Rendera om
+    if(savedRefId && S.persons[savedRefId]) sel(savedRefId);
+    else if(S.persons[newId]) sel(newId);
+    buildList();
+    updateProBadge();
+  } catch(e){
+    alert('Fel vid sparande: '+e.message);
+    console.error(e);
+  }
+}
+
+function proAddRelation(newId, refId, mode, newSex){
+  const ref=S.persons[refId];
+  if(!ref) return;
+  const newP=S.persons[newId];
+
+  if(mode==='partner'){
+    const famId='@PFAM'+String(Date.now()).slice(-6)+'@';
+    const fam={husb:'',wife:'',chil:[],chilPedi:{}};
+    if(ref.sex==='F'){ fam.wife=refId; fam.husb=newId; }
+    else{ fam.husb=refId; fam.wife=newId; }
+    S.families[famId]=fam;
+    ref.fams.push(famId);
+    newP.fams.push(famId);
+    PRO_EDITS[newId]['_famId']=famId;
+
+  } else if(mode==='barn'){
+    // Barnet läggs till refId:s familj (refId är förälder)
+    let famId=ref.fams.find(fid=>{
+      const f=S.families[fid];
+      return f&&(f.husb===refId||f.wife===refId);
+    })||null;
+    if(!famId){
+      famId='@PFAM'+String(Date.now()).slice(-6)+'@';
+      const fam={husb:'',wife:'',chil:[],chilPedi:{}};
+      if(ref.sex==='F') fam.wife=refId; else fam.husb=refId;
+      S.families[famId]=fam;
+      ref.fams.push(famId);
+    }
+    S.families[famId].chil.push(newId);
+    newP.famc.push({id:famId,pedi:'birth'});
+    PRO_EDITS[newId]['_famId']=famId;
+
+  } else if(mode==='foraldrar'){
+    // newId är ny förälder till refId
+    let famId=null;
+    for(const fc of (ref.famc||[])){
+      const f=S.families[fc.id];
+      if(!f) continue;
+      if(newSex==='F'&&!f.wife){ f.wife=newId; famId=fc.id; break; }
+      if(newSex!=='F'&&!f.husb){ f.husb=newId; famId=fc.id; break; }
+    }
+    if(!famId){
+      famId='@PFAM'+String(Date.now()).slice(-6)+'@';
+      const fam={husb:'',wife:'',chil:[refId],chilPedi:{}};
+      if(newSex==='F') fam.wife=newId; else fam.husb=newId;
+      S.families[famId]=fam;
+      ref.famc.push({id:famId,pedi:'birth'});
+    }
+    newP.fams.push(famId);
+    PRO_EDITS[newId]['_famId']=famId;
+  }
+}
+
+/* ──── Importera _r.ged ──── */
+function proImportGedTrigger(){
+  const inp=document.getElementById('pro-import-input');
+  if(inp) inp.click();
+}
+
+function proImportGed(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const text=e.target.result;
+    const result=proParseImportGed(text);
+    input.value=''; // återställ input
+    if(result.count===0){
+      alert('Inga ändringar hittades i filen.');
+      return;
+    }
+    const merge=confirm(result.count+' ändring(ar) i '+file.name+'. Slå samman med befintliga? Avbryt=ersätt alla.');
+    if(!merge){
+      PRO_EDITS={};
+    }
+    // Applicera importerade ändringar
+    Object.entries(result.edits).forEach(([id,changes])=>{
+      if(!PRO_EDITS[id]) PRO_EDITS[id]={_orig:{}};
+      Object.entries(changes).forEach(([field,val])=>{
+        if(field==='_orig') return;
+        // Spara originalvärdet från aktuellt träd om det finns
+        if(PRO_EDITS[id]['_orig'][field]===undefined){
+          const p=S.persons[id];
+          if(p){
+            const origMap={
+              'NAME':p.name||'',
+              'BIRT.DATE':(p.birt&&p.birt.date)||'',
+              'BIRT.PLAC':(p.birt&&p.birt.place)||'',
+              'DEAT.DATE':(p.deat&&p.deat.date)||'',
+              'DEAT.PLAC':(p.deat&&p.deat.place)||'',
+              'NOTE':p.bio||''
+            };
+            PRO_EDITS[id]['_orig'][field]=origMap[field]||'';
+          }
+        }
+        PRO_EDITS[id][field]=val;
+      });
+    });
+    proSaveEdits();
+    if(S.curId) sel(S.curId);
+    updateProBadge();
+    proShowChanges(); // visa ändringsmodalen direkt
+    alert('✓ '+result.count+' ändring(ar) laddades från "'+file.name+'".');
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+function proParseImportGed(text){
+  const lines=text.split(/\r?\n/);
+  const edits={};
+  let curId=null;
+  let curTag=null;
+  let count=0;
+
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i].trim();
+    if(!line) continue;
+    const m=line.match(/^(\d+)\s+(\S+)(?:\s+(.*))?$/);
+    if(!m) continue;
+    const level=parseInt(m[1]);
+    const tag=m[2];
+    const val=(m[3]||'').trim();
+
+    if(level===0){
+      curTag=null;
+      // 0 @I123@ INDI
+      const idm=tag.match(/^@[^@]+@$/);
+      if(idm && val==='INDI'){
+        curId=tag;
+        edits[curId]={_orig:{}};
+      } else {
+        curId=null;
+      }
+      continue;
+    }
+    if(!curId) continue;
+
+    if(level===1){
+      curTag=tag;
+      if(tag==='NAME' && val){
+        edits[curId]['NAME']=val; count++;
+      } else if(tag==='NOTE' && val){
+        edits[curId]['NOTE']=val; count++;
+      }
+    } else if(level===2 && curTag){
+      if(curTag==='BIRT'){
+        if(tag==='DATE'){ edits[curId]['BIRT.DATE']=val; count++; }
+        if(tag==='PLAC'){ edits[curId]['BIRT.PLAC']=val; count++; }
+      } else if(curTag==='DEAT'){
+        if(tag==='DATE'){ edits[curId]['DEAT.DATE']=val; count++; }
+        if(tag==='PLAC'){ edits[curId]['DEAT.PLAC']=val; count++; }
+      } else if(curTag==='NOTE' && tag==='CONC'){
+        edits[curId]['NOTE']=(edits[curId]['NOTE']||'')+'\n'+val;
+      }
+    }
+  }
+  // Rensa tomma poster
+  Object.keys(edits).forEach(id=>{
+    if(Object.keys(edits[id]).filter(k=>k!=='_orig').length===0) delete edits[id];
+  });
+  return {edits, count};
+}
+
+/* ──── Pro nav: Visa ändringar en i taget ──── */
+let _proNavList=[];
+let _proNavIdx=0;
+
+function proNavBuildList(){
+  _proNavList=[];
+  const fieldLabels={
+    'NAME':'Namn','BIRT.DATE':'Födelsedag','BIRT.PLAC':'Födelseort',
+    'DEAT.DATE':'Dödsdag','DEAT.PLAC':'Dödsort','NOTE':'Anteckning'
+  };
+  Object.entries(PRO_EDITS).forEach(([id,changes])=>{
+    const p=S.persons[id];
+    const pname=p?p.name||id:id;
+    Object.entries(changes).forEach(([field,val])=>{
+      if(field==='_orig') return;
+      const origVal=(changes['_orig']&&changes['_orig'][field])||'';
+      _proNavList.push({id, pname, field, label:fieldLabels[field]||field, origVal, newVal:val});
+    });
+  });
+}
+
+function proNavStart(){
+  // Stäng ändringsmodalen
+  document.getElementById('pro-changes-modal').classList.remove('show');
+  proNavBuildList();
+  if(!_proNavList.length){ alert('Inga ändringar att visa.'); return; }
+  _proNavIdx=0;
+  proNavShow();
+}
+
+function proNavShow(){
+  const bar=document.getElementById('pro-nav-bar');
+  const item=_proNavList[_proNavIdx];
+  if(!item){ bar.classList.remove('show'); return; }
+
+  document.getElementById('pro-nav-idx').textContent=_proNavIdx+1;
+  document.getElementById('pro-nav-total').textContent=_proNavList.length;
+  document.getElementById('pro-nav-person').textContent=item.pname+'  –  '+item.id;
+  document.getElementById('pro-nav-field').textContent=item.label+':';
+  document.getElementById('pro-nav-old').textContent='Tidigare: '+(item.origVal||'(tomt)');
+  document.getElementById('pro-nav-new').textContent='Nytt: '+item.newVal;
+
+  // Uppdatera knappar
+  document.getElementById('pro-nav-prev').classList.toggle('disabled', _proNavIdx===0);
+  document.getElementById('pro-nav-next').classList.toggle('disabled', _proNavIdx===_proNavList.length-1);
+
+  bar.classList.add('show');
+
+  // Hoppa till personen i appen
+  if(item.id && S.persons[item.id]) sel(item.id, false);
+}
+
+function proNavStep(dir){
+  _proNavIdx=Math.max(0, Math.min(_proNavList.length-1, _proNavIdx+dir));
+  proNavShow();
+}
+
+function proNavClose(){
+  document.getElementById('pro-nav-bar').classList.remove('show');
+  _proNavList=[];
+  _proNavIdx=0;
+}
+
+/* ──── Visa ändringar-modal ──── */
+function proShowChanges(){
+  const list=document.getElementById('pro-changes-list');
+  list.innerHTML='';
+  const n=proCountChanges();
+  if(n===0){
+    list.innerHTML='<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:10px 0;">Inga ändringar ännu.</div>';
+  } else {
+    const fieldLabels={
+      'NAME':'Namn','BIRT.DATE':'Födelsedag','BIRT.PLAC':'Födelseort',
+      'DEAT.DATE':'Dödsdag','DEAT.PLAC':'Dödsort','NOTE':'Anteckning'
+    };
+    Object.entries(PRO_EDITS).forEach(([id, changes])=>{
+      const p=S.persons[id];
+      const pname=p?p.name||id:id;
+      Object.entries(changes).forEach(([field,newVal])=>{
+        if(field==='_orig') return;
+        const origVal=(changes['_orig']&&changes['_orig'][field])||'';
+        const row=document.createElement('div');
+        row.className='pro-change-row';
+        row.innerHTML=`<span class="pro-change-person">${pname}</span>`
+          +`<span class="pro-change-field">[${fieldLabels[field]||field}]</span>`
+          +`<br><span class="pro-change-old">${origVal||'(tomt)'}</span>`
+          +` → <span class="pro-change-new">${newVal||'(tomt)'}</span>`;
+        list.appendChild(row);
+      });
+    });
+  }
+  document.getElementById('pro-changes-modal').classList.add('show');
+}
+
+/* ──── Dela GEDCOM via iOS share sheet ──── */
+async function proShareGed(){
+  if(!proCountChanges()){ alert('Inga ändringar att dela.'); return; }
+  const lines=proGetGedLines();
+  const content=lines.join('\n');
+  const origName=(S.fileName||'slaktvis').replace(/\.(zip|ged|gedcom)$/i,'');
+  const fileName=origName+'_r.ged';
+  const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
+  const file=new File([blob],fileName,{type:'text/plain'});
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file],title:'Släktvis ändringar',text:fileName});
+    }catch(e){
+      if(e.name!=='AbortError') proExportGed(); // fallback till nedladdning
+    }
+  } else {
+    // Fallback: vanlig nedladdning
+    proExportGed();
+  }
+}
+
+/* ──── Export GEDCOM (_r.ged) ──── */
+function proGetGedLines(){
+  const lines=['0 HEAD','1 CHAR UTF-8','1 SOUR Slaktvis Pro','1 GEDC','2 VERS 5.5.1'];
+  const famsSeen=new Set();
+
+  Object.entries(PRO_EDITS).forEach(([id,changes])=>{
+    const isNew=changes['_isNew'];
+    const dataFields=['NAME','SEX','BIRT.DATE','BIRT.PLAC','DEAT.DATE','DEAT.PLAC','NOTE'];
+    const edits=Object.entries(changes).filter(([k])=>dataFields.includes(k));
+    if(!edits.length) return;
+
+    lines.push('0 @'+id+'@ INDI');
+    let birtWritten=false, deatWritten=false;
+    edits.forEach(([field,val])=>{
+      if(field==='NAME') lines.push('1 NAME '+val);
+      else if(field==='SEX') lines.push('1 SEX '+val);
+      else if(field.startsWith('BIRT.')){
+        if(!birtWritten){ lines.push('1 BIRT'); birtWritten=true; }
+        if(field==='BIRT.DATE') lines.push('2 DATE '+val);
+        if(field==='BIRT.PLAC') lines.push('2 PLAC '+val);
+      } else if(field.startsWith('DEAT.')){
+        if(!deatWritten){ lines.push('1 DEAT'); deatWritten=true; }
+        if(field==='DEAT.DATE') lines.push('2 DATE '+val);
+        if(field==='DEAT.PLAC') lines.push('2 PLAC '+val);
+      } else if(field==='NOTE'){
+        const nl=val.split('\n');
+        lines.push('1 NOTE '+nl[0]);
+        nl.slice(1).forEach(l=>lines.push('2 CONC '+l));
+      }
+    });
+
+    // Lägg till FAM-referenser för nya personer
+    if(isNew && changes['_famId']){
+      const famId=changes['_famId'];
+      const relation=changes['_relation'];
+      if(relation==='barn'||relation==='foraldrar'){
+        lines.push('1 FAMC @'+famId+'@');
+      } else {
+        lines.push('1 FAMS @'+famId+'@');
+      }
+      famsSeen.add(famId);
+    }
+  });
+
+  // Skriv ut nya FAM-poster
+  famsSeen.forEach(famId=>{
+    const fam=S.families[famId];
+    if(!fam) return;
+    lines.push('0 @'+famId+'@ FAM');
+    if(fam.husb) lines.push('1 HUSB @'+fam.husb+'@');
+    if(fam.wife) lines.push('1 WIFE @'+fam.wife+'@');
+    fam.chil.forEach(c=>lines.push('1 CHIL @'+c+'@'));
+  });
+
+  lines.push('0 TRLR');
+  return lines;
+}
+
+function proExportGed(){
+  if(!proCountChanges()){
+    alert('Inga ändringar att exportera.');
+    return;
+  }
+  // Bygg en minimal GEDCOM med bara ändrade poster
+  const lines=proGetGedLines();
+  const gedContent=lines.join('\n');
+  const blob=new Blob([gedContent],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const origName=(S.fileName||'slaktvis').replace(/\.(zip|ged|gedcom)$/i,'');
+  a.download=origName+'_r.ged';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
