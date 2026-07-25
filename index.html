@@ -728,7 +728,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.2.30 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.2.31 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- PRO MODAL -->
@@ -1637,6 +1637,11 @@ function renderList(ids){
 ══════════════════════════════════════════ */
 function sel(id,addHistory=true){
   if(addHistory&&S.curId&&S.curId!==id) S.history.push(S.curId);
+  // Uppdatera tillbaka-knappar
+  setTimeout(()=>{
+    const ab=document.getElementById('anc-back-btn');
+    if(ab) ab.style.opacity=S.history.length?'1':'0.3';
+  },50);
   S.curId=id;
   document.querySelectorAll('.person-item').forEach(el=>el.classList.toggle('selected',el.dataset.id===id));
   renderD(id);renderE(id);renderG(id);renderF(id);
@@ -1658,6 +1663,8 @@ function updateBackBtn(){
   if(btn)btn.style.opacity=S.history.length?'1':'0.3';
   const btn2=document.getElementById('fan-back-btn2');
   if(btn2)btn2.style.opacity=S.history.length?'1':'0.3';
+  const ancBtn=document.getElementById('anc-back-btn');
+  if(ancBtn)ancBtn.style.opacity=S.history.length?'1':'0.3';
 }
 function clearSel(){
   S.curId=null;
@@ -1698,22 +1705,12 @@ function setDView(mode,btn){
     if(rc) rc.style.gridTemplateRows='auto 1fr';
   } else if(mode==='fan'){
     fan.style.display='block';
-    // iPad: Block D tar 55% av tillgänglig höjd
-    if(isIpad()&&rc){
-      rc.style.gridTemplateRows='55fr 45fr';
-      fan.style.height='';
-    } else {
-      if(rc) rc.style.gridTemplateRows='auto 1fr';
-    }
+    fan.style.height='';
+    if(rc) rc.style.gridTemplateRows=isIpad()?'55fr 45fr':'60fr 40fr';
   } else if(mode==='stam'){
     stam.style.display='block';
-    // iPad: Block D tar 60% av tillgänglig höjd
-    if(isIpad()&&rc){
-      rc.style.gridTemplateRows='60fr 40fr';
-      stam.style.height='100%';
-    } else {
-      if(rc) rc.style.gridTemplateRows='auto 1fr';
-    }
+    stam.style.height='100%';
+    if(rc) rc.style.gridTemplateRows=isIpad()?'60fr 40fr':'62fr 38fr';
   }
   if(S.curId)renderD(S.curId);
 }
@@ -1763,6 +1760,18 @@ function renderD(id){
 function renderAntavla(id){
   const chart=document.getElementById('ancestor-chart');
   chart.innerHTML='';
+  // Tillbaka-knapp
+  const backBar=document.createElement('div');
+  backBar.style.cssText='position:absolute;top:4px;left:6px;z-index:10;';
+  const backBtn=document.createElement('button');
+  backBtn.id='anc-back-btn';
+  backBtn.textContent='◀';
+  backBtn.title='Föregående person';
+  backBtn.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:14px;cursor:pointer;color:var(--text);opacity:'+(S.history.length?'1':'0.3')+';';
+  backBtn.onclick=()=>back();
+  backBar.appendChild(backBtn);
+  chart.style.position='relative';
+  chart.appendChild(backBar);
   const cols=buildGenTree(id,S.genCount);
   for(let ci=0;ci<cols.length;ci++){
     const colEl=document.createElement('div');
@@ -2045,18 +2054,16 @@ function renderFan(id){
       if(factor===null){goBack();return;}
       if(factor===0){zoom=1;panX=0;panY=0;}
       else if(factor==='fit'){
-        // Räkna ut zoom som passar SVG i containern
+        // Räkna ut zoom som passar SVG i hela containern
         const rect=wrap.getBoundingClientRect();
-        const svgRect=svg.getBoundingClientRect();
-        // SVG:ns naturliga storlek vid zoom=1
-        const svgW=svg.viewBox.baseVal.width||svgRect.width/zoom;
-        const svgH=svg.viewBox.baseVal.height||svgRect.height/zoom;
+        const svgW=svg.viewBox.baseVal.width||W;
+        const svgH=svg.viewBox.baseVal.height||H;
         const fitZoom=Math.min(
-          (rect.width-20)/svgW,
-          (rect.height-20)/svgH,
-          1.5  // max fit-zoom så det inte blir för stort
+          (rect.width-10)/svgW,
+          (rect.height-10)/svgH
         );
-        zoom=Math.max(0.2,fitZoom);
+        zoom=Math.max(0.15, fitZoom);
+        // Centrera horisontellt, lägg solfjädern nära botten
         panX=(rect.width-svgW*zoom)/2;
         panY=(rect.height-svgH*zoom)/2;
       }
