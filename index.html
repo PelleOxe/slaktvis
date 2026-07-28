@@ -714,9 +714,13 @@ input[type="file"]{display:none;}
 
   <!-- Tema -->
   <div id="theme-group">
-    <button class="theme-btn" onclick="setTheme('light',this)" id="tbtn-light">☀ Ljust</button>
-    <button class="theme-btn" onclick="setTheme('dark',this)" id="tbtn-dark">☾ Mörkt</button>
-    <button class="theme-btn active" onclick="setTheme('parchment',this)" id="tbtn-parch">📜 Pergament</button>
+    <select id="theme-select" onchange="setTheme(this.value)"
+      style="background:var(--surface);color:var(--text);border:1px solid rgba(255,255,255,.25);
+      border-radius:6px;padding:3px 6px;font-size:12px;cursor:pointer;font-family:sans-serif;">
+      <option value="parchment" selected>📜 Pergament</option>
+      <option value="light">☀ Ljust</option>
+      <option value="dark">☾ Mörkt</option>
+    </select>
   </div>
   <button class="theme-btn" onclick="document.getElementById('dela-modal').style.display='flex'"
     style="margin-left:4px;" title="Dela Släktvis">🔗 Dela</button>
@@ -728,7 +732,7 @@ input[type="file"]{display:none;}
     <div id="info-count"><strong>—</strong></div>
     <div id="info-file" style="font-size:11px">—</div>
   </div>
-  <div id="copyright">v1.2.31 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+  <div id="copyright">v1.2.34 &nbsp;|&nbsp; © 2026 Per Andersson</div>
 </div>
 
 <!-- PRO MODAL -->
@@ -874,7 +878,7 @@ input[type="file"]{display:none;}
       <div style="font-size:22px;font-weight:bold;color:var(--accent);letter-spacing:1px;">
         Släkt<span style="color:var(--text);">vis</span>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">v1.2 · © 2026 Per Andersson</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">v1.2.34 · © 2026 Per Andersson</div>
     </div>
 
     <div style="font-family:sans-serif;font-size:13px;color:var(--text);line-height:1.7;">
@@ -902,9 +906,10 @@ input[type="file"]{display:none;}
 
       <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">🌳 Förfädervyer</div>
       <ul style="margin:0 0 14px;padding-left:18px;">
-        <li><b>Antavla</b> — klassisk förfädertavla, 3–5 generationer</li>
-        <li><b>Solfjäder</b> — radiell SVG-grafik med pan och zoom</li>
-        <li><b>Stamtavla</b> — ättlingstavla med obegränsat djup</li>
+        <li><b>Antavla</b> — klassisk förfädertavla, 3–5 generationer, med navigeringshistorik</li>
+        <li><b>Solfjäder</b> — radiell SVG-grafik med pan, zoom, pinch och navigeringshistorik</li>
+        <li>Solfjäder: ⊡ Anpassa till yta zoomar in diagrammet i tillgängligt utrymme</li>
+        <li><b>Stamtavla</b> — ättlingstavla med obegränsat djup, horisontell scroll</li>
       </ul>
 
       <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">👤 Personinformation</div>
@@ -925,6 +930,28 @@ input[type="file"]{display:none;}
         <li>Bläddra bland alternativa släktvägar — upp till 20 visas</li>
         <li>Hittar multipla släktband (endogama familjer)</li>
         <li>Aldrig via giftermål — bara biologiska band</li>
+      </ul>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">✦ Pro-läge — redigering</div>
+      <ul style="margin:0 0 14px;padding-left:18px;">
+        <li>Aktiveras med valfritt 6-siffrigt primtal — ingen hårdkodad kod</li>
+        <li>Redigera befintliga fält: namn, datum, orter, yrke, anteckning m.m.</li>
+        <li>Datumfält med klickbar kalender (Disgen-format)</li>
+        <li>Lägg till ny partner, barn eller förälder direkt i appen</li>
+        <li>Bryt koppling mellan partner eller barn</li>
+        <li>Redigerade värden visas i lila — originalet bevaras alltid</li>
+        <li>Ändringar sparas i webbläsaren och återappliceras automatiskt</li>
+        <li>Exportera ändringar som GEDCOM-fil (<code>_r.ged</code>) — dela via AirDrop</li>
+        <li>Ladda in sparade ändringar på ny enhet via <code>_r.ged</code></li>
+      </ul>
+
+      <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">📖 Släktberättelse</div>
+      <ul style="margin:0 0 14px;padding-left:18px;">
+        <li>Genererar en löpande text på svenska för markerad person</li>
+        <li>Täcker fem generationer: fokusperson, barn, föräldrar och far-/morföräldrar</li>
+        <li>Rätt tempus baserat på om personen har dödsdag eller ej</li>
+        <li>Skiljer på vigsel och samboskap utifrån GEDCOM-data</li>
+        <li>Kan skrivas ut eller sparas som PDF via webbläsaren</li>
       </ul>
 
       <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">🎨 Design & tillgänglighet</div>
@@ -1109,9 +1136,10 @@ input[type="file"]{display:none;}
 /* ══════════════════════════════════════════
    TEMA
 ══════════════════════════════════════════ */
-function setTheme(t,btn){
+function setTheme(t){
   document.body.setAttribute('data-theme',t);
-  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  const sel=document.getElementById('theme-select');
+  if(sel&&sel.value!==t)sel.value=t;
 }
 
 /* ══════════════════════════════════════════
@@ -1768,7 +1796,7 @@ function renderAntavla(id){
   backBtn.textContent='◀';
   backBtn.title='Föregående person';
   backBtn.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:14px;cursor:pointer;color:var(--text);opacity:'+(S.history.length?'1':'0.3')+';';
-  backBtn.onclick=()=>back();
+  backBtn.onclick=()=>goBack();
   backBar.appendChild(backBtn);
   chart.style.position='relative';
   chart.appendChild(backBar);
