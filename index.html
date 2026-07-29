@@ -102,10 +102,10 @@ input[type="file"]{display:none;}
 #empty-state .icon{font-size:28px;margin-bottom:10px;}
 
 /* ══ RIGHT ══ */
-#right-col{display:grid;grid-template-rows:auto 1fr;gap:var(--gap);overflow:hidden;}
+#right-col{display:flex;flex-direction:column;gap:var(--gap);overflow:hidden;}
 
 /* ══ BLOCK D ══ */
-#block-d{overflow:hidden;min-height:0;transition:max-height .35s ease;display:flex;flex-direction:column;}
+#block-d{overflow:hidden;min-height:0;flex:1;transition:max-height .35s ease;display:flex;flex-direction:column;}
 #block-d.collapsed #block-d-inner{display:none;}
 #block-d.collapsed{max-height:36px !important;}
 #block-d-inner{overflow:auto;padding:6px 10px 8px;flex:1;min-height:0;display:flex;flex-direction:column;}
@@ -122,7 +122,7 @@ input[type="file"]{display:none;}
   text-transform:uppercase;letter-spacing:.5px;user-select:none;
 }
 
-#ancestor-chart{display:flex;align-items:stretch;height:270px;transition:height .3s ease;}
+#ancestor-chart{display:flex;align-items:stretch;flex-shrink:0;transition:flex .3s ease;}
 
 /* Vy-lägesväljare */
 .view-btns{display:flex;gap:2px;margin-right:8px;}
@@ -159,7 +159,7 @@ input[type="file"]{display:none;}
 #anc-placeholder{font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px;}
 
 /* ══ BOTTOM ROW ══ */
-#bottom-row{display:grid;grid-template-columns:4fr 3fr 3fr;gap:var(--gap);overflow:hidden;min-height:0;}
+#bottom-row{display:grid;grid-template-columns:4fr 3fr 3fr;gap:var(--gap);overflow:hidden;min-height:0;flex:1 1 0;}
 
 /* ── Block E ── */
 #block-e{overflow-y:auto;}
@@ -307,7 +307,6 @@ input[type="file"]{display:none;}
   #person-name-block h2{font-size:15px;}
   #search-input{font-size:12px;}
   .person-item{font-size:12px;}
-  #ancestor-chart{min-height:320px !important;}
 }
 
 /* Tablet stående / stor telefon landskap (768px och under) */
@@ -329,7 +328,6 @@ input[type="file"]{display:none;}
   #left-col .panel:last-child{flex:1;max-height:220px;}
   #right-col{overflow:visible;height:auto;display:flex;flex-direction:column;gap:4px;}
   #block-d{min-height:0;}
-  #ancestor-chart{height:180px !important;}
   #fan-chart{height:400px !important;}
   #bottom-row{
     display:flex;flex-direction:column;gap:4px;
@@ -352,7 +350,6 @@ input[type="file"]{display:none;}
   #main{padding:3px;gap:3px;}
   .panel-head{font-size:10px;padding:4px 8px 4px 10px;}
   .gen-btn{width:20px;height:20px;font-size:12px;}
-  #ancestor-chart{height:140px !important;}
   #fan-chart{height:320px !important;}
   #block-e,#block-g,#block-f{min-height:160px;}
   .event-date{width:60px;font-size:11px;}
@@ -732,7 +729,7 @@ input[type="file"]{display:none;}
   <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.2.39 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.2.44 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1719,8 +1716,10 @@ function clearSel(){
    Höjdtabell (px): 3→160, 4→270, 5→351, 6→456
    = gen4 har gen5:s gamla höjd, gen5 har gen6:s gamla+30%
 ══════════════════════════════════════════ */
-const GEN_HEIGHTS={3:160,4:297,5:583};
-function genHeight(n){return GEN_HEIGHTS[n]||160;}
+const GEN_HEIGHTS={3:'40%',4:'58%',5:'100%'};
+const BLOCK_D_HEIGHTS={3:'30%',4:'35%',5:'70%'};
+function genHeight(n){return GEN_HEIGHTS[n]||'40%';}
+function blockDHeight(n){return BLOCK_D_HEIGHTS[n]||'30%';}
 
 /* Vy-läge */
 S.dView='antavla';
@@ -1739,8 +1738,9 @@ function setDView(mode,btn){
   chart.style.display='none'; fan.style.display='none'; stam.style.display='none';
   if(mode==='antavla'){
     chart.style.display='flex';
-    chart.style.height=genHeight(S.genCount)+'px';
-    if(rc) rc.style.gridTemplateRows='auto 1fr';
+    chart.style.flexBasis=genHeight(S.genCount);
+    chart.style.flexGrow='0'; chart.style.flexShrink='0';
+    setBlockDHeight(S.genCount);
   } else if(mode==='fan'){
     fan.style.display='block';
     fan.style.height='';
@@ -1753,6 +1753,14 @@ function setDView(mode,btn){
   if(S.curId)renderD(S.curId);
 }
 
+function setBlockDHeight(n){
+  const bd=document.getElementById('block-d');
+  const br=document.getElementById('bottom-row');
+  if(!bd||!br)return;
+  const pct=blockDHeight(n);
+  bd.style.flex='0 0 '+pct;
+  br.style.flex='1 1 0';
+}
 function changeGen(delta){
   const maxGen=isIpad()?4:5; // iPad: max 4 gen
   const n=Math.min(maxGen,Math.max(3,S.genCount+delta));
@@ -1761,7 +1769,10 @@ function changeGen(delta){
   document.getElementById('gen-count').textContent=n;
   document.getElementById('gen-minus').disabled=(n<=3);
   document.getElementById('gen-plus').disabled=(n>=maxGen);
-  document.getElementById('ancestor-chart').style.height=genHeight(n)+'px';
+  const ch=document.getElementById('ancestor-chart');
+  ch.style.flexBasis=genHeight(n);
+  ch.style.flexGrow='0'; ch.style.flexShrink='0';
+  setBlockDHeight(n);
   if(S.curId)renderD(S.curId);
 }
 document.getElementById('gen-minus').disabled=false;
@@ -2283,8 +2294,21 @@ function makeAncCard(id,extra){
   const s=sc(p);
   d.className='anc-card '+(extra||'')+' '+s;
   if(!p){d.classList.add('anc-empty');d.innerHTML=`<div class="anc-name" style="color:var(--text-muted)">${'Okänd'}</div>`;return d;}
-  const dates=[yr(p.birt.date),yr(p.deat.date)].filter(Boolean).join('–');
-  d.innerHTML=`<div class="anc-name">${esc(shortN(p.name))}</div>${dates?`<div class="anc-dates">${dates}</div>`:''}`;
+  if(S.genCount===3){
+    const edits=PRO_EDITS[id]||{};
+    const bYear=yr(p.birt.date)||'';
+    const dYear=yr(p.deat.date)||'';
+    const bPlace=(edits['BIRT.PLAC']||p.birt.place||'').split(',')[0].trim();
+    const dPlace=(edits['DEAT.PLAC']||p.deat.place||'').split(',')[0].trim();
+    const bLine=[bYear,bPlace].filter(Boolean).join(' ');
+    const dLine=[dYear,dPlace].filter(Boolean).join(' ');
+    d.innerHTML=`<div class="anc-name">${esc(shortN(p.name))}</div>`
+      +(bLine?`<div class="anc-dates" style="font-size:11px;margin-top:0;">⁎ ${esc(bLine)}</div>`:'')
+      +(dLine?`<div class="anc-dates" style="font-size:11px;margin-top:0;">† ${esc(dLine)}</div>`:'');
+  } else {
+    const dates=[yr(p.birt.date),yr(p.deat.date)].filter(Boolean).join('–');
+    d.innerHTML=`<div class="anc-name">${esc(shortN(p.name))}</div>${dates?`<div class="anc-dates">${dates}</div>`:''}`;
+  }
   d.onclick=()=>sel(id);return d;
 }
 
@@ -2645,7 +2669,7 @@ function toggleBlockH(){
   setBlockHGrid(collapsed);
 }
 // Sätt korrekt startläge (Block H är dolt från start)
-document.addEventListener('DOMContentLoaded',()=>setBlockHGrid(true));
+document.addEventListener('DOMContentLoaded',()=>{setBlockHGrid(true);setBlockDHeight(S.genCount);});
 
 function toggleRefPerson(cb){
   if(cb.checked){
