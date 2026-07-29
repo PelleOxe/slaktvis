@@ -69,7 +69,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direc
 input[type="file"]{display:none;}
 
 /* ══ LAYOUT ══ */
-#main{display:grid;grid-template-columns:18fr 64fr 18fr;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);min-height:0;align-items:stretch;}
+#main{display:grid;grid-template-columns:15fr 70fr 15fr;flex:1;overflow:hidden;padding:var(--gap);gap:var(--gap);min-height:0;align-items:stretch;}
 #left-col{display:flex;flex-direction:column;gap:var(--gap);overflow:hidden;}
 #left-col.collapsed{display:none;}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
@@ -732,7 +732,7 @@ input[type="file"]{display:none;}
   <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.2.38 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.2.39 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -2624,13 +2624,13 @@ function setBlockHGrid(hCollapsed){
   // B/C=18fr, D=64fr, H=18fr — anpassas efter vad som är synligt
   if(!lcCollapsed && !hCollapsed){
     // Alla tre synliga: 18% / 64% / 18%
-    main.style.gridTemplateColumns='18fr 64fr 18fr';
+    main.style.gridTemplateColumns='15fr 70fr 15fr';
   } else if(lcCollapsed && !hCollapsed){
     // Bara D + H: 78% / 22%
-    main.style.gridTemplateColumns='78fr 22fr';
+    main.style.gridTemplateColumns='82fr 18fr';
   } else if(!lcCollapsed && hCollapsed){
     // Bara B/C + D: 22% / 78%
-    main.style.gridTemplateColumns='22fr 78fr';
+    main.style.gridTemplateColumns='18fr 82fr';
   } else {
     // Bara D: 100%
     main.style.gridTemplateColumns='1fr';
