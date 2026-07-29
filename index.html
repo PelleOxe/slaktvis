@@ -108,7 +108,7 @@ input[type="file"]{display:none;}
 #block-d{overflow:hidden;min-height:0;flex:1;transition:max-height .35s ease;display:flex;flex-direction:column;}
 #block-d.collapsed #block-d-inner{display:none;}
 #block-d.collapsed{max-height:36px !important;}
-#block-d-inner{overflow:auto;padding:6px 10px 8px;flex:1;min-height:0;display:flex;flex-direction:column;}
+#block-d-inner{overflow:auto;padding:6px 10px 8px;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;}
 #ancestor-chart{width:100%;display:none;flex-shrink:0;}
 #fan-chart{width:100%;flex:1;min-height:200px;display:none;position:relative;}
 /* Kollaps-knapp */
@@ -141,8 +141,17 @@ input[type="file"]{display:none;}
 .fan-label{font-family:sans-serif;font-size:10px;pointer-events:none;fill:var(--text);}
 .fan-label-sm{font-family:sans-serif;font-size:8.5px;pointer-events:none;fill:var(--text);}
 .fan-center-text{font-family:sans-serif;font-size:11px;font-weight:bold;fill:var(--text);pointer-events:none;}
-.anc-col{display:flex;flex-direction:column;justify-content:space-around;gap:5px;flex:1;min-width:120px;}
-.anc-col.col-center{flex:1.4;}
+.anc-col{display:flex;flex-direction:column;justify-content:space-around;gap:4px;flex:1;min-width:120px;}
+.anc-col.col-center{flex:1.4;justify-content:center;}
+.anc-col:not(.col-center) .anc-card{flex:1;display:flex;flex-direction:column;justify-content:center;}
+.anc-col.col-last{min-width:100px;}
+.anc-col.col-last .anc-card{padding:2px 6px;}
+.anc-col.col-last .anc-name{font-size:11px;}
+.anc-col.col-last .anc-dates{font-size:11px;}
+.anc-col.col-last-5{min-width:80px;}
+.anc-col.col-last-5 .anc-card{padding:1px 4px;gap:1px;}
+.anc-col.col-last-5 .anc-name{font-size:11px;line-height:1.15;}
+.anc-col.col-last-5 .anc-dates{font-size:11px;margin-top:0;}
 .anc-connector{width:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .anc-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 9px;
   cursor:pointer;transition:border-color .12s,background .12s;flex:1;display:flex;
@@ -729,7 +738,7 @@ input[type="file"]{display:none;}
   <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.2.44 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.2.53 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1716,8 +1725,8 @@ function clearSel(){
    Höjdtabell (px): 3→160, 4→270, 5→351, 6→456
    = gen4 har gen5:s gamla höjd, gen5 har gen6:s gamla+30%
 ══════════════════════════════════════════ */
-const GEN_HEIGHTS={3:'40%',4:'58%',5:'100%'};
-const BLOCK_D_HEIGHTS={3:'30%',4:'35%',5:'70%'};
+const GEN_HEIGHTS={3:'95%',4:'95%',5:'100%'};
+const BLOCK_D_HEIGHTS={3:'34%',4:'42%',5:'72%'};
 function genHeight(n){return GEN_HEIGHTS[n]||'40%';}
 function blockDHeight(n){return BLOCK_D_HEIGHTS[n]||'30%';}
 
@@ -1744,15 +1753,22 @@ function setDView(mode,btn){
   } else if(mode==='fan'){
     fan.style.display='block';
     fan.style.height='';
-    if(rc) rc.style.gridTemplateRows=isIpad()?'55fr 45fr':'60fr 40fr';
+    setBlockDHeightPct('60%');
   } else if(mode==='stam'){
     stam.style.display='block';
     stam.style.height='100%';
-    if(rc) rc.style.gridTemplateRows=isIpad()?'60fr 40fr':'62fr 38fr';
+    setBlockDHeightPct('60%');
   }
   if(S.curId)renderD(S.curId);
 }
 
+function setBlockDHeightPct(pct){
+  const bd=document.getElementById('block-d');
+  const br=document.getElementById('bottom-row');
+  if(!bd||!br)return;
+  bd.style.flex='0 0 '+pct;
+  br.style.flex='1 1 0';
+}
 function setBlockDHeight(n){
   const bd=document.getElementById('block-d');
   const br=document.getElementById('bottom-row');
@@ -1824,8 +1840,9 @@ function renderAntavla(id){
   const cols=buildGenTree(id,S.genCount);
   for(let ci=0;ci<cols.length;ci++){
     const colEl=document.createElement('div');
-    colEl.className='anc-col'+(ci===0?' col-center':'');
-    for(const pid of cols[ci])colEl.appendChild(makeAncCard(pid,ci===0?'center-card':''));
+    const isLast=(ci===cols.length-1);
+    colEl.className='anc-col'+(ci===0?' col-center':'')+(isLast&&cols.length>2?' col-last':'')+(isLast&&cols.length>4?' col-last-5':'');
+    for(const pid of cols[ci])colEl.appendChild(makeAncCard(pid,ci===0?'center-card':'',ci));
     chart.appendChild(colEl);
     if(ci<cols.length-1){
       const conn=document.createElement('div');conn.className='anc-connector';
@@ -2288,18 +2305,18 @@ function buildStamNode(id, isHP){
 }
 
 function sc(p){if(!p)return'';return p.sex==='M'?'male':p.sex==='F'?'female':'';}
-function makeAncCard(id,extra){
+function makeAncCard(id,extra,ci=0){
   const d=document.createElement('div');
   const p=id?S.persons[id]:null;
   const s=sc(p);
   d.className='anc-card '+(extra||'')+' '+s;
   if(!p){d.classList.add('anc-empty');d.innerHTML=`<div class="anc-name" style="color:var(--text-muted)">${'Okänd'}</div>`;return d;}
-  if(S.genCount===3){
+  if(ci<3){
     const edits=PRO_EDITS[id]||{};
     const bYear=yr(p.birt.date)||'';
     const dYear=yr(p.deat.date)||'';
-    const bPlace=(edits['BIRT.PLAC']||p.birt.place||'').split(',')[0].trim();
-    const dPlace=(edits['DEAT.PLAC']||p.deat.place||'').split(',')[0].trim();
+    const bPlace=(edits['BIRT.PLAC']||p.birt.place||'').trim();
+    const dPlace=(edits['DEAT.PLAC']||p.deat.place||'').trim();
     const bLine=[bYear,bPlace].filter(Boolean).join(' ');
     const dLine=[dYear,dPlace].filter(Boolean).join(' ');
     d.innerHTML=`<div class="anc-name">${esc(shortN(p.name))}</div>`
