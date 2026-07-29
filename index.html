@@ -738,7 +738,7 @@ input[type="file"]{display:none;}
   <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.2.53 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.2.54 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1727,8 +1727,9 @@ function clearSel(){
 ══════════════════════════════════════════ */
 const GEN_HEIGHTS={3:'95%',4:'95%',5:'100%'};
 const BLOCK_D_HEIGHTS={3:'34%',4:'42%',5:'72%'};
+const BLOCK_D_HEIGHTS_IPAD={3:'40%',4:'50%',5:'75%'};
 function genHeight(n){return GEN_HEIGHTS[n]||'40%';}
-function blockDHeight(n){return BLOCK_D_HEIGHTS[n]||'30%';}
+function blockDHeight(n){return (isIpad()?BLOCK_D_HEIGHTS_IPAD:BLOCK_D_HEIGHTS)[n]||'34%';}
 
 /* Vy-läge */
 S.dView='antavla';
