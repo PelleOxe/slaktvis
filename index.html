@@ -142,7 +142,7 @@ input[type="file"]{display:none;}
 .fan-label-sm{font-family:sans-serif;font-size:8.5px;pointer-events:none;fill:var(--text);}
 .fan-center-text{font-family:sans-serif;font-size:11px;font-weight:bold;fill:var(--text);pointer-events:none;}
 .anc-col{display:flex;flex-direction:column;justify-content:space-around;gap:4px;flex:1;min-width:120px;}
-.anc-col.col-center{flex:1.4;justify-content:center;}
+.anc-col.col-center{flex:1;justify-content:center;}
 .anc-col:not(.col-center) .anc-card{flex:1;display:flex;flex-direction:column;justify-content:center;}
 .anc-col.col-last{min-width:100px;}
 .anc-col.col-last .anc-card{padding:2px 6px;}
@@ -330,20 +330,19 @@ input[type="file"]{display:none;}
     height:auto;min-height:100vh;
   }
   #left-col{
-    flex-direction:row;flex-shrink:0;
+    flex-direction:column;flex-shrink:0;
     height:auto;overflow:visible;
   }
   #left-col .panel:first-child{flex-shrink:0;width:100%;}
-  #left-col .panel:last-child{flex:1;max-height:220px;}
+  #left-col .panel:last-child{flex:1;max-height:300px;overflow-y:auto;}
   #right-col{overflow:visible;height:auto;display:flex;flex-direction:column;gap:4px;}
-  #block-d{min-height:0;}
+  #block-d{min-height:0;flex:none !important;}
   #fan-chart{height:400px !important;}
   #bottom-row{
     display:flex;flex-direction:column;gap:4px;
     overflow:visible;min-height:0;
   }
   #block-e,#block-g,#block-f{min-height:200px;max-height:none;}
-  /* Block H under på smal skärm */
   #block-h{min-height:200px;}
 }
 
@@ -738,7 +737,7 @@ input[type="file"]{display:none;}
   <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.2.54 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.2.56 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1764,6 +1763,7 @@ function setDView(mode,btn){
 }
 
 function setBlockDHeightPct(pct){
+  if(window.innerWidth<=768)return;
   const bd=document.getElementById('block-d');
   const br=document.getElementById('bottom-row');
   if(!bd||!br)return;
@@ -1771,6 +1771,7 @@ function setBlockDHeightPct(pct){
   br.style.flex='1 1 0';
 }
 function setBlockDHeight(n){
+  if(window.innerWidth<=768)return;
   const bd=document.getElementById('block-d');
   const br=document.getElementById('bottom-row');
   if(!bd||!br)return;
