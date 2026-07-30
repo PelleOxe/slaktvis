@@ -73,6 +73,9 @@ input[type="file"]{display:none;}
 #left-col{display:flex;flex-direction:column;gap:var(--gap);overflow:hidden;}
 #left-col.collapsed{display:none;}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.mob-land-hidden{display:none !important;}
+/* Delad vy i landscape — vertikal avdelare mellan blocken */
+#mob-land-view > .panel + .panel{border-left:2px solid var(--border);}
 .panel-head{font-family:sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.9px;
   color:var(--text-sec);padding:5px 10px 5px 12px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:6px;}
@@ -225,7 +228,7 @@ input[type="file"]{display:none;}
 .rel-group{margin-bottom:6px;}
 .rel-row{display:flex;align-items:center;gap:4px;}
 .rel-toggle{font-size:12px;color:var(--amber);background:none;border:none;cursor:pointer;
-  font-family:sans-serif;width:20px;flex-shrink:0;text-align:center;padding:0;line-height:1;}
+  font-family:sans-serif;width:20px;flex-shrink:0;text-align:center;padding:0;line-height:1;margin-left:8px;}
 .rel-children{padding-left:24px;border-left:2px solid var(--border);margin:3px 0 3px 10px;}
 
 /* ══ BLOCK H — SLÄKTSKAP ══ */
@@ -350,18 +353,172 @@ input[type="file"]{display:none;}
 @media (max-width:600px){
   .stam-dates{display:none;}
 }
-/* Telefon stående (480px och under) */
-@media (max-width:480px){
+/* Telefon stående (430px och under) — Accordion-layout */
+@media (max-width:430px){
   #header{padding:5px 8px;gap:4px;}
   #theme-group{display:none;}
   #open-menu-wrap{flex-shrink:0;}
-  #main{padding:3px;gap:3px;}
-  .panel-head{font-size:10px;padding:4px 8px 4px 10px;}
-  .gen-btn{width:20px;height:20px;font-size:12px;}
-  #fan-chart{height:320px !important;}
-  #block-e,#block-g,#block-f{min-height:160px;}
+
+  /* Huvudlayout: ett vertikalt flöde */
+  #main{
+    display:flex;flex-direction:column;
+    padding:3px;gap:3px;
+    height:auto;min-height:calc(100vh - 48px);
+    overflow-y:auto;overflow-x:hidden;
+  }
+  #left-col{
+    display:flex;flex-direction:column;gap:3px;
+    height:auto;overflow:visible;flex-shrink:0;
+    order:0;
+  }
+  #right-col{
+    display:flex;flex-direction:column;gap:3px;
+    height:auto;overflow:visible;flex-shrink:0;
+    order:1;
+  }
+  #bottom-row{
+    display:flex;flex-direction:column;gap:3px;
+    overflow:visible;min-height:0;
+  }
+  /* Block H hamnar sist */
+  #block-h-show-btn{display:none;}
+  #block-h{
+    position:static;width:auto;height:auto;
+    opacity:1 !important;pointer-events:auto !important;
+    display:flex;flex-direction:column;order:2;
+  }
+  #block-h .panel{flex:none;}
+
+  /* Accordion: panel-head klickbar */
+  .mob-accordion .panel-head{
+    cursor:pointer;user-select:none;
+    padding:8px 10px;font-size:11px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .mob-accordion .panel-head::before{
+    content:'▶';font-size:10px;color:var(--text-muted);
+    transition:transform .2s;flex-shrink:0;
+  }
+  .mob-accordion.mob-open .panel-head::before{
+    transform:rotate(90deg);
+  }
+  /* Innehåll: dolt när stängt */
+  .mob-accordion .mob-body{
+    overflow:hidden;
+    max-height:0;
+    transition:max-height .3s ease;
+  }
+  .mob-accordion.mob-open .mob-body{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Antavlan fyller blockets höjd */
+  .mob-accordion.mob-open#mob-d .mob-body{max-height:60vh;}
+  .mob-accordion.mob-open#mob-d #block-d{flex:1;display:flex;flex-direction:column;}
+  .mob-accordion.mob-open#mob-d #block-d-inner{flex:1;min-height:0;}
+  .mob-accordion.mob-open#mob-d #ancestor-chart{height:100% !important;flex:1;}
+
+  /* Specifika höjder per block */
+  .mob-accordion.mob-open#mob-bc .mob-body{max-height:55vh;}
+  .mob-accordion.mob-open#mob-d  .mob-body{max-height:350px;}
+  .mob-accordion.mob-open#mob-e  .mob-body{max-height:50vh;}
+  .mob-accordion.mob-open#mob-f  .mob-body{max-height:40vh;}
+  .mob-accordion.mob-open#mob-g  .mob-body{max-height:40vh;}
+  .mob-accordion.mob-open#mob-h  .mob-body{max-height:40vh;}
+
+  /* Block D inre när expanderat */
+  #block-d{flex:none !important;min-height:0;}
+  #block-d-inner{height:320px;}
+  #fan-chart{height:310px !important;}
+  #ancestor-chart{height:310px !important;}
+  #stam-chart{height:310px !important;}
+
+  /* Typografi */
+  .panel-head{font-size:11px;padding:8px 10px;}
+  .gen-btn{width:24px;height:24px;font-size:13px;}
   .event-date{width:60px;font-size:11px;}
   .event-type{width:55px;font-size:11px;}
+
+  /* Block D collapse-knapp döljs (accordion sköter det) */
+  .d-collapse-wrap{display:none;}
+}
+
+/* ══ TELEFON LIGGANDE (landscape) ══ */
+@media (orientation:landscape) and (max-height:430px) and (min-aspect-ratio:1/1){
+  /* Återställ stående-accordion om det byggts */
+  #mob-container{display:none !important;}
+
+  /* Tvåkolumnslayout */
+  #main{
+    display:flex;flex-direction:row;
+    flex:1;min-height:0;
+    overflow:hidden;padding:3px;gap:3px;
+  }
+  #left-col{
+    width:42%;flex-shrink:0;
+    display:flex;flex-direction:column;gap:3px;
+    overflow:hidden;height:100%;
+  }
+  #left-col .panel:first-child{flex-shrink:0;}
+  #left-col .panel:last-child{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+  #left-col .panel:last-child #person-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Höger kolumn med fliknavigation */
+  #right-col{
+    flex:1;display:flex;flex-direction:column;
+    overflow:hidden;height:100%;gap:0;
+  }
+  #bottom-row{display:contents;}
+
+  /* Dölj block H:s fasta knapp */
+  #block-h-show-btn{display:none;}
+  #block-h{position:static;width:auto;opacity:1 !important;pointer-events:auto !important;}
+
+  /* Flikrad */
+  #mob-land-tabs{
+    display:flex;flex-direction:row;
+    background:var(--surface);border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .mob-land-tab{
+    flex:1;border:none;background:transparent;
+    padding:5px 2px;font-size:18px;cursor:pointer;
+    color:var(--text-muted);position:relative;
+    transition:color .15s;
+  }
+  .mob-land-tab.active{color:var(--accent);}
+  .mob-land-tab.active::after{
+    content:'';position:absolute;bottom:0;left:20%;right:20%;
+    height:2px;background:var(--accent);border-radius:2px;
+  }
+  .mob-land-tab[title]:hover::before{
+    content:attr(title);position:absolute;bottom:110%;left:50%;
+    transform:translateX(-50%);background:var(--surface);
+    color:var(--text);font-size:10px;padding:2px 6px;
+    border:1px solid var(--border);border-radius:4px;white-space:nowrap;
+    pointer-events:none;z-index:200;
+  }
+
+  /* Flikstyrda block — right-col visar ett block i taget via display:none/'' */
+  #right-col > .panel,
+  #bottom-row > .panel{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Block D när det visas */
+  #block-d{flex:1 !important;min-height:0;}
+  #block-d-inner{flex:1;min-height:0;}
+  #fan-chart,#ancestor-chart,#stam-chart{height:100% !important;}
+
+  /* bottom-row hanteras via mob-land-hidden-klassen */
+
+  /* collapse-knapp döljs */
+  .d-collapse-wrap{display:none;}
+  /* info-block: en rad i landscape */
+  #info-block{font-size:10px;line-height:1.2;}
+  #info-block strong{font-size:11px;}
+  #info-count, #info-file, #info-ver, #copyright{display:inline;}
+  #info-count::after{content:' · ';}
+  #info-ver::after{content:' · ';}
 }
 
 /* iPad Pro och liknande (1024–1180px) */
@@ -737,7 +894,7 @@ input[type="file"]{display:none;}
   <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.2.56 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.3.21 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1007,6 +1164,7 @@ input[type="file"]{display:none;}
 </div>
 
 <!-- resume-bar already in offline_html -->
+<div id="mob-land-depot" style="display:none"></div>
 <div id="main">
   <!-- LEFT -->
   <button id="left-col-toggle" onclick="toggleLeftCol()" title="Dölj/visa sökning"
@@ -1016,7 +1174,7 @@ input[type="file"]{display:none;}
     color:var(--text-sec);font-size:13px;line-height:1;
     box-shadow:2px 0 6px rgba(0,0,0,.15);">◀</button>
   <div id="left-col">
-    <div class="panel" style="flex-shrink:0">
+    <div id="panel-search" class="panel" style="flex-shrink:0">
       <div id="search-box" style="position:relative">
         <input type="text" id="search-input" oninput="debouncedSearch(this.value);updateSearchClear()">
         <button id="search-clear" onclick="clearSearch()" title="Rensa sökning"
@@ -1030,7 +1188,7 @@ input[type="file"]{display:none;}
         <span id="search-hits" style="font-size:11px;color:var(--text);margin-left:auto;font-family:sans-serif;"></span>
       </div>
     </div>
-    <div class="panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div id="panel-list" class="panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
       <div class="panel-head" id="ph-persons">Alla personer</div>
       <div id="person-list" style="flex:1;overflow-y:auto">
         <div id="empty-state">
@@ -1644,6 +1802,7 @@ function filterPersons(q){
 }
 function renderList(ids){
   const list=document.getElementById('person-list');
+  if(!list)return;
   const hitsEl=document.getElementById('search-hits');
   const total=Object.keys(S.persons||{}).length;
   if(hitsEl){
@@ -1690,6 +1849,8 @@ function sel(id,addHistory=true){
   renderD(id);renderE(id);renderG(id);renderF(id);
   syncRefCheckbox(id);
   if(S.refId) renderRelChain();
+  // Mobil: visa Person-blocket automatiskt
+  if(window.innerWidth<=430) mobShowBlock('person');
   // Pro: injicera redigerbara fält
   setTimeout(()=>proInjectEditBadges(id),0);
   const el=document.querySelector(`.person-item[data-id="${id}"]`);
@@ -1711,12 +1872,16 @@ function updateBackBtn(){
 }
 function clearSel(){
   S.curId=null;
-  document.getElementById('ancestor-chart').innerHTML=`<div id="anc-placeholder" style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">${'Välj en person i listan.'}</div>`;
-  document.getElementById('no-selection').textContent='Välj en person för att se detaljer.';
-  document.getElementById('no-selection').style.display='flex';
-  document.getElementById('person-details').style.display='none';
-  document.getElementById('block-g-inner').innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Välj en person i listan.'}</div>`;
-  document.getElementById('block-f-inner').innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Välj en person i listan.'}</div>`;
+  const ancChart=document.getElementById('ancestor-chart');
+  if(ancChart) ancChart.innerHTML=`<div id="anc-placeholder" style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">${'Välj en person i listan.'}</div>`;
+  const noSel=document.getElementById('no-selection');
+  if(noSel){noSel.textContent='Välj en person för att se detaljer.';noSel.style.display='flex';}
+  const pd=document.getElementById('person-details');
+  if(pd) pd.style.display='none';
+  const bgi=document.getElementById('block-g-inner');
+  if(bgi) bgi.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Välj en person i listan.'}</div>`;
+  const bfi=document.getElementById('block-f-inner');
+  if(bfi) bfi.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Välj en person i listan.'}</div>`;
 }
 
 /* ══════════════════════════════════════════
@@ -1780,8 +1945,10 @@ function setBlockDHeight(n){
   br.style.flex='1 1 0';
 }
 function changeGen(delta){
-  const maxGen=isIpad()?4:5; // iPad: max 4 gen
-  const n=Math.min(maxGen,Math.max(3,S.genCount+delta));
+  const isMob=isPhone();
+  const maxGen=isMob?3:isIpad()?4:5;
+  const minGen=3;
+  const n=Math.min(maxGen,Math.max(minGen,S.genCount+delta));
   if(n===S.genCount)return;
   S.genCount=n;
   document.getElementById('gen-count').textContent=n;
@@ -1826,6 +1993,7 @@ function renderD(id){
 
 function renderAntavla(id){
   const chart=document.getElementById('ancestor-chart');
+  if(!chart)return;
   chart.innerHTML='';
   // Tillbaka-knapp
   const backBar=document.createElement('div');
@@ -1856,7 +2024,7 @@ function renderAntavla(id){
 
 function renderFan(id){
   const container=document.getElementById('fan-chart');
-  container.innerHTML='';
+  if(!container)return;
   const p=S.persons[id];
   if(!p){
     container.innerHTML='<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">'+'Välj en person i listan.'+'</div>';
@@ -2176,7 +2344,7 @@ function stamAskHP(id){
 
 function renderStam(rootId){
   const container=document.getElementById('stam-chart');
-  container.innerHTML='';
+  if(!container)return;
   const p=S.persons[rootId];
   if(!p){
     container.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">${'Välj en person i listan.'}</div>`;
@@ -2313,7 +2481,12 @@ function makeAncCard(id,extra,ci=0){
   const s=sc(p);
   d.className='anc-card '+(extra||'')+' '+s;
   if(!p){d.classList.add('anc-empty');d.innerHTML=`<div class="anc-name" style="color:var(--text-muted)">${'Okänd'}</div>`;return d;}
-  if(ci<3){
+  const isMob=(window.innerWidth<=430);
+  if(isMob){
+    // Mobil: bara namn + födelseår–dödsår
+    const dates=[yr(p.birt.date),yr(p.deat.date)].filter(Boolean).join('–');
+    d.innerHTML=`<div class="anc-name">${esc(shortN(p.name))}</div>${dates?`<div class="anc-dates">${dates}</div>`:''}`;
+  } else if(ci<3){
     const edits=PRO_EDITS[id]||{};
     const bYear=yr(p.birt.date)||'';
     const dYear=yr(p.deat.date)||'';
@@ -2460,6 +2633,7 @@ function renderE(id){
 function renderG(id){
   const p=S.persons[id];
   const inner=document.getElementById('block-g-inner');
+  if(!inner)return;
   inner.innerHTML='';
   if(!p){inner.innerHTML=`<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:4px">${'Välj en person i listan.'}</div>`;return;}
   let has=false;
@@ -2515,6 +2689,7 @@ function getPediLabel(cid){
 function renderF(id){
   const p=S.persons[id];
   const inner=document.getElementById('block-f-inner');
+  if(!inner)return;
   inner.innerHTML='';if(!p)return;
   if(proIsActive()) inner.classList.add('pro-active');
   else inner.classList.remove('pro-active');
@@ -2657,6 +2832,8 @@ function toggleLeftCol(){
   btn.textContent=collapsed?'▶':'◀';
   btn.title=collapsed?'Visa sökning':'Dölj sökning';
   setBlockHGrid(document.getElementById('block-h').classList.contains('collapsed'));
+  // Uppdatera landscape-vy om aktiv
+  if(isPhoneLandscape()) mobLandSwitch(mobLandActive);
 }
 
 
@@ -2688,7 +2865,273 @@ function toggleBlockH(){
   setBlockHGrid(collapsed);
 }
 // Sätt korrekt startläge (Block H är dolt från start)
-document.addEventListener('DOMContentLoaded',()=>{setBlockHGrid(true);setBlockDHeight(S.genCount);});
+document.addEventListener('DOMContentLoaded',()=>{
+  setBlockHGrid(true);
+  if(window.innerWidth<=430){ S.genCount=3; document.getElementById('gen-count').textContent=3; }
+  setBlockDHeight(S.genCount);
+  if(isPhoneLandscape()) initMobLandscape();
+  else initMobAccordion();
+});
+
+/* ══ MOBIL — visa block (stående accordion eller liggande flik) ══ */
+function mobShowBlock(key){
+  if(window.innerWidth>480)return;
+  if(isPhoneLandscape()){
+    mobLandSwitch(key);
+  } else {
+    const cfg=MOB_ACC_BLOCKS.find(c=>MOB_LAND_TABS.find(t=>t.key===key && (t.blockId===c.ids[0]||c.qAll)));
+    // Hitta wrapper via key→blockId→wrId
+    const tab=MOB_LAND_TABS.find(t=>t.key===key);
+    if(!tab)return;
+    const accCfg=MOB_ACC_BLOCKS.find(c=>c.ids&&c.ids.includes(tab.blockId));
+    const wrId=accCfg?accCfg.wrId:null;
+    if(!wrId)return;
+    const wrap=document.getElementById(wrId);
+    if(wrap && !wrap.classList.contains('mob-open')){
+      wrap.classList.add('mob-open');
+      setTimeout(()=>wrap.scrollIntoView({behavior:'smooth',block:'start'}),50);
+    }
+  }
+}
+
+/* ══ MOBIL ACCORDION ══ */
+const MOB_ACC_BLOCKS=[
+  {wrId:'mob-bc', ids:['panel-search','panel-list'], qAll:null, label:'Sök & Personlista', open:true},
+  {wrId:'mob-d',  ids:['block-d'],  label:null, open:false},
+  {wrId:'mob-e',  ids:['block-e'],  label:null, open:false},
+  {wrId:'mob-f',  ids:['block-f'],  label:null, open:false},
+  {wrId:'mob-g',  ids:['block-g'],  label:null, open:false},
+  {wrId:'mob-h',  ids:['rel-panel'],label:'Släktskap', open:false},
+];
+function _accElements(cfg){
+  if(cfg.qAll) return [...document.querySelectorAll(cfg.qAll)];
+  return cfg.ids.map(id=>document.getElementById(id)).filter(Boolean);
+}
+
+function initMobAccordion(){
+  if(!isPhonePortrait())return;
+  teardownMobAccordion();
+
+  const container=document.createElement('div');
+  container.id='mob-container';
+  container.style.cssText='display:flex;flex-direction:column;gap:3px;padding:3px;min-height:calc(100vh - 48px);overflow-y:auto;';
+
+  MOB_ACC_BLOCKS.forEach(cfg=>{
+    const elements=_accElements(cfg);
+    if(!elements.length)return;
+    const wrap=document.createElement('div');
+    wrap.id=cfg.wrId;
+    wrap.className='mob-accordion panel'+(cfg.open?' mob-open':'');
+    let label=cfg.label;
+    if(!label){ const ph=elements[0].querySelector('.panel-head'); label=ph?ph.textContent.trim():'Block'; }
+    const head=document.createElement('div');
+    head.className='panel-head'; head.style.cursor='pointer';
+    head.innerHTML=`<span>${label}</span>`;
+    head.addEventListener('click',()=>wrap.classList.toggle('mob-open'));
+    wrap.appendChild(head);
+    const body=document.createElement('div');
+    body.className='mob-body';
+    elements.forEach(el=>{
+      _saveOrigin(el.id);
+      const oldHead=el.querySelector(':scope > .panel-head');
+      if(oldHead){ oldHead.dataset.mobHidden='1'; oldHead.style.display='none'; }
+      body.appendChild(el);
+    });
+    wrap.appendChild(body);
+    container.appendChild(wrap);
+  });
+
+  // Lägg container FÖRE #main — bevara #main intakt i DOM
+  const main=document.getElementById('main');
+  main.style.display='none';
+  main.parentNode.insertBefore(container,main);
+}
+
+function teardownMobAccordion(){
+  const container=document.getElementById('mob-container');
+  if(!container)return;
+  MOB_ACC_BLOCKS.forEach(cfg=>{
+    _accElements(cfg).forEach(el=>{
+      const oldHead=el.querySelector(':scope > .panel-head[data-mob-hidden]');
+      if(oldHead){ oldHead.style.display=''; delete oldHead.dataset.mobHidden; }
+      _restoreOrigin(el.id);
+    });
+  });
+  container.remove();
+  const main=document.getElementById('main');
+  if(main) main.style.display='';
+}
+
+/* ══ MOBIL LANDSCAPE ══ */
+function isPhone(){ return Math.min(window.innerWidth,window.innerHeight)<=430; }
+function isLandscape(){ return window.matchMedia('(orientation:landscape)').matches; }
+function isPhoneLandscape(){ return isPhone() && isLandscape(); }
+function isPhonePortrait(){ return isPhone() && !isLandscape(); }
+
+const MOB_LAND_TABS=[
+  {key:'person',  icon:'👤', label:'Person',             blockId:'block-e', blockId2:null},
+  {key:'antavla', icon:'🌳', label:'Antavla',            blockId:'block-d', blockId2:null},
+  {key:'rel',     icon:'💑', label:'Person + Relationer',blockId:'block-e', blockId2:'block-f'},
+  {key:'familj',  icon:'👨‍👩‍👧‍👦', label:'Person + Familj',    blockId:'block-e', blockId2:'block-g'},
+  {key:'slaktsk', icon:'🔗', label:'Person + Släktskap', blockId:'block-e', blockId2:'rel-panel'},
+];
+
+let mobLandActive='person';
+// Sparar ursprungsförälder och nästa syskon för varje block
+const _blockOrigin={};
+
+function _saveOrigin(id){
+  const el=document.getElementById(id);
+  if(el && !_blockOrigin[id]){
+    _blockOrigin[id]={parent:el.parentNode, next:el.nextSibling};
+  }
+}
+function _restoreOrigin(id){
+  const el=document.getElementById(id);
+  const o=_blockOrigin[id];
+  if(el && o){
+    if(o.next && o.next.parentNode===o.parent) o.parent.insertBefore(el,o.next);
+    else o.parent.appendChild(el);
+    delete _blockOrigin[id];
+  }
+}
+
+function initMobLandscape(){
+  if(!isPhoneLandscape())return;
+
+  // Spara ursprung för alla block (första gången)
+  MOB_LAND_TABS.forEach(t=>_saveOrigin(t.blockId));
+
+  // Visa #main (accordion kan ha gömt den)
+  const main=document.getElementById('main');
+  if(main) main.style.display='';
+
+  const rightCol=document.getElementById('right-col');
+  if(!rightCol){ console.warn('mob-land: #right-col saknas'); return; }
+
+  // Göm befintliga block i right-col så de inte tar plats
+  const blockD=document.getElementById('block-d');
+  const bottomRow=document.getElementById('bottom-row');
+  if(blockD) blockD.classList.add('mob-land-hidden');
+  if(bottomRow) bottomRow.classList.add('mob-land-hidden');
+
+  // Bygg flikrad om den inte redan finns
+  let tabBar=document.getElementById('mob-land-tabs');
+  if(!tabBar){
+    tabBar=document.createElement('div');
+    tabBar.id='mob-land-tabs';
+    MOB_LAND_TABS.forEach(t=>{
+      const btn=document.createElement('button');
+      btn.className='mob-land-tab'+(t.key===mobLandActive?' active':'');
+      btn.textContent=t.icon;
+      btn.title=t.label;
+      btn.dataset.key=t.key;
+      btn.addEventListener('click',()=>mobLandSwitch(t.key));
+      tabBar.appendChild(btn);
+    });
+    rightCol.insertBefore(tabBar, rightCol.firstChild);
+  }
+
+  // Bygg view-container direkt efter flikraden
+  let view=document.getElementById('mob-land-view');
+  if(!view){
+    view=document.createElement('div');
+    view.id='mob-land-view';
+    view.style.cssText='flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;min-height:0;';
+    tabBar.insertAdjacentElement('afterend', view);
+  }
+
+  // Flytta aktivt block in i view
+  mobLandSwitch(mobLandActive);
+}
+
+function mobLandSwitch(key){
+  if(!isPhoneLandscape())return;
+  mobLandActive=key;
+
+  // Uppdatera aktiv flik
+  document.querySelectorAll('.mob-land-tab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.key===key);
+  });
+
+  const view=document.getElementById('mob-land-view');
+  if(!view)return;
+  const depot=document.getElementById('mob-land-depot');
+
+  // Flytta nuvarande block tillbaka till depot och dölj
+  while(view.firstChild){
+    const el=view.firstChild;
+    el.classList.add('mob-land-hidden');
+    el.style.flex='';
+    el.style.width='';
+    el.style.overflow='';
+    (depot||document.body).appendChild(el);
+  }
+  view.style.flexDirection='row';
+
+  const tab=MOB_LAND_TABS.find(t=>t.key===key);
+  if(!tab)return;
+
+  const lcCollapsed=document.getElementById('left-col')?.classList.contains('collapsed');
+  const splitMode=lcCollapsed && tab.blockId2;
+
+  // Lyft primärt block
+  const block=document.getElementById(tab.blockId);
+  if(block){
+    block.classList.remove('mob-land-hidden');
+    block.style.flex= splitMode ? '0 0 50%' : '1';
+    block.style.overflow='auto';
+    view.appendChild(block);
+  }
+
+  // Lyft sekundärt block om delad vy
+  if(splitMode){
+    const block2=document.getElementById(tab.blockId2);
+    if(block2){
+      block2.classList.remove('mob-land-hidden');
+      block2.style.flex='0 0 50%';
+      block2.style.overflow='auto';
+      view.appendChild(block2);
+    }
+  }
+
+  // Rendera om om det är antavlan
+  if(tab.blockId==='block-d' && S.curId) renderD(S.curId);
+}
+
+function teardownMobLandscape(){
+  // Återställ block som lyfts ur view
+  MOB_LAND_TABS.forEach(t=>{
+    const el=document.getElementById(t.blockId);
+    if(el){ el.style.flex=''; el.style.display=''; }
+    _restoreOrigin(t.blockId);
+  });
+  // Visa block-d och bottom-row igen
+  const blockD=document.getElementById('block-d');
+  const bottomRow=document.getElementById('bottom-row');
+  if(blockD) blockD.classList.remove('mob-land-hidden');
+  if(bottomRow) bottomRow.classList.remove('mob-land-hidden');
+  document.getElementById('mob-land-tabs')?.remove();
+  document.getElementById('mob-land-view')?.remove();
+}
+
+// Rotation / resize
+let _lastMobMode='';
+window.addEventListener('resize',()=>{
+  const mode=isPhoneLandscape()?'land':isPhonePortrait()?'port':'desktop';
+  if(mode===_lastMobMode)return;
+  _lastMobMode=mode;
+
+  if(mode==='land'){
+    teardownMobAccordion();   // återställer #main och block till DOM
+    teardownMobLandscape();   // städar ev. gamla flikar
+    initMobLandscape();
+  } else if(mode==='port'){
+    teardownMobLandscape();   // återställer block till DOM
+    teardownMobAccordion();   // städar ev. gammal accordion
+    initMobAccordion();
+  }
+});
 
 function toggleRefPerson(cb){
   if(cb.checked){
