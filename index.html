@@ -66,6 +66,14 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direc
   color:var(--text);border-bottom:1px solid var(--border);line-height:1.3;}
 .omenu-item:last-child{border-bottom:none;}
 .omenu-item:hover{background:var(--accent-light);}
+/* Mer-meny submenyer */
+.omenu-has-sub{position:relative;display:flex;align-items:center;}
+.mer-sub{
+  position:absolute;left:100%;top:0;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);
+  min-width:180px;z-index:60;overflow:hidden;
+}
 input[type="file"]{display:none;}
 
 /* ══ LAYOUT ══ */
@@ -125,7 +133,7 @@ input[type="file"]{display:none;}
   text-transform:uppercase;letter-spacing:.5px;user-select:none;
 }
 
-#ancestor-chart{display:flex;align-items:stretch;flex-shrink:0;transition:flex .3s ease;}
+#ancestor-chart{display:flex;align-items:stretch;flex-shrink:0;transition:flex .3s ease;position:relative;}
 
 /* Vy-lägesväljare */
 .view-btns{display:flex;gap:2px;margin-right:8px;}
@@ -326,7 +334,18 @@ input[type="file"]{display:none;}
   body{font-size:12px;overflow:auto;}
   #header{flex-wrap:wrap;gap:6px;padding:6px 10px;}
   #header h1{font-size:15px;}
-  #info-block{display:none;}
+  /* Info-block: bryter till egen rad, kompakt */
+  #info-block{
+    width:100%;flex-basis:100%;
+    font-size:10px;line-height:1.3;
+    text-align:left;margin-left:0;
+  }
+  #info-block strong{font-size:11px;}
+  /* En rad: antal · fil · version · copyright */
+  #info-count,#info-file,#info-ver,#copyright{display:inline;}
+  #info-count::after{content:' · ';}
+  #info-file::after{content:' · ';}
+  #info-ver::after{content:' · ';}
   #main{
     display:flex;flex-direction:column;
     overflow:visible;padding:4px;gap:4px;
@@ -851,50 +870,57 @@ input[type="file"]{display:none;}
 <div id="header">
   <h1>Släkt<span>vis</span></h1>
 
-  <!-- Öppna fil -->
-  <div style="position:relative" id="open-menu-wrap">
-    <button class="hdr-btn" onclick="toggleOpenMenu(event)" id="btn-open">📂 Öppna fil ▾</button>
-    <div id="open-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;
+  <!-- Mer...-meny -->
+  <div style="position:relative" id="mer-menu-wrap">
+    <button class="hdr-btn" onclick="toggleMerMenu(event)" id="btn-mer">Mer... ▾</button>
+    <div id="mer-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;
       background:var(--surface);border:1px solid var(--border);border-radius:8px;
-      box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:50;min-width:210px;overflow:hidden;">
-      <div class="omenu-item" id="omenu-zip" onclick="openZipDialog()">
-        🗜 <span id="omenu-zip-label">ZIP-fil</span>
-        <span id="omenu-zip-sub" style="font-size:11px;color:var(--text-muted);display:block">GEDCOM + porträttbilder</span>
+      box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:50;min-width:200px;overflow:visible;">
+
+      <!-- Öppna fil -->
+      <div class="omenu-item omenu-has-sub" id="mer-open"
+           onmouseenter="merShowSub('sub-open',this)" onclick="merShowSub('sub-open',this)">
+        📂 Öppna fil <span style="margin-left:auto;font-size:10px;">▶</span>
+        <div id="sub-open" class="mer-sub" style="display:none;">
+          <div class="omenu-item" onclick="openZipDialog();closeMerMenu()">
+            🗜 ZIP-fil
+            <span style="font-size:11px;color:var(--text-muted);display:block">GEDCOM + porträttbilder</span>
+          </div>
+          <div class="omenu-item" onclick="document.getElementById('fi-ged').click();closeMerMenu()">
+            📄 GEDCOM-fil
+            <span style="font-size:11px;color:var(--text-muted);display:block">Utan bilder</span>
+          </div>
+        </div>
       </div>
-      <div class="omenu-item" id="omenu-ged" onclick="document.getElementById('fi-ged').click();closeOpenMenu()">
-        📄 <span id="omenu-ged-label">GEDCOM-fil</span>
-        <span id="omenu-ged-sub" style="font-size:11px;color:var(--text-muted);display:block">Utan bilder</span>
+
+      <!-- Tema -->
+      <div class="omenu-item omenu-has-sub" id="mer-tema"
+           onmouseenter="merShowSub('sub-tema',this)" onclick="merShowSub('sub-tema',this)">
+        🎨 Tema <span style="margin-left:auto;font-size:10px;">▶</span>
+        <div id="sub-tema" class="mer-sub" style="display:none;">
+          <div class="omenu-item" onclick="setTheme('parchment');closeMerMenu()">📜 Pergament</div>
+          <div class="omenu-item" onclick="setTheme('light');closeMerMenu()">☀ Ljust</div>
+          <div class="omenu-item" onclick="setTheme('dark');closeMerMenu()">☾ Mörkt</div>
+        </div>
       </div>
+
+      <div style="height:1px;background:var(--border);margin:3px 0;"></div>
+
+      <!-- Berättelse, Dela, Om -->
+      <div class="omenu-item" onclick="storyOpen();closeMerMenu()">📖 Berättelse</div>
+      <div class="omenu-item" onclick="document.getElementById('dela-modal').style.display='flex';closeMerMenu()">🔗 Dela</div>
+      <div class="omenu-item" onclick="document.getElementById('om-modal').style.display='flex';closeMerMenu()">ℹ️ Om</div>
     </div>
   </div>
+
   <input type="file" id="fi-zip" accept=".zip">
   <input type="file" id="fi-ged" accept=".ged,.gedcom">
 
-  <!-- Tema -->
-  <div id="theme-group">
-    <select id="theme-select" onchange="setTheme(this.value)"
-      style="background:var(--surface);color:var(--text);border:1px solid rgba(255,255,255,.25);
-      border-radius:6px;padding:3px 6px;font-size:12px;cursor:pointer;font-family:sans-serif;">
-      <option value="parchment" selected>📜 Pergament</option>
-      <option value="light">☀ Ljust</option>
-      <option value="dark">☾ Mörkt</option>
-    </select>
-  </div>
-  <!-- Visa-meny -->
-  <div style="position:relative" id="visa-menu-wrap">
-    <button class="theme-btn" onclick="toggleVisaMenu(event)" style="margin-left:4px;">👁 Visa ▾</button>
-    <div id="visa-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;
-      background:var(--surface);border:1px solid var(--border);border-radius:8px;
-      box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:50;min-width:170px;overflow:hidden;">
-      <div class="omenu-item" onclick="storyOpen();closeVisaMenu()">📖 Berättelse</div>
-      <div class="omenu-item" onclick="document.getElementById('dela-modal').style.display='flex';closeVisaMenu()">🔗 Dela</div>
-      <div class="omenu-item" onclick="document.getElementById('om-modal').style.display='flex';closeVisaMenu()">ℹ️ Om</div>
-    </div>
-  </div>
   <button id="pro-btn" onclick="proToggle()" title="Släktvis Pro — klicka för att aktivera/avaktivera">✦ Pro</button>
+
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.3.21 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.3.25 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1522,22 +1548,31 @@ function parseGedcom(text){
 /* ══════════════════════════════════════════
    ÖPPNA-MENY
 ══════════════════════════════════════════ */
-function toggleVisaMenu(e){
+function toggleMerMenu(e){
   e.stopPropagation();
-  const m=document.getElementById('visa-menu');
-  m.style.display=m.style.display==='none'?'block':'none';
+  const m=document.getElementById('mer-menu');
+  const open=m.style.display==='none'||m.style.display==='';
+  m.style.display=open?'block':'none';
+  if(!open) merCloseAllSubs();
 }
-function closeVisaMenu(){
-  const m=document.getElementById('visa-menu');
+function closeMerMenu(){
+  const m=document.getElementById('mer-menu');
   if(m)m.style.display='none';
+  merCloseAllSubs();
 }
-function toggleOpenMenu(e){
-  e.stopPropagation();
-  const m=document.getElementById('open-menu');
-  m.style.display=m.style.display==='none'?'block':'none';
+function merCloseAllSubs(){
+  document.querySelectorAll('.mer-sub').forEach(s=>s.style.display='none');
 }
-function closeOpenMenu(){document.getElementById('open-menu').style.display='none';}
-document.addEventListener('click',()=>{closeOpenMenu();closeVisaMenu();});
+function merShowSub(subId,item){
+  // Stäng andra submenyer
+  document.querySelectorAll('.mer-sub').forEach(s=>{
+    if(s.id!==subId)s.style.display='none';
+  });
+  const sub=document.getElementById(subId);
+  if(sub) sub.style.display=sub.style.display==='none'||!sub.style.display?'block':'none';
+}
+// Stäng vid klick utanför
+document.addEventListener('click',()=>closeMerMenu());
 
 /* ══════════════════════════════════════════
    INDEXEDDB — offline-lagring
@@ -1619,7 +1654,7 @@ function blobToThumb(blob,w=60,h=80){
 let pendingZipFile=null, odlgMode='normal';
 
 function openZipDialog(){
-  closeOpenMenu();
+  closeMerMenu();
   pendingZipFile=null; odlgMode='normal';
   selectOdlg('normal');
   document.getElementById('offline-dialog').classList.add('show');
@@ -1997,7 +2032,7 @@ function renderAntavla(id){
   chart.innerHTML='';
   // Tillbaka-knapp
   const backBar=document.createElement('div');
-  backBar.style.cssText='position:absolute;top:4px;left:6px;z-index:10;';
+  backBar.style.cssText='position:absolute;top:6px;left:6px;z-index:10;';
   const backBtn=document.createElement('button');
   backBtn.id='anc-back-btn';
   backBtn.textContent='◀';
@@ -2025,6 +2060,7 @@ function renderAntavla(id){
 function renderFan(id){
   const container=document.getElementById('fan-chart');
   if(!container)return;
+  container.innerHTML='';
   const p=S.persons[id];
   if(!p){
     container.innerHTML='<div style="font-family:sans-serif;font-size:13px;color:var(--text-muted);padding:16px">'+'Välj en person i listan.'+'</div>';
