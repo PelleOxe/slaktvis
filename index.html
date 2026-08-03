@@ -920,7 +920,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.3.38 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.3.41 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1641,7 +1641,7 @@ function tlShowPopup(txt, x, y){
   if(py<0) py=y+12;
   p.style.left=px+'px'; p.style.top=py+'px';
   clearTimeout(_tlPopupTimer);
-  _tlPopupTimer=setTimeout(()=>{if(p)p.style.display='none';},3000);
+  _tlPopupTimer=setTimeout(()=>{if(p)p.style.display='none';},5000);
 }
 function tlHidePopup(){
   const p=document.getElementById('tl-popup');
@@ -2067,17 +2067,34 @@ const HIST_KRIG=[
   {n:'Andra världskriget',        y1:1939,y2:1945},
 ];
 const HIST_HAEND=[
-  {n:'Digerdöden',                y1:1349,y2:1351,typ:'pest'},
-  {n:'Stockholms blodbad',        y1:1520,y2:1520,typ:'drama'},
-  {n:'Reformationen i Sverige',   y1:1527,y2:1527,typ:'drama'},
+  // Pest och sjukdom
+  {n:'Digerdöden (första vågen)',  y1:1349,y2:1351,typ:'pest'},
+  {n:'Digerdöden (andra vågen)',   y1:1360,y2:1360,typ:'pest'},
+  {n:'Digerdöden (tredje vågen)',  y1:1413,y2:1413,typ:'pest'},
+  {n:'Nordiska pesten',            y1:1710,y2:1713,typ:'pest'},
+  {n:'Koleraepidemi',              y1:1834,y2:1834,typ:'pest'},
+  {n:'Koleraepidemi',              y1:1850,y2:1851,typ:'pest'},
+  {n:'Spanska sjukan',             y1:1918,y2:1920,typ:'pest'},
+  // Naturkatastrofer
+  {n:'Laki-vulkanen (askregn/svält)',y1:1783,y2:1784,typ:'svält'},
+  {n:'Tambora — året utan sommar', y1:1816,y2:1816,typ:'svält'},
+  // Svält och missväxt
+  {n:'Stora ofreden (svält)',      y1:1696,y2:1697,typ:'svält'},
+  {n:'Missväxt/hungersnöd',        y1:1867,y2:1869,typ:'svält'},
+  // Socialt och politiskt
+  {n:'Engelbrektsupproret',        y1:1434,y2:1436,typ:'drama'},
+  {n:'Stockholms blodbad',         y1:1520,y2:1520,typ:'drama'},
+  {n:'Reformationen i Sverige',    y1:1527,y2:1527,typ:'drama'},
+  {n:'Dackefejden',                y1:1542,y2:1543,typ:'drama'},
   {n:'Häxjakten (trolldomsprocesserna)',y1:1668,y2:1676,typ:'drama'},
-  {n:'Stora ofreden (svält)',     y1:1696,y2:1697,typ:'svält'},
-  {n:'Nordiska pesten',           y1:1710,y2:1713,typ:'pest'},
-  {n:'Koleraepidemi',             y1:1834,y2:1834,typ:'pest'},
-  {n:'Koleraepidemi',             y1:1850,y2:1851,typ:'pest'},
-  {n:'Emigrationen till Amerika', y1:1850,y2:1920,typ:'drama'},
-  {n:'Missväxt/hungersnöd',       y1:1867,y2:1869,typ:'svält'},
-  {n:'Spanska sjukan',            y1:1918,y2:1920,typ:'pest'},
+  {n:'Reduktionen',                y1:1680,y2:1682,typ:'drama'},
+  {n:'Gustav III:s statskupp',     y1:1772,y2:1772,typ:'drama'},
+  {n:'Mordet på Gustav III',       y1:1792,y2:1792,typ:'drama'},
+  {n:'Unionen med Norge',          y1:1814,y2:1905,typ:'drama'},
+  {n:'Storstrejken',               y1:1909,y2:1909,typ:'drama'},
+  {n:'Allmän rösträtt',            y1:1921,y2:1921,typ:'drama'},
+  // Emigration
+  {n:'Emigrationen till Amerika',  y1:1850,y2:1920,typ:'drama'},
 ];
 
 // Toggle-state för tidslinje-lager
@@ -3580,6 +3597,10 @@ function toggleLeftCol(){
   setBlockHGrid(document.getElementById('block-h').classList.contains('collapsed'));
   // Uppdatera landscape-vy om aktiv
   if(isPhoneLandscape()) mobLandSwitch(mobLandActive);
+  // Rendera om tidslinje om aktiv
+  if(S.curId && S.dView && S.dView.startsWith('tl-')){
+    setTimeout(()=>renderD(S.curId), 50);
+  }
 }
 
 
@@ -3609,6 +3630,10 @@ function toggleBlockH(){
   btn.textContent=collapsed?'◀':'▶';
   btn.title=collapsed?'Visa Släktskap':'Dölj Släktskap';
   setBlockHGrid(collapsed);
+  // Rendera om tidslinje om aktiv (layouten ändras)
+  if(S.curId && S.dView && S.dView.startsWith('tl-')){
+    setTimeout(()=>renderD(S.curId), 50);
+  }
 }
 // Sätt korrekt startläge (Block H är dolt från start)
 document.addEventListener('DOMContentLoaded',()=>{
