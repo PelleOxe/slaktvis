@@ -920,7 +920,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.3.35 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.3.37 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1190,6 +1190,10 @@ input[type="file"]{display:none;}
 </div>
 
 <!-- resume-bar already in offline_html -->
+<div id="tl-popup" style="display:none;position:fixed;z-index:200;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;padding:8px 12px;
+  font-family:sans-serif;font-size:13px;color:var(--text);
+  box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:240px;pointer-events:none;"></div>
 <div id="mob-land-depot" style="display:none"></div>
 <div id="main">
   <!-- LEFT -->
@@ -1623,6 +1627,44 @@ document.addEventListener('click',()=>{
   if(m)m.style.display='none';
 });
 
+// ── Tidslinje popup ──
+let _tlPopupTimer=null;
+function tlShowPopup(txt, x, y){
+  const p=document.getElementById('tl-popup');
+  if(!p)return;
+  p.innerHTML=txt;
+  p.style.display='block';
+  // Placera nära tap/klick men inom fönster
+  const pw=240, ph=80;
+  let px=x+12, py=y-40;
+  if(px+pw>window.innerWidth) px=x-pw-12;
+  if(py<0) py=y+12;
+  p.style.left=px+'px'; p.style.top=py+'px';
+  clearTimeout(_tlPopupTimer);
+  _tlPopupTimer=setTimeout(()=>{if(p)p.style.display='none';},3000);
+}
+function tlHidePopup(){
+  const p=document.getElementById('tl-popup');
+  if(p)p.style.display='none';
+  clearTimeout(_tlPopupTimer);
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#tl-chart')) tlHidePopup();
+});
+
+// Skapa klickbart SVG-element med popup
+function tlMakeClickable(el, txt){
+  el.style.cursor='pointer';
+  const handler=e=>{
+    e.stopPropagation();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    tlShowPopup(txt, cx, cy);
+  };
+  el.addEventListener('click', handler);
+  el.addEventListener('touchend', e=>{e.preventDefault();handler(e);});
+}
+
 function merCloseAllSubs(){
   document.querySelectorAll('.mer-sub').forEach(s=>s.style.display='none');
 }
@@ -2028,7 +2070,14 @@ const HIST_HAEND=[
   {n:'Digerdöden',                y1:1349,y2:1351,typ:'pest'},
   {n:'Stockholms blodbad',        y1:1520,y2:1520,typ:'drama'},
   {n:'Reformationen i Sverige',   y1:1527,y2:1527,typ:'drama'},
+  {n:'Häxjakten (trolldomsprocesserna)',y1:1668,y2:1676,typ:'drama'},
   {n:'Stora ofreden (svält)',     y1:1696,y2:1697,typ:'svält'},
+  {n:'Nordiska pesten',           y1:1710,y2:1713,typ:'pest'},
+  {n:'Koleraepidemi',             y1:1834,y2:1834,typ:'pest'},
+  {n:'Koleraepidemi',             y1:1850,y2:1851,typ:'pest'},
+  {n:'Emigrationen till Amerika', y1:1850,y2:1920,typ:'drama'},
+  {n:'Missväxt/hungersnöd',       y1:1867,y2:1869,typ:'svält'},
+  {n:'Spanska sjukan',            y1:1918,y2:1920,typ:'pest'},
 ];
 
 // Toggle-state för tidslinje-lager
@@ -2043,9 +2092,23 @@ function buildTlSvg(rows, minY, maxY, w, rowH, pad, showRegents, showKrig, showH
   // Beräkna höjd för extra rader
   const regBands=showRegents?2:0;
   const krigBands=showKrig?1:0;
-  const haendBands=showHaend?1:0;
-  const extraRows=regBands+krigBands+haendBands;
-  const extraH=extraRows>0?(extraRows*18+10):0;
+  // Händelsenivåer: räkna överlapp för att sätta rätt höjd
+  let haendLevels=0;
+  if(showHaend){
+    const levels=[];
+    HIST_HAEND.forEach(hh=>{
+      const hx1=labelW+pad+(Math.max(hh.y1,minY)-minY)/Math.max(maxY-minY,1)*(w-labelW-pad*2);
+      const hx2=labelW+pad+(Math.min(hh.y2,maxY)-minY)/Math.max(maxY-minY,1)*(w-labelW-pad*2);
+      if(hx2<labelW||hx1>w)return;
+      let lvl=0;
+      while(lvl<levels.length && levels[lvl]>hx1+2) lvl++;
+      levels[lvl]=hx2;
+      haendLevels=Math.max(haendLevels,lvl+1);
+    });
+    haendLevels=Math.max(1,haendLevels);
+  }
+  const extraRows=regBands+krigBands;
+  const extraH=(extraRows*18)+(showHaend?haendLevels*16+8:0)+(extraRows||showHaend?10:0);
   const tlW=w-labelW-pad*2;
   const h=rows.length*rowH+pad*2+30+extraH;
   const ns='http://www.w3.org/2000/svg';
@@ -2081,6 +2144,14 @@ function buildTlSvg(rows, minY, maxY, w, rowH, pad, showRegents, showKrig, showH
     nm.setAttribute('fill',row.color||'var(--text)');
     nm.setAttribute('font-weight',i===0?'bold':'normal');
     nm.textContent=row.name;svg.appendChild(nm);
+    // Klick på namn → välj som fokusperson
+    if(row.id && S.persons[row.id]){
+      nm.style.cursor='pointer';
+      nm.setAttribute('text-decoration','underline');
+      const pid=row.id;
+      nm.addEventListener('click',e=>{e.stopPropagation();sel(pid);});
+      nm.addEventListener('touchend',e=>{e.preventDefault();e.stopPropagation();sel(pid);});
+    }
     if(row.birthYear&&row.deathYear){
       const lx1=xOf(Math.max(row.birthYear,minY));
       const lx2=xOf(Math.min(row.deathYear,maxY));
@@ -2101,7 +2172,9 @@ function buildTlSvg(rows, minY, maxY, w, rowH, pad, showRegents, showKrig, showH
       circle.style.cursor='pointer';
       const title=document.createElementNS(ns,'title');
       title.textContent=ev.label+(ev.place?' — '+ev.place.split(',')[0]:'')+' ('+ev.year+')';
+      const popupTxt=`<strong>${ev.label}</strong>${ev.place?' — '+ev.place.split(',')[0]:''}<br><span style="color:var(--text-sec)">${ev.year}</span>`;
       circle.appendChild(title);svg.appendChild(circle);
+      tlMakeClickable(circle, popupTxt);
       if(ev.type==='BIRT'||ev.type==='DEAT'||ev.type==='MARR'){
         const yt=document.createElementNS(ns,'text');
         yt.setAttribute('x',cx);yt.setAttribute('y',y-(rowH>30?10:8));
@@ -2160,6 +2233,8 @@ function buildTlSvg(rows, minY, maxY, w, rowH, pad, showRegents, showKrig, showH
       const period=(item.r1||item.y1)+'–'+(item.r2||item.y2);
       title.textContent=name+' '+period+(item.f?' (f.'+item.f+(item.d?', d.'+item.d:'')+')':'  ');
       rect.appendChild(title);svg.appendChild(rect);
+      const popupTxt2=`<strong>${name}</strong><br>${period}${item.f?'<br><span style="color:var(--text-sec)">f.'+item.f+(item.d?', d.'+item.d:'')+'</span>':''}`;
+      tlMakeClickable(rect, popupTxt2);
       if(bw>22){
         const rt=document.createElementNS(ns,'text');
         rt.setAttribute('x',(rx1+rx2)/2);rt.setAttribute('y',bandY+4);
@@ -2194,31 +2269,53 @@ function buildTlSvg(rows, minY, maxY, w, rowH, pad, showRegents, showKrig, showH
 
   // Händelser
   if(showHaend){
-    drawSep(ey-2);
-    rowLabel('📌 Händelser',ey+8);
-    HIST_HAEND.forEach(hh=>{
+    // Beräkna hur många nivåer som behövs (greedigt staplings-algoritm)
+    const visible=HIST_HAEND.filter(hh=>{
       const hx1=xOf(Math.max(hh.y1,minY));
       const hx2=xOf(Math.min(hh.y2,maxY));
-      if(hx2<labelW||hx1>w)return;
+      return hx2>=labelW && hx1<=w;
+    });
+    // Tilldela nivå: hitta lägsta nivå där bandet får plats
+    const levels=[]; // levels[i] = x2 för sista bandet på nivå i
+    const assigned=visible.map(hh=>{
+      const hx1=xOf(Math.max(hh.y1,minY));
+      const hx2=xOf(Math.min(hh.y2,maxY));
+      let lvl=0;
+      while(lvl<levels.length && levels[lvl]>hx1+2) lvl++;
+      levels[lvl]=hx2;
+      return {hh,hx1,hx2,lvl};
+    });
+    const nLevels=Math.max(1,...assigned.map(a=>a.lvl+1));
+    const bandH=14, gap=2;
+    const totalH=nLevels*(bandH+gap)+4;
+
+    drawSep(ey-2);
+    // Etikett centrerat vertikalt
+    rowLabel('📌 Händelser', ey+totalH/2+4);
+
+    assigned.forEach(({hh,hx1,hx2,lvl})=>{
       const bw=Math.max(4,hx2-hx1);
+      const by=ey+lvl*(bandH+gap)+2;
       const rect=document.createElementNS(ns,'rect');
-      rect.setAttribute('x',hx1);rect.setAttribute('y',ey+1);
-      rect.setAttribute('width',bw);rect.setAttribute('height',14);
-      rect.setAttribute('fill','#775599');rect.setAttribute('opacity','0.85');
+      rect.setAttribute('x',hx1); rect.setAttribute('y',by);
+      rect.setAttribute('width',bw); rect.setAttribute('height',bandH);
+      rect.setAttribute('fill','#775599'); rect.setAttribute('opacity','0.85');
       rect.setAttribute('rx','2');
       const title=document.createElementNS(ns,'title');
       title.textContent=hh.n+' '+hh.y1+(hh.y2!==hh.y1?'–'+hh.y2:'');
-      rect.appendChild(title);svg.appendChild(rect);
+      rect.appendChild(title); svg.appendChild(rect);
+      const hPeriod=hh.y1+(hh.y2!==hh.y1?'–'+hh.y2:'');
+      tlMakeClickable(rect,`<strong>${hh.n}</strong><br><span style="color:var(--text-sec)">${hPeriod}</span>`);
       if(bw>24){
         const rt=document.createElementNS(ns,'text');
-        rt.setAttribute('x',(hx1+hx2)/2);rt.setAttribute('y',ey+12);
-        rt.setAttribute('text-anchor','middle');rt.setAttribute('font-size','11');
-        rt.setAttribute('fill','#fff');rt.setAttribute('pointer-events','none');
+        rt.setAttribute('x',(hx1+hx2)/2); rt.setAttribute('y',by+bandH-2);
+        rt.setAttribute('text-anchor','middle'); rt.setAttribute('font-size','11');
+        rt.setAttribute('fill','#fff'); rt.setAttribute('pointer-events','none');
         rt.textContent=bw>120?hh.n:hh.n.split(' ')[0];
         svg.appendChild(rt);
       }
     });
-    ey+=20;
+    ey+=totalH+4;
   }
 
   // Regenter
@@ -2278,6 +2375,14 @@ function renderTlPerson(id){
 function tlBuildHeader(c, title, showRegents, showKrig, showHaend, refreshFn){
   const wrap=document.createElement('div');
   wrap.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;';
+
+  // Tillbaka-knapp
+  const backBtn=document.createElement('button');
+  backBtn.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:13px;cursor:pointer;color:var(--text-sec);opacity:'+(S.history.length>1?'1':'0.3')+';';
+  backBtn.textContent='◀';
+  backBtn.title='Föregående person';
+  backBtn.onclick=()=>{ if(S.history.length>1) goBack(); };
+  wrap.appendChild(backBtn);
 
   const h=document.createElement('div');
   h.style.cssText='font-family:sans-serif;font-size:13px;font-weight:bold;color:var(--accent);flex:1;min-width:0;';
