@@ -920,7 +920,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.3.26 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.3.35 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1241,6 +1241,16 @@ input[type="file"]{display:none;}
           <button class="view-btn active" id="vbtn-antavla" onclick="setDView('antavla',this)" id="vbtn-antavla">Antavla</button>
           <button class="view-btn" id="vbtn-fan" onclick="setDView('fan',this)">Solfjäder</button>
           <button class="view-btn" id="vbtn-stam" onclick="setDView('stam',this)">Stamtavla</button>
+          <div style="position:relative;display:inline-block">
+            <button class="view-btn" id="vbtn-tl" onclick="toggleTlMenu(event)">Tidslinje ▾</button>
+            <div id="tl-menu" style="display:none;position:absolute;top:calc(100% + 3px);left:0;
+              background:var(--surface);border:1px solid var(--border);border-radius:7px;
+              box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:50;min-width:140px;overflow:hidden;">
+              <div class="omenu-item" onclick="setDView('tl-person',document.getElementById('vbtn-tl'));document.getElementById('tl-menu').style.display='none'">👤 Person</div>
+              <div class="omenu-item" onclick="setDView('tl-familj',document.getElementById('vbtn-tl'));document.getElementById('tl-menu').style.display='none'">👨‍👩‍👧‍👦 Familj</div>
+              <div class="omenu-item" onclick="setDView('tl-anlinjen',document.getElementById('vbtn-tl'));document.getElementById('tl-menu').style.display='none'">🌳 Anlinjen</div>
+            </div>
+          </div>
         </div>
         <div class="gen-controls" id="gen-controls">
           <button class="gen-btn" id="gen-minus" onclick="changeGen(-1)">−</button>
@@ -1254,6 +1264,7 @@ input[type="file"]{display:none;}
         </div>
         <div id="fan-chart"></div>
         <div id="stam-chart"></div>
+        <div id="tl-chart" style="display:none;width:100%;height:100%;overflow:auto;position:relative;"></div>
       </div>
     </div>
 
@@ -1306,7 +1317,12 @@ input[type="file"]{display:none;}
     box-shadow:-2px 0 6px rgba(0,0,0,.15);">◀</button>
   <div id="block-h" class="collapsed">
     <div class="panel" id="rel-panel">
-      <div class="panel-head">Släktskap</div>
+      <div class="panel-head">Släktskap
+        <button id="rel-copy-btn" onclick="copyRelChain()" title="Kopiera släktskapskedjan"
+          style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:5px;
+          padding:2px 7px;font-size:11px;cursor:pointer;color:var(--text-sec);font-family:sans-serif;
+          display:none;">📋 Kopiera</button>
+      </div>
       <div id="rel-selected-ref" style="padding:5px 10px;font-size:11px;font-family:sans-serif;color:var(--text-sec);border-bottom:1px solid var(--border);display:none;">
         Ref: <span id="rel-ref-name" style="color:var(--accent);font-weight:bold;"></span>
         <button onclick="refClearSel()" style="float:right;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;">✕</button>
@@ -1560,6 +1576,53 @@ function closeMerMenu(){
   if(m)m.style.display='none';
   merCloseAllSubs();
 }
+function copyRelChain(){
+  const path=S._relPaths&&S._relPaths[S._relPathIdx||0];
+  if(!path||!path.length)return;
+  const commonAnc=findCommonAncestors(path);
+
+  const parts=path.map(node=>{
+    if(Array.isArray(node)){
+      // Anpar — hakparenteser runt varje
+      return node.map(pid=>{
+        const p=S.persons[pid]; if(!p)return'';
+        return '['+formatRelName(p)+']';
+      }).join('/');
+    } else {
+      const p=S.persons[node]; if(!p)return'';
+      const isAnc=commonAnc.has(node);
+      const nm=formatRelName(p);
+      return isAnc?'['+nm+']':nm;
+    }
+  }).filter(Boolean);
+
+  const text=parts.join(' / ');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('rel-copy-btn');
+    const orig=btn.textContent;
+    btn.textContent='✓ Kopierad';
+    setTimeout(()=>btn.textContent=orig,2000);
+  }).catch(()=>prompt('Kopiera texten:',text));
+}
+
+function formatRelName(p){
+  const name=(p.name||'').replace(/\//g,'').trim();
+  const by=yr(p.birt.date)||'';
+  const dy=yr(p.deat.date)||'';
+  const years=by||dy?(by||'?')+(dy?'–'+dy:'-'):'';
+  return name+(years?' '+years:'');
+}
+
+function toggleTlMenu(e){
+  e.stopPropagation();
+  const m=document.getElementById('tl-menu');
+  m.style.display=m.style.display==='none'||!m.style.display?'block':'none';
+}
+document.addEventListener('click',()=>{
+  const m=document.getElementById('tl-menu');
+  if(m)m.style.display='none';
+});
+
 function merCloseAllSubs(){
   document.querySelectorAll('.mer-sub').forEach(s=>s.style.display='none');
 }
@@ -1870,6 +1933,503 @@ function renderList(ids){
 }
 
 /* ══════════════════════════════════════════
+   TIDSLINJE
+══════════════════════════════════════════ */
+
+// Hjälpfunktion: hämta alla händelser för en person
+function getEvents(id){
+  const p=S.persons[id]; if(!p)return[];
+  const edits=PRO_EDITS[id]||{};
+  const evs=[];
+  const bDate=edits['BIRT.DATE']||p.birt?.date||'';
+  const dDate=edits['DEAT.DATE']||p.deat?.date||'';
+  const bPlace=edits['BIRT.PLAC']||p.birt?.place||'';
+  const dPlace=edits['DEAT.PLAC']||p.deat?.place||'';
+  if(bDate){const y=yr(bDate);if(y)evs.push({year:+y,type:'BIRT',label:'Född',place:bPlace,date:bDate});}
+  if(p.chr?.date){const y=yr(p.chr.date);if(y)evs.push({year:+y,type:'CHR',label:'Döpt',place:p.chr.place||'',date:p.chr.date});}
+  // Vigsel/sambo
+  for(const famId of (p.fams||[])){
+    const fam=S.families[famId];if(!fam)continue;
+    const mDate=fam.marr?.date||'';
+    if(mDate){const y=yr(mDate);if(y){
+      const sp=fam.husb===id?fam.wife:fam.husb;
+      const spName=sp&&S.persons[sp]?shortN(S.persons[sp].name):'';
+      evs.push({year:+y,type:'MARR',label:'Gift'+(spName?' m. '+spName:''),place:fam.marr?.place||'',date:mDate});
+    }}
+  }
+  // Bostad
+  for(const ev of (p.events||[])){
+    if(ev.type==='RESI'&&ev.date){const y=yr(ev.date);if(y)evs.push({year:+y,type:'RESI',label:'Bostad',place:ev.place||'',date:ev.date});}
+  }
+  if(dDate){const y=yr(dDate);if(y)evs.push({year:+y,type:'DEAT',label:'Död',place:dPlace,date:dDate});}
+  return evs.sort((a,b)=>a.year-b.year);
+}
+
+// Färger per händelsetyp
+function evColor(type){
+  const m={BIRT:'#2a7a3a',CHR:'#4a9a5a',MARR:'var(--amber)',RESI:'#5588cc',DEAT:'#884444'};
+  return m[type]||'var(--text-muted)';
+}
+
+// Bygg SVG-tidslinje för en eller flera rader
+// Svenska och danska regenter
+const REGENTER_SE=[
+  {n:'Erik XIV',f:1533,d:1577,r1:1560,r2:1568},
+  {n:'Johan III',f:1537,d:1592,r1:1568,r2:1592},
+  {n:'Sigismund',f:1566,d:1632,r1:1592,r2:1599},
+  {n:'Karl IX',f:1550,d:1611,r1:1599,r2:1611},
+  {n:'Gustav II Adolf',f:1594,d:1632,r1:1611,r2:1632},
+  {n:'Kristina',f:1626,d:1689,r1:1632,r2:1654},
+  {n:'Karl X Gustav',f:1622,d:1660,r1:1654,r2:1660},
+  {n:'Karl XI',f:1655,d:1697,r1:1660,r2:1697},
+  {n:'Karl XII',f:1682,d:1718,r1:1697,r2:1718},
+  {n:'Ulrika Eleonora',f:1688,d:1741,r1:1718,r2:1720},
+  {n:'Fredrik I',f:1676,d:1751,r1:1720,r2:1751},
+  {n:'Adolf Fredrik',f:1710,d:1771,r1:1751,r2:1771},
+  {n:'Gustav III',f:1746,d:1792,r1:1771,r2:1792},
+  {n:'Gustav IV Adolf',f:1778,d:1837,r1:1792,r2:1809},
+  {n:'Karl XIII',f:1748,d:1818,r1:1809,r2:1818},
+  {n:'Karl XIV Johan',f:1763,d:1844,r1:1818,r2:1844},
+  {n:'Oscar I',f:1799,d:1859,r1:1844,r2:1859},
+  {n:'Karl XV',f:1826,d:1872,r1:1859,r2:1872},
+  {n:'Oscar II',f:1829,d:1907,r1:1872,r2:1907},
+  {n:'Gustav V',f:1858,d:1950,r1:1907,r2:1950},
+  {n:'Gustav VI Adolf',f:1882,d:1973,r1:1950,r2:1973},
+  {n:'Carl XVI Gustaf',f:1946,d:null,r1:1973,r2:2030},
+];
+const REGENTER_DK=[
+  {n:'Fredrik II',f:1534,d:1588,r1:1559,r2:1588},
+  {n:'Kristian IV',f:1577,d:1648,r1:1588,r2:1648},
+  {n:'Fredrik III',f:1609,d:1670,r1:1648,r2:1670},
+  {n:'Kristian V',f:1646,d:1699,r1:1670,r2:1699},
+];
+
+// Historiska händelser
+const HIST_KRIG=[
+  {n:'Livländska kriget',         y1:1558,y2:1583},
+  {n:'Nordiska sjuårskriget',     y1:1563,y2:1570},
+  {n:'Ryska kriget',              y1:1590,y2:1595},
+  {n:'Ingermanländska kriget',    y1:1610,y2:1617},
+  {n:'Kalmarkriget',              y1:1611,y2:1613},
+  {n:'Trettioåriga kriget',       y1:1618,y2:1648},
+  {n:'Torstenssonkriget',         y1:1643,y2:1645},
+  {n:'Karl X Gustavs krig',       y1:1655,y2:1660},
+  {n:'Skånska kriget',            y1:1675,y2:1679},
+  {n:'Stora nordiska kriget',     y1:1700,y2:1721},
+  {n:'Lilla ofreden (ryska kriget)',y1:1741,y2:1743},
+  {n:'Pommerska kriget',          y1:1757,y2:1762},
+  {n:'Pommerska kriget (Napoleon)',y1:1806,y2:1807},
+  {n:'Finska kriget',             y1:1808,y2:1809},
+  {n:'Krimkriget',                y1:1853,y2:1856},
+  {n:'Första världskriget',       y1:1914,y2:1918},
+  {n:'Andra världskriget',        y1:1939,y2:1945},
+];
+const HIST_HAEND=[
+  {n:'Digerdöden',                y1:1349,y2:1351,typ:'pest'},
+  {n:'Stockholms blodbad',        y1:1520,y2:1520,typ:'drama'},
+  {n:'Reformationen i Sverige',   y1:1527,y2:1527,typ:'drama'},
+  {n:'Stora ofreden (svält)',     y1:1696,y2:1697,typ:'svält'},
+];
+
+// Toggle-state för tidslinje-lager
+const TL_STATE={regenter:false, krig:false, haend:false};
+
+// Bygg SVG-tidslinje — dynamisk labelbredd, allt ≥10px
+function buildTlSvg(rows, minY, maxY, w, rowH, pad, showRegents, showKrig, showHaend){
+  const span=Math.max(maxY-minY,1);
+  const FONT=11;
+  const maxNameLen=Math.max(...rows.map(r=>r.name.length),8);
+  const labelW=Math.min(240,Math.max(120,Math.ceil(maxNameLen*6.5)+12));
+  // Beräkna höjd för extra rader
+  const regBands=showRegents?2:0;
+  const krigBands=showKrig?1:0;
+  const haendBands=showHaend?1:0;
+  const extraRows=regBands+krigBands+haendBands;
+  const extraH=extraRows>0?(extraRows*18+10):0;
+  const tlW=w-labelW-pad*2;
+  const h=rows.length*rowH+pad*2+30+extraH;
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('width',w);svg.setAttribute('height',h);
+  svg.style.fontFamily='sans-serif';
+
+  function xOf(year){return labelW+pad+(year-minY)/span*tlW;}
+  function yOf(i){return pad+30+i*rowH+rowH/2;}
+
+  // Decennium-linjer
+  const startDec=Math.ceil(minY/10)*10;
+  for(let dec=startDec;dec<=maxY;dec+=10){
+    const x=xOf(dec);
+    const line=document.createElementNS(ns,'line');
+    line.setAttribute('x1',x);line.setAttribute('x2',x);
+    line.setAttribute('y1',pad+20);line.setAttribute('y2',h-pad-extraH);
+    line.setAttribute('stroke','var(--border)');line.setAttribute('stroke-width','0.5');
+    svg.appendChild(line);
+    const lbl=document.createElementNS(ns,'text');
+    lbl.setAttribute('x',x);lbl.setAttribute('y',pad+14);
+    lbl.setAttribute('text-anchor','middle');lbl.setAttribute('font-size','11');
+    lbl.setAttribute('fill','var(--text-muted)');lbl.textContent=dec;
+    svg.appendChild(lbl);
+  }
+
+  // Personrader
+  rows.forEach((row,i)=>{
+    const y=yOf(i);
+    const nm=document.createElementNS(ns,'text');
+    nm.setAttribute('x',labelW-6);nm.setAttribute('y',y+4);
+    nm.setAttribute('text-anchor','end');nm.setAttribute('font-size',FONT);
+    nm.setAttribute('fill',row.color||'var(--text)');
+    nm.setAttribute('font-weight',i===0?'bold':'normal');
+    nm.textContent=row.name;svg.appendChild(nm);
+    if(row.birthYear&&row.deathYear){
+      const lx1=xOf(Math.max(row.birthYear,minY));
+      const lx2=xOf(Math.min(row.deathYear,maxY));
+      const ll=document.createElementNS(ns,'line');
+      ll.setAttribute('x1',lx1);ll.setAttribute('x2',lx2);
+      ll.setAttribute('y1',y);ll.setAttribute('y2',y);
+      ll.setAttribute('stroke',row.color||'var(--border)');
+      ll.setAttribute('stroke-width','2');ll.setAttribute('opacity','0.35');
+      svg.appendChild(ll);
+    }
+    row.events.forEach(ev=>{
+      if(ev.year<minY||ev.year>maxY)return;
+      const cx=xOf(ev.year);
+      const circle=document.createElementNS(ns,'circle');
+      circle.setAttribute('cx',cx);circle.setAttribute('cy',y);
+      circle.setAttribute('r','5');circle.setAttribute('fill',evColor(ev.type));
+      circle.setAttribute('stroke','var(--surface)');circle.setAttribute('stroke-width','1.5');
+      circle.style.cursor='pointer';
+      const title=document.createElementNS(ns,'title');
+      title.textContent=ev.label+(ev.place?' — '+ev.place.split(',')[0]:'')+' ('+ev.year+')';
+      circle.appendChild(title);svg.appendChild(circle);
+      if(ev.type==='BIRT'||ev.type==='DEAT'||ev.type==='MARR'){
+        const yt=document.createElementNS(ns,'text');
+        yt.setAttribute('x',cx);yt.setAttribute('y',y-(rowH>30?10:8));
+        yt.setAttribute('text-anchor','middle');yt.setAttribute('font-size','11');
+        yt.setAttribute('fill',evColor(ev.type));yt.textContent=ev.year;
+        svg.appendChild(yt);
+      }
+    });
+  });
+
+  // Extra-rader längst ned
+  let ey=h-extraH+6;
+
+  function drawSep(y){
+    const sep=document.createElementNS(ns,'line');
+    sep.setAttribute('x1',0);sep.setAttribute('x2',w);
+    sep.setAttribute('y1',y);sep.setAttribute('y2',y);
+    sep.setAttribute('stroke','var(--border)');sep.setAttribute('stroke-width','1.5');
+    svg.appendChild(sep);
+  }
+
+  function rowLabel(txt,y){
+    const t=document.createElementNS(ns,'text');
+    t.setAttribute('x',labelW-6);t.setAttribute('y',y+4);
+    t.setAttribute('text-anchor','end');t.setAttribute('font-size','11');
+    t.setAttribute('font-weight','bold');t.setAttribute('fill','var(--text-sec)');
+    t.textContent=txt;svg.appendChild(t);
+  }
+
+  function drawBandRow(list,bandY,color,opacity){
+    // Avskiljare mellan regenter
+    let prevX2=null;
+    list.forEach(item=>{
+      const rx1=xOf(Math.max(item.y1||item.r1,minY));
+      const rx2=xOf(Math.min((item.y2||item.r2),maxY));
+      if(rx2<labelW+pad||rx1>w-pad)return;
+      const bw=Math.max(0,rx2-rx1);if(!bw)return;
+
+      // Tydlig avskiljarlinje mellan intilliggande band
+      if(prevX2!==null){
+        const sep2=document.createElementNS(ns,'line');
+        sep2.setAttribute('x1',rx1);sep2.setAttribute('x2',rx1);
+        sep2.setAttribute('y1',bandY-7);sep2.setAttribute('y2',bandY+7);
+        sep2.setAttribute('stroke','#fff');sep2.setAttribute('stroke-width','1.5');
+        svg.appendChild(sep2);
+      }
+      prevX2=rx2;
+
+      const rect=document.createElementNS(ns,'rect');
+      rect.setAttribute('x',rx1);rect.setAttribute('y',bandY-7);
+      rect.setAttribute('width',bw);rect.setAttribute('height',14);
+      rect.setAttribute('fill',color);rect.setAttribute('opacity',opacity||'0.8');
+      rect.setAttribute('rx','2');
+      const title=document.createElementNS(ns,'title');
+      const name=item.n;
+      const period=(item.r1||item.y1)+'–'+(item.r2||item.y2);
+      title.textContent=name+' '+period+(item.f?' (f.'+item.f+(item.d?', d.'+item.d:'')+')':'  ');
+      rect.appendChild(title);svg.appendChild(rect);
+      if(bw>22){
+        const rt=document.createElementNS(ns,'text');
+        rt.setAttribute('x',(rx1+rx2)/2);rt.setAttribute('y',bandY+4);
+        rt.setAttribute('text-anchor','middle');rt.setAttribute('font-size','11');
+        rt.setAttribute('fill','#fff');rt.setAttribute('pointer-events','none');
+        rt.textContent=bw>100?name:bw>50?name.split(' ')[0]:name[0]+'.';
+        svg.appendChild(rt);
+      }
+    });
+  }
+
+  // Krig
+  if(showKrig){
+    drawSep(ey-2);
+    rowLabel('⚔ Krig',ey+8);
+    drawBandRow(HIST_KRIG.map(k=>({...k,r1:k.y1,r2:k.y2})),ey+8,'#b04020','0.8');
+    // Punkthändelser som vertikala linjer
+    HIST_HAEND.forEach(h=>{
+      if(showHaend)return; // ritas separat
+      const hx=xOf(h.y1);
+      if(hx<labelW||hx>w)return;
+      const vl=document.createElementNS(ns,'line');
+      vl.setAttribute('x1',hx);vl.setAttribute('x2',hx);
+      vl.setAttribute('y1',ey+2);vl.setAttribute('y2',ey+14);
+      vl.setAttribute('stroke','#885588');vl.setAttribute('stroke-width','2');
+      const title=document.createElementNS(ns,'title');
+      title.textContent=h.n+' '+h.y1;
+      vl.appendChild(title);svg.appendChild(vl);
+    });
+    ey+=20;
+  }
+
+  // Händelser
+  if(showHaend){
+    drawSep(ey-2);
+    rowLabel('📌 Händelser',ey+8);
+    HIST_HAEND.forEach(hh=>{
+      const hx1=xOf(Math.max(hh.y1,minY));
+      const hx2=xOf(Math.min(hh.y2,maxY));
+      if(hx2<labelW||hx1>w)return;
+      const bw=Math.max(4,hx2-hx1);
+      const rect=document.createElementNS(ns,'rect');
+      rect.setAttribute('x',hx1);rect.setAttribute('y',ey+1);
+      rect.setAttribute('width',bw);rect.setAttribute('height',14);
+      rect.setAttribute('fill','#775599');rect.setAttribute('opacity','0.85');
+      rect.setAttribute('rx','2');
+      const title=document.createElementNS(ns,'title');
+      title.textContent=hh.n+' '+hh.y1+(hh.y2!==hh.y1?'–'+hh.y2:'');
+      rect.appendChild(title);svg.appendChild(rect);
+      if(bw>24){
+        const rt=document.createElementNS(ns,'text');
+        rt.setAttribute('x',(hx1+hx2)/2);rt.setAttribute('y',ey+12);
+        rt.setAttribute('text-anchor','middle');rt.setAttribute('font-size','11');
+        rt.setAttribute('fill','#fff');rt.setAttribute('pointer-events','none');
+        rt.textContent=bw>120?hh.n:hh.n.split(' ')[0];
+        svg.appendChild(rt);
+      }
+    });
+    ey+=20;
+  }
+
+  // Regenter
+  if(showRegents){
+    drawSep(ey-2);
+    rowLabel('🇸🇪 Sverige',ey+8);
+    drawBandRow(REGENTER_SE,ey+8,'#2a5a9a','0.8');
+    ey+=18;
+    rowLabel('🇩🇰 Danmark',ey+8);
+    drawBandRow(REGENTER_DK,ey+8,'#9a2a2a','0.8');
+  }
+
+  return svg;
+}
+
+// ── Tidslinje: Person ──
+function renderTlPerson(id){
+  const c=document.getElementById('tl-chart');
+  if(!c)return; c.innerHTML='';
+  const p=S.persons[id]; if(!p){c.innerHTML='<div style="padding:16px;font-family:sans-serif;color:var(--text-muted)">Välj en person.</div>';return;}
+  const evs=getEvents(id);
+  if(!evs.length){c.innerHTML='<div style="padding:16px;font-family:sans-serif;color:var(--text-muted)">Inga daterade händelser hittades.</div>';return;}
+  const years=evs.map(e=>e.year);
+  const minY=Math.min(...years)-2, maxY=Math.max(...years)+2;
+  const w=c.clientWidth||600;
+  const availH=c.clientHeight||400;
+  const row={id,name:shortN(p.name),color:'var(--accent)',events:evs,
+    birthYear:+yr(p.birt?.date)||null, deathYear:+yr(p.deat?.date)||null};
+  const rowH=Math.max(50,Math.min(120,availH-120));
+
+  // Rubrik
+  const title=document.createElement('div');
+  title.style.cssText='font-family:sans-serif;font-size:13px;font-weight:bold;padding:8px 12px;color:var(--accent);border-bottom:1px solid var(--border);';
+  title.textContent='👤 '+shortN(p.name)+' — Personlig tidslinje';
+  c.appendChild(title);
+
+  // Händelselista under SVG
+  const svgWrap=document.createElement('div');
+  svgWrap.style.cssText='overflow-x:auto;';
+  svgWrap.appendChild(buildTlSvg([row],minY,maxY,Math.max(w,400),rowH,12));
+  c.appendChild(svgWrap);
+
+  // Händelselista
+  const list=document.createElement('div');
+  list.style.cssText='padding:8px 12px;font-family:sans-serif;font-size:12px;';
+  evs.forEach(ev=>{
+    const d=document.createElement('div');
+    d.style.cssText='display:flex;gap:8px;padding:3px 0;border-bottom:0.5px solid var(--border);';
+    d.innerHTML=`<span style="color:${evColor(ev.type)};font-weight:bold;width:36px;flex-shrink:0;">${ev.year}</span>
+      <span style="width:60px;flex-shrink:0;color:${evColor(ev.type)}">${ev.label}</span>
+      <span style="color:var(--text-sec)">${ev.place?ev.place.split(',')[0]:''}</span>`;
+    list.appendChild(d);
+  });
+  c.appendChild(list);
+}
+
+function tlBuildHeader(c, title, showRegents, showKrig, showHaend, refreshFn){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;';
+
+  const h=document.createElement('div');
+  h.style.cssText='font-family:sans-serif;font-size:13px;font-weight:bold;color:var(--accent);flex:1;min-width:0;';
+  h.textContent=title;
+  wrap.appendChild(h);
+
+  function mkBtn(label, key){
+    const btn=document.createElement('button');
+    btn.style.cssText='font-family:sans-serif;font-size:11px;padding:2px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--border);background:'+(TL_STATE[key]?'var(--accent)':'var(--surface)')+';color:'+(TL_STATE[key]?'#fff':'var(--text-sec)')+';';
+    btn.textContent=label;
+    btn.onclick=()=>{
+      TL_STATE[key]=!TL_STATE[key];
+      refreshFn();
+    };
+    wrap.appendChild(btn);
+  }
+  mkBtn('⚔ Krig','krig');
+  mkBtn('📌 Händelser','haend');
+  mkBtn('👑 Regenter','regenter');
+  c.appendChild(wrap);
+}
+
+// ── Tidslinje: Familj ──
+function renderTlFamilj(id){
+  const c=document.getElementById('tl-chart');
+  if(!c)return; c.innerHTML='';
+  const p=S.persons[id]; if(!p){c.innerHTML='<div style="padding:16px;font-family:sans-serif;color:var(--text-muted)">Välj en person.</div>';return;}
+
+  const rows=[];
+  const colors=['var(--accent)','var(--amber)','#2a7a3a','#5588cc','#884444','#886688','#448888'];
+  let ci=0;
+
+  // Fokusperson
+  const mainEvs=getEvents(id);
+  if(mainEvs.length) rows.push({id,name:shortN(p.name),color:colors[ci++],events:mainEvs,
+    birthYear:+yr(p.birt?.date)||null,deathYear:+yr(p.deat?.date)||null});
+
+  // Partners och barn via fams
+  for(const famId of (p.fams||[])){
+    const fam=S.families[famId]; if(!fam)continue;
+    const spId=fam.husb===id?fam.wife:fam.husb;
+    if(spId&&S.persons[spId]){
+      const sp=S.persons[spId];
+      const spEvs=getEvents(spId);
+      if(spEvs.length) rows.push({id:spId,name:shortN(sp.name),color:colors[ci%colors.length],events:spEvs,
+        birthYear:+yr(sp.birt?.date)||null,deathYear:+yr(sp.deat?.date)||null});
+      ci++;
+    }
+    for(const chId of (fam.chil||[])){
+      const ch=S.persons[chId]; if(!ch)continue;
+      const chEvs=getEvents(chId);
+      if(chEvs.length) rows.push({id:chId,name:shortN(ch.name),color:colors[ci%colors.length],events:chEvs,
+        birthYear:+yr(ch.birt?.date)||null,deathYear:+yr(ch.deat?.date)||null});
+      ci++;
+    }
+  }
+
+  if(!rows.length){c.innerHTML='<div style="padding:16px;font-family:sans-serif;color:var(--text-muted)">Inga daterade händelser hittades.</div>';return;}
+
+  const allYears=rows.flatMap(r=>r.events.map(e=>e.year));
+  const minY=Math.min(...allYears)-2, maxY=Math.max(...allYears)+2;
+  const w=c.clientWidth||600;
+  const availH=c.clientHeight||400;
+  const rowH=Math.max(32, Math.min(60, Math.floor((availH-100)/rows.length)));
+  const titleText='👨‍👩‍👧‍👦 '+shortN(p.name)+' — Familjetidslinje';
+
+  function redrawFamilj(){
+    c.innerHTML='';
+    tlBuildHeader(c, titleText, TL_STATE.regenter, TL_STATE.krig, TL_STATE.haend, redrawFamilj);
+    const svgWrap=document.createElement('div');
+    svgWrap.style.cssText='overflow-x:auto;';
+    svgWrap.appendChild(buildTlSvg(rows,minY,maxY,Math.max(w,500),rowH,12,TL_STATE.regenter,TL_STATE.krig,TL_STATE.haend));
+    c.appendChild(svgWrap);
+  }
+  redrawFamilj();
+}
+
+// ── Tidslinje: Anlinjen ──
+function renderTlAnlinjen(id){
+  const c=document.getElementById('tl-chart');
+  if(!c)return; c.innerHTML='';
+  const p=S.persons[id]; if(!p){c.innerHTML='<div style="padding:16px;font-family:sans-serif;color:var(--text-muted)">Välj en person.</div>';return;}
+
+  // Bygg Ahnentafel-karta: index→personId
+  // 1=fokusperson, 2=far, 3=mor, 4=ff, 5=fm, 6=mf, 7=mm, 8-15=fff,ffm,fmf,fmm,mff,mfm,mmf,mmm...
+  const ahnMap={};
+  function fillAhn(pid, idx, depth){
+    if(!pid||!S.persons[pid]||depth>4)return;
+    ahnMap[idx]=pid;
+    const ap=S.persons[pid];
+    for(const fc of (ap.famc||[])){
+      const fam=S.families[fc.id]; if(!fam)continue;
+      if(fam.husb) fillAhn(fam.husb, idx*2,   depth+1);
+      if(fam.wife) fillAhn(fam.wife, idx*2+1, depth+1);
+      break; // bara första familj
+    }
+  }
+  fillAhn(id,1,0);
+
+  // Färger per generation (djup)
+  const genColors=['var(--accent)','#2a6a8a','#8a6a2a','#2a7a3a','#6a4a8a'];
+
+  // Sortera efter Ahnentafel-index (ger ffff→fmff→mfff→mmmm-ordning)
+  const rows=[];
+  const idxSorted=Object.keys(ahnMap).map(Number).sort((a,b)=>a-b);
+  idxSorted.forEach(idx=>{
+    const pid=ahnMap[idx];
+    const ap=S.persons[pid];
+    const depth=Math.floor(Math.log2(idx)); // 1→0, 2-3→1, 4-7→2 osv
+    const by=+yr(ap.birt?.date)||null;
+    const dy=+yr(ap.deat?.date)||null;
+    const evs=getEvents(pid);
+    // Se till att födelseår/dödsår alltid finns
+    if(by&&!evs.find(e=>e.type==='BIRT')) evs.unshift({year:by,type:'BIRT',label:'Född',place:ap.birt?.place||''});
+    if(dy&&!evs.find(e=>e.type==='DEAT')) evs.push({year:dy,type:'DEAT',label:'Död',place:ap.deat?.place||''});
+    evs.sort((a,b)=>a.year-b.year);
+
+    // Ahnentafel-suffix: far=f, mor=m
+    let suffix='';
+    if(idx>1){
+      let n=idx;
+      const parts=[];
+      while(n>1){ parts.unshift(n%2===0?'f':'m'); n=Math.floor(n/2); }
+      suffix=' ('+parts.join('')+')';
+    }
+
+    rows.push({id:pid, name:shortN(ap.name)+(by?' '+by:'')+suffix,
+      color:genColors[Math.min(depth,genColors.length-1)],
+      events:evs, birthYear:by, deathYear:dy, depth});
+  });
+
+  if(!rows.length){c.innerHTML='<div style="padding:16px;font-family:sans-serif;color:var(--text-muted)">Inga daterade händelser hittades.</div>';return;}
+
+  const allYears=rows.flatMap(r=>r.events.map(e=>e.year));
+  const minY=Math.min(...allYears)-5, maxY=Math.max(...allYears)+5;
+  const w=c.clientWidth||600;
+  const availH=c.clientHeight||400;
+  const rowH=Math.max(24, Math.min(44, Math.floor((availH-120)/rows.length)));
+  const titleText='🌳 '+shortN(p.name)+' — Anlinjetidslinje ('+rows.length+' personer)';
+
+  function redrawAnlinjen(){
+    c.innerHTML='';
+    tlBuildHeader(c, titleText, TL_STATE.regenter, TL_STATE.krig, TL_STATE.haend, redrawAnlinjen);
+    const svgWrap=document.createElement('div');
+    svgWrap.style.cssText='overflow-x:auto;overflow-y:auto;';
+    svgWrap.appendChild(buildTlSvg(rows,minY,maxY,Math.max(w,650),rowH,12,TL_STATE.regenter,TL_STATE.krig,TL_STATE.haend));
+    c.appendChild(svgWrap);
+  }
+  redrawAnlinjen();
+}
+
+/* ══════════════════════════════════════════
    SELEKTION
 ══════════════════════════════════════════ */
 function sel(id,addHistory=true){
@@ -1943,8 +2503,8 @@ function setDView(mode,btn){
   const chart=document.getElementById('ancestor-chart');
   const fan=document.getElementById('fan-chart');
   const stam=document.getElementById('stam-chart');
-  const rc=document.getElementById('right-col');
-  chart.style.display='none'; fan.style.display='none'; stam.style.display='none';
+  const tl=document.getElementById('tl-chart');
+  chart.style.display='none'; fan.style.display='none'; stam.style.display='none'; tl.style.display='none';
   if(mode==='antavla'){
     chart.style.display='flex';
     chart.style.flexBasis=genHeight(S.genCount);
@@ -1958,6 +2518,9 @@ function setDView(mode,btn){
     stam.style.display='block';
     stam.style.height='100%';
     setBlockDHeightPct('60%');
+  } else if(mode==='tl-person'||mode==='tl-familj'||mode==='tl-anlinjen'){
+    tl.style.display='block';
+    setBlockDHeightPct('65%');
   }
   if(S.curId)renderD(S.curId);
 }
@@ -2023,6 +2586,9 @@ function buildGenTree(rootId,maxGen){
 function renderD(id){
   if(S.dView==='fan') renderFan(id);
   else if(S.dView==='stam') renderStam(id);
+  else if(S.dView==='tl-person') renderTlPerson(id);
+  else if(S.dView==='tl-familj') renderTlFamilj(id);
+  else if(S.dView==='tl-anlinjen') renderTlAnlinjen(id);
   else renderAntavla(id);
 }
 
@@ -3549,10 +4115,14 @@ function renderRelChain(){
   const inner=document.getElementById('rel-inner');
   if(!S.refId||!S.curId){
     inner.innerHTML='<div class="rel-chain-empty">Markera en person som referensperson via kryssrutan i personkortet.</div>';
+    const copyBtn=document.getElementById('rel-copy-btn');
+    if(copyBtn) copyBtn.style.display='none';
     return;
   }
   if(S.refId===S.curId){
     inner.innerHTML='<div class="rel-chain-empty">Referenspersonen och huvudpersonen är samma.</div>';
+    const copyBtn=document.getElementById('rel-copy-btn');
+    if(copyBtn) copyBtn.style.display='none';
     return;
   }
   inner.innerHTML='<div class="rel-chain-empty" style="font-size:11px">Beräknar…</div>';
@@ -3563,6 +4133,8 @@ function renderRelChain(){
     S._relPathIdx=0;
     if(!paths||paths.length===0){
       inner.innerHTML='<div class="rel-no-path">Inget känt släktskap hittades.</div>';
+      const copyBtn=document.getElementById('rel-copy-btn');
+      if(copyBtn) copyBtn.style.display='none';
       return;
     }
     drawRelPath(paths[0],paths.length);
@@ -3616,6 +4188,10 @@ function drawRelPath(path, totalPaths){
     lbl.textContent=`Väg ${S._relPathIdx+1} av ${totalPaths}`;
     inner.appendChild(lbl);
   }
+
+  // Visa kopieringsknapp
+  const copyBtn=document.getElementById('rel-copy-btn');
+  if(copyBtn) copyBtn.style.display='block';
 
   // Scrolla till toppen när ny väg visas
   inner.scrollTop=0;
