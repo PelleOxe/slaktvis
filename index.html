@@ -920,7 +920,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.3.41 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.3.44 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1067,7 +1067,7 @@ input[type="file"]{display:none;}
       <div style="font-size:22px;font-weight:bold;color:var(--accent);letter-spacing:1px;">
         Släkt<span style="color:var(--text);">vis</span>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">v1.2.34 · © 2026 Per Andersson</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">v1.3.42 · © 2026 Per Andersson</div>
     </div>
 
     <div style="font-family:sans-serif;font-size:13px;color:var(--text);line-height:1.7;">
@@ -1099,6 +1099,7 @@ input[type="file"]{display:none;}
         <li><b>Solfjäder</b> — radiell SVG-grafik med pan, zoom, pinch och navigeringshistorik</li>
         <li>Solfjäder: ⊡ Anpassa till yta zoomar in diagrammet i tillgängligt utrymme</li>
         <li><b>Stamtavla</b> — ättlingstavla med obegränsat djup, horisontell scroll</li>
+        <li><b>Tidslinje</b> — tre varianter: Person (egna händelser), Familj (parallella rader) och Anlinjen (upp till 4 generationer i Ahnentafel-ordning). Lager för Krig, Händelser och Regenter kan slås på/av. Tap på element ger popup med detaljer.</li>
       </ul>
 
       <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">👤 Personinformation</div>
@@ -1119,11 +1120,12 @@ input[type="file"]{display:none;}
         <li>Bläddra bland alternativa släktvägar — upp till 20 visas</li>
         <li>Hittar multipla släktband (endogama familjer)</li>
         <li>Aldrig via giftermål — bara biologiska band</li>
+        <li>📋 Kopiera-knapp — kopierar hela kedjan som text med anfäder i hakparenteser</li>
       </ul>
 
       <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">✦ Pro-läge — redigering</div>
       <ul style="margin:0 0 14px;padding-left:18px;">
-        <li>Aktiveras med valfritt 6-siffrigt primtal — ingen hårdkodad kod</li>
+        <li>Aktiveras med en personlig kod</li>
         <li>Redigera befintliga fält: namn, datum, orter, yrke, anteckning m.m.</li>
         <li>Datumfält med klickbar kalender (Disgen-format)</li>
         <li>Lägg till ny partner, barn eller förälder direkt i appen</li>
@@ -1145,8 +1147,10 @@ input[type="file"]{display:none;}
 
       <div style="font-weight:bold;color:var(--amber);margin-bottom:6px;">🎨 Design & tillgänglighet</div>
       <ul style="margin:0 0 14px;padding-left:18px;">
-        <li>Tre teman: Ljust, Mörkt och Pergament</li>
+        <li>Tre teman: Ljust, Mörkt och Pergament — väljs under Mer… → Tema</li>
         <li>Responsiv layout för PC, Mac, iPad och iPhone</li>
+        <li>Telefon stående: accordion-layout med fällbara block</li>
+        <li>Telefon liggande: tvåkolumn med ikonnavigation — delad vy när söklistan är dold</li>
         <li>Block B/C och Block H kan fällas in för mer utrymme</li>
         <li>PWA-stöd — kan installeras som app på mobil</li>
         <li>Inget nätverk krävs efter första laddningen</li>
@@ -1164,7 +1168,7 @@ input[type="file"]{display:none;}
     </div>
 
     <div style="text-align:center;margin-top:18px;font-family:sans-serif;font-size:11px;color:var(--text-muted);">
-      Utvecklad med ❤️ av Per Andersson · pelleoxe.github.io/slaktvis
+      Utvecklad av Per Andersson · pelleoxe.github.io/slaktvis
     </div>
   </div>
 </div>
@@ -2749,7 +2753,7 @@ function renderD(id){
   else if(S.dView==='tl-person') renderTlPerson(id);
   else if(S.dView==='tl-familj') renderTlFamilj(id);
   else if(S.dView==='tl-anlinjen') renderTlAnlinjen(id);
-  else renderAntavla(id);
+  else setTimeout(()=>renderAntavla(id),30);
 }
 
 function renderAntavla(id){
