@@ -920,7 +920,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.3.44 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.3.50 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1194,10 +1194,10 @@ input[type="file"]{display:none;}
 </div>
 
 <!-- resume-bar already in offline_html -->
-<div id="tl-popup" style="display:none;position:fixed;z-index:200;background:var(--surface);
+<div id="tl-popup" onclick="tlHidePopup()" style="display:none;position:fixed;z-index:200;background:var(--surface);
   border:1px solid var(--border);border-radius:8px;padding:8px 12px;
   font-family:sans-serif;font-size:13px;color:var(--text);
-  box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:240px;pointer-events:none;"></div>
+  box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:300px;cursor:pointer;"></div>
 <div id="mob-land-depot" style="display:none"></div>
 <div id="main">
   <!-- LEFT -->
@@ -1431,32 +1431,42 @@ const AVATAR_F=makeSvgAvatar('F');
 /* ══════════════════════════════════════════
    STATE
 ══════════════════════════════════════════ */
-const S={persons:{},families:{},images:{},curId:null,genCount:4,filteredIds:[],history:[]};
+const S={persons:{},families:{},images:{},sources:{},curId:null,genCount:4,filteredIds:[],history:[]};
 
 /* ══════════════════════════════════════════
    GEDCOM PARSER
 ══════════════════════════════════════════ */
 function parseGedcom(text){
   const lines=text.split(/\r?\n/);
-  const persons={},families={};
+  const persons={},families={},sources={};
   let cur=null,ct=null,sub=null;
   let noteLines=[];
+  let curSour=null; // aktiv SOUR-post (0-nivå)
+  let curEv=null;  // aktiv händelse med källkoppling
+  let curSourRef=null; // aktiv källreferens under händelse
   const flushNote=()=>{if(cur&&ct==='I'&&noteLines.length){cur.noteRaw.push(...noteLines);}noteLines=[];};
   const newP=()=>({id:'',nameRaw:'',name:'',fullName:'',callname:null,nameGiven:'',nameSur:'',allSurnames:'',sex:'',
-    birt:{date:'',place:''},deat:{date:'',place:''},buri:{date:'',place:''},
-    chr:{date:'',place:''},occu:'',resi:[],immi:[],obje:[],famc:[],fams:[],noteRaw:[]});
+    birt:{date:'',place:'',sources:[]},deat:{date:'',place:'',sources:[]},buri:{date:'',place:'',sources:[]},
+    chr:{date:'',place:'',sources:[]},occu:'',resi:[],immi:[],obje:[],famc:[],fams:[],noteRaw:[]});
   // famc är [{id,pedi}], fams är strängar
-  const newF=()=>({id:'',husb:'',wife:'',chil:[],chilPedi:{},marr:{date:'',place:''},divr:{date:'',place:''},relType:''});
+  const newF=()=>({id:'',husb:'',wife:'',chil:[],chilPedi:{},marr:{date:'',place:'',sources:[]},divr:{date:'',place:''},relType:''});
 
   for(const raw of lines){
     const m=raw.match(/^(\d+)\s+(@\S+@|\w+)\s*(.*)?$/);
     if(!m)continue;
     const lv=parseInt(m[1]),tag=m[2],val=(m[3]||'').trim();
     if(lv===0){
-      flushNote();sub=null;
-      if(tag.startsWith('@I')){cur=newP();cur.id=tag.replace(/@/g,'');persons[cur.id]=cur;ct='I';}
-      else if(tag.startsWith('@F')){cur=newF();cur.id=tag.replace(/@/g,'');families[cur.id]=cur;ct='F';}
-      else{cur=null;ct=null;}
+      flushNote();sub=null;curEv=null;curSourRef=null;
+      if(tag.startsWith('@I')){cur=newP();cur.id=tag.replace(/@/g,'');persons[cur.id]=cur;ct='I';curSour=null;}
+      else if(tag.startsWith('@F')){cur=newF();cur.id=tag.replace(/@/g,'');families[cur.id]=cur;ct='F';curSour=null;}
+      else if(tag.startsWith('@S')&&val==='SOUR'){curSour={id:tag.replace(/@/g,''),abbr:''};sources[curSour.id]=curSour;cur=null;ct='S';}
+      else{cur=null;ct=null;curSour=null;}
+      continue;
+    }
+    // SOUR-post på nivå 1
+    if(ct==='S'){
+      if(lv===1&&tag==='ABBR')curSour.abbr=val;
+      else if(lv===1&&tag==='TITL'&&!curSour.abbr)curSour.abbr=val;
       continue;
     }
     if(!cur)continue;
@@ -1502,10 +1512,26 @@ function parseGedcom(text){
       }else if(lv===2){
         if(sub==='NAME'){if(tag==='GIVN'&&!cur.nameGiven)cur.nameGiven=cleanName(val);else if(tag==='SURN'&&!cur.nameSur)cur.nameSur=cleanName(val.split(' ')[0]);}
         else if(sub==='FAMC'&&tag==='PEDI'&&cur.famc.length){cur.famc[cur.famc.length-1].pedi=val.toLowerCase();}
-        else if(sub==='BIRT'){if(tag==='DATE')cur.birt.date=val;else if(tag==='PLAC')cur.birt.place=cleanDisgenTags(val);}
-        else if(sub==='DEAT'){if(tag==='DATE')cur.deat.date=val;else if(tag==='PLAC')cur.deat.place=cleanDisgenTags(val);}
-        else if(sub==='BURI'){if(tag==='DATE')cur.buri.date=val;else if(tag==='PLAC')cur.buri.place=cleanDisgenTags(val);}
-        else if(sub==='CHR'){if(tag==='DATE')cur.chr.date=val;else if(tag==='PLAC')cur.chr.place=cleanDisgenTags(val);}
+        else if(sub==='BIRT'){
+          if(tag==='DATE')cur.birt.date=val;
+          else if(tag==='PLAC')cur.birt.place=cleanDisgenTags(val);
+          else if(tag==='SOUR'){curEv=cur.birt;curSourRef={id:val.startsWith('@')?val.replace(/@/g,''):null,inline:val.startsWith('@')?null:val,page:'',quay:''};curEv.sources.push(curSourRef);}
+        }
+        else if(sub==='DEAT'){
+          if(tag==='DATE')cur.deat.date=val;
+          else if(tag==='PLAC')cur.deat.place=cleanDisgenTags(val);
+          else if(tag==='SOUR'){curEv=cur.deat;curSourRef={id:val.startsWith('@')?val.replace(/@/g,''):null,inline:val.startsWith('@')?null:val,page:'',quay:''};curEv.sources.push(curSourRef);}
+        }
+        else if(sub==='BURI'){
+          if(tag==='DATE')cur.buri.date=val;
+          else if(tag==='PLAC')cur.buri.place=cleanDisgenTags(val);
+          else if(tag==='SOUR'){curEv=cur.buri;curSourRef={id:val.startsWith('@')?val.replace(/@/g,''):null,inline:val.startsWith('@')?null:val,page:'',quay:''};curEv.sources.push(curSourRef);}
+        }
+        else if(sub==='CHR'){
+          if(tag==='DATE')cur.chr.date=val;
+          else if(tag==='PLAC')cur.chr.place=cleanDisgenTags(val);
+          else if(tag==='SOUR'){curEv=cur.chr;curSourRef={id:val.startsWith('@')?val.replace(/@/g,''):null,inline:val.startsWith('@')?null:val,page:'',quay:''};curEv.sources.push(curSourRef);}
+        }
         else if(sub==='OBJE'&&tag==='FILE')cur.obje.push(val);
         else if(sub==='RESI'){
           if(tag==='DATE'&&cur.resi.length)cur.resi[cur.resi.length-1].date=val;
@@ -1519,23 +1545,31 @@ function parseGedcom(text){
           if(tag==='CONC'){if(noteLines.length)noteLines[noteLines.length-1]+=val;else noteLines.push(val);}
           else if(tag==='CONT')noteLines.push(val);
         }
+      }else if(lv===3&&ct==='I'){
+        if(curSourRef){
+          if(tag==='PAGE')curSourRef.page=val;
+          else if(tag==='QUAY')curSourRef.quay=val;
+        }
       }
     }else if(ct==='F'&&lv===2){
-      // PEDI under CHIL i familjeposten
       if(sub==='CHIL'&&tag==='PEDI'&&cur.chil.length){
         const lastChildId=cur.chil[cur.chil.length-1];
         if(!cur.chilPedi)cur.chilPedi={};
         cur.chilPedi[lastChildId]=val.toLowerCase();
       }
-      // Datum/plats under MARR
       else if(sub==='MARR'){
         if(tag==='DATE')cur.marr.date=val;
         else if(tag==='PLAC')cur.marr.place=cleanDisgenTags(val);
+        else if(tag==='SOUR'){curEv=cur.marr;curSourRef={id:val.startsWith('@')?val.replace(/@/g,''):null,inline:val.startsWith('@')?null:val,page:'',quay:''};if(!curEv.sources)curEv.sources=[];curEv.sources.push(curSourRef);}
       }
-      // Datum/plats under DIV
       else if(sub==='DIV'){
         if(tag==='DATE')cur.divr.date=val;
         else if(tag==='PLAC')cur.divr.place=cleanDisgenTags(val);
+      }
+    }else if(ct==='F'&&lv===3){
+      if(curSourRef){
+        if(tag==='PAGE')curSourRef.page=val;
+        else if(tag==='QUAY')curSourRef.quay=val;
       }
     }else if(ct==='F'&&lv===1){
       sub=tag;
@@ -1566,7 +1600,7 @@ function parseGedcom(text){
     if(!p.name)p.name='(Okänt namn)';
     p.bio=p.noteRaw.length?processDisgenNote(p.noteRaw):'';
   }
-  return{persons,families};
+  return{persons,families,sources};
 }
 
 /* ══════════════════════════════════════════
@@ -1667,6 +1701,42 @@ function tlMakeClickable(el, txt){
   };
   el.addEventListener('click', handler);
   el.addEventListener('touchstart', e=>{e.preventDefault();handler(e);},{passive:false});
+}
+
+function showSources(e, evType, pid){
+  e.stopPropagation();
+  const p=S.persons[pid]; if(!p)return;
+  const typeMap={
+    'Född':'birt','Döpt':'chr','Begr.':'buri','Begravd':'buri','Död':'deat',
+    'Gift':'marr','Skild':'divr'
+  };
+  const evKey=typeMap[evType];
+  let srcs=evKey&&p[evKey]&&p[evKey].sources?p[evKey].sources:[];
+
+  if(!srcs.length){
+    // Kolla ev inline-källa från events-listan
+    const ev=(p.events||[]).find(ev=>ev.type===evType);
+    if(ev&&ev.source) srcs=[{inline:ev.source,page:'',quay:''}];
+  }
+
+  let html=`<div style="font-weight:bold;margin-bottom:6px;font-family:sans-serif;font-size:12px;color:var(--text)">📄 Källhänvisning — ${evType}</div>`;
+  if(!srcs.length){
+    html+='<div style="color:var(--text-muted);font-size:12px;font-family:sans-serif">Ingen källa registrerad.</div>';
+  } else {
+    srcs.forEach((s,i)=>{
+      const abbr=s.id?((S.sources[s.id]||{}).abbr||s.id):s.inline||'';
+      const stars=s.quay?'★'.repeat(Math.min(+s.quay,4)):'' ;
+      html+=`<div style="font-family:sans-serif;font-size:12px;margin-bottom:4px;padding:4px 6px;background:var(--bg);border-radius:4px;border:0.5px solid var(--border);">`;
+      html+=`<span style="color:var(--text)">${esc(abbr)}</span>`;
+      if(s.page) html+=`<br><span style="color:var(--text-sec);font-size:11px">${esc(s.page)}</span>`;
+      if(stars) html+=`<span style="color:var(--amber);margin-left:6px">${stars}</span>`;
+      html+=`</div>`;
+    });
+  }
+  // Visa popup nära knappen
+  const btn=e.target;
+  const rect=btn.getBoundingClientRect();
+  tlShowPopup(html, rect.right, rect.top);
 }
 
 function merCloseAllSubs(){
@@ -1790,8 +1860,8 @@ function loadParsed(gedText,fileName){
   showLoad('Tolkar GEDCOM…');
   setTimeout(()=>{
     try{
-      const{persons,families}=parseGedcom(gedText);
-      S.persons=persons;S.families=families;
+      const{persons,families,sources}=parseGedcom(gedText);
+      S.persons=persons;S.families=families;S.sources=sources||{};
       const cnt=Object.keys(persons).length;
       document.getElementById('info-count').innerHTML=`<strong>${cnt.toLocaleString('sv-SE')}</strong> ${'personer'}`;
       document.getElementById('info-file').textContent=fileName;
@@ -2762,7 +2832,7 @@ function renderAntavla(id){
   chart.innerHTML='';
   // Tillbaka-knapp
   const backBar=document.createElement('div');
-  backBar.style.cssText='position:absolute;top:6px;left:6px;z-index:10;';
+  backBar.style.cssText='position:sticky;top:4px;left:6px;z-index:10;width:0;height:0;overflow:visible;';
   const backBtn=document.createElement('button');
   backBtn.id='anc-back-btn';
   backBtn.textContent='◀';
@@ -3379,14 +3449,34 @@ function renderE(id){
   if(ep.buri&&(ep.buri.date||ep.buri.place))evs.push({date:ep.buri.date,type:'Begr.',desc:ep.buri.place,_proDate:ep._proBuriDate,_proDesc:ep._proBuriPlac});
   if(ep.emig&&ep.emig[0]&&(ep.emig[0].date||ep.emig[0].place))evs.push({date:ep.emig[0].date,type:'Emigr.',desc:ep.emig[0].place,_proDate:ep._proEmigDate,_proDesc:ep._proEmigPlac});
 
+  // Hjälp: hämta källtext för en händelsetyp
+  function getSources(evType){
+    const typeMap={
+      'Född':'birt','Döpt':'chr','Begr.':'buri','Begravd':'buri','Död':'deat',
+      'Gift':'marr','Skild':'divr'
+    };
+    const evKey=typeMap[evType];
+    let srcs=[];
+    if(evKey&&p[evKey]&&p[evKey].sources) srcs=p[evKey].sources;
+    return srcs;
+  }
+  function fmtSource(s){
+    const abbr=s.id?((S.sources[s.id]||{}).abbr||s.id):s.inline||'';
+    return abbr+(s.page?' — '+s.page:'')+(s.quay?(' ★'.repeat(+s.quay||0)):'' );
+  }
+  const proActive=proIsActive();
   const ul=document.getElementById('event-list');
   ul.innerHTML=evs.length?evs.map(ev=>{
     const dc=ev._proDate?'pro-modified':'';
     const pc=ev._proDesc?'pro-modified':'';
+    const srcs=getSources(ev.type);
+    const hasSrc=srcs.length>0;
+    // 📄 visas alltid om källa finns; redigeringsknapp bara i Pro
+    const srcBtn=hasSrc?` <button onclick="showSources(event,'${esc(ev.type)}','${S.curId}')" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0 2px;color:var(--text-muted);vertical-align:middle;" title="Visa källa">📄</button>`:'';
     return `<li class="event-item">
     <span class="event-date ${dc}">${esc(ev.date)}</span>
     <span class="event-type">${esc(ev.type)}</span>
-    <span class="event-desc ${pc}">${esc(ev.desc||'')}</span>
+    <span class="event-desc ${pc}">${esc(ev.desc||'')}${srcBtn}</span>
   </li>`;}).join(''):`<li style="padding:8px;font-family:sans-serif;font-size:13px;color:var(--text-muted)">—</li>`;
   const bioEl=document.getElementById('bio-text');
   if(ep.bio){bioEl.style.display='block';bioEl.textContent=ep.bio;
@@ -4656,10 +4746,13 @@ function proEditableFields(p){
     { key:'NAME',      label:'Namn',        get:()=>p.name||'' },
     { key:'BIRT.DATE', label:'Födelsedag',  get:()=>p.birt&&p.birt.date||'',  isDate:true },
     { key:'BIRT.PLAC', label:'Födelseort',  get:()=>p.birt&&p.birt.place||'' },
+    { key:'BIRT.SOUR', label:'Källa — Född', get:()=>p.birt&&p.birt.sources&&p.birt.sources[0]?fmtSourEdit(p.birt.sources[0]):'' },
     { key:'CHR.DATE',  label:'Dopdag',      get:()=>p.chr&&p.chr.date||'',    isDate:true },
     { key:'CHR.PLAC',  label:'Dopplats',    get:()=>p.chr&&p.chr.place||'' },
+    { key:'CHR.SOUR',  label:'Källa — Döpt', get:()=>p.chr&&p.chr.sources&&p.chr.sources[0]?fmtSourEdit(p.chr.sources[0]):'' },
     { key:'DEAT.DATE', label:'Dödsdag',     get:()=>p.deat&&p.deat.date||'',  isDate:true },
     { key:'DEAT.PLAC', label:'Dödsort',     get:()=>p.deat&&p.deat.place||'' },
+    { key:'DEAT.SOUR', label:'Källa — Död', get:()=>p.deat&&p.deat.sources&&p.deat.sources[0]?fmtSourEdit(p.deat.sources[0]):'' },
     { key:'BURI.DATE', label:'Begr.dag',    get:()=>p.buri&&p.buri.date||'',  isDate:true },
     { key:'BURI.PLAC', label:'Begr.plats',  get:()=>p.buri&&p.buri.place||'' },
     { key:'OCCU',      label:'Yrke',        get:()=>p.occu||'' },
@@ -4667,6 +4760,13 @@ function proEditableFields(p){
     { key:'EMIG.PLAC', label:'Emigr.ort',   get:()=>(p.emig&&p.emig[0]&&p.emig[0].place)||'' },
     { key:'NOTE',      label:'Anteckning',  get:()=>p.bio||'', textarea:true },
   ];
+}
+
+// Formatera källa för redigering (inline-text)
+function fmtSourEdit(s){
+  if(!s)return'';
+  if(s.id){ const abbr=(S.sources[s.id]||{}).abbr||s.id; return abbr+(s.page?' sid '+s.page:''); }
+  return (s.inline||'')+(s.page?' sid '+s.page:'');
 }
 
 // Injicera ✎-redigeringspanel i Block E efter rendrering
