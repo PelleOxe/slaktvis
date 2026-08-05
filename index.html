@@ -920,7 +920,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.3.50 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.3.51 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1536,6 +1536,19 @@ function parseGedcom(text){
         else if(sub==='RESI'){
           if(tag==='DATE'&&cur.resi.length)cur.resi[cur.resi.length-1].date=val;
           else if(tag==='PLAC'&&cur.resi.length)cur.resi[cur.resi.length-1].place=cleanDisgenTags(val);
+          else if(tag==='SOUR'&&cur.resi.length){
+            const r=cur.resi[cur.resi.length-1];
+            if(!r.sources)r.sources=[];
+            curSourRef={id:val.startsWith('@')?val.replace(/@/g,''):null,inline:val.startsWith('@')?null:val,page:'',quay:''};
+            r.sources.push(curSourRef);
+          }
+        }
+        else if(sub==='OCCU'){
+          if(tag==='SOUR'){
+            if(!cur.occuSources)cur.occuSources=[];
+            curSourRef={id:val.startsWith('@')?val.replace(/@/g,''):null,inline:val.startsWith('@')?null:val,page:'',quay:''};
+            cur.occuSources.push(curSourRef);
+          }
         }
         else if(sub==='IMMI'){
           if(tag==='DATE'&&cur.immi.length)cur.immi[cur.immi.length-1].date=val;
@@ -1711,7 +1724,17 @@ function showSources(e, evType, pid){
     'Gift':'marr','Skild':'divr'
   };
   const evKey=typeMap[evType];
-  let srcs=evKey&&p[evKey]&&p[evKey].sources?p[evKey].sources:[];
+  let srcs=[];
+  if(evKey&&p[evKey]&&p[evKey].sources) srcs=p[evKey].sources;
+  else if(evType==='Bostad'){
+    // pid2 = desc skickas som tredje param
+    const desc=pid.split('|')[1]||'';
+    const pid2=pid.split('|')[0];
+    const p2=S.persons[pid2]||p;
+    const r=p2.resi.find(r=>r.place===desc);
+    srcs=r&&r.sources?r.sources:[];
+  }
+  else if(evType==='Yrke') srcs=p.occuSources||[];
 
   if(!srcs.length){
     // Kolla ev inline-källa från events-listan
@@ -3450,15 +3473,20 @@ function renderE(id){
   if(ep.emig&&ep.emig[0]&&(ep.emig[0].date||ep.emig[0].place))evs.push({date:ep.emig[0].date,type:'Emigr.',desc:ep.emig[0].place,_proDate:ep._proEmigDate,_proDesc:ep._proEmigPlac});
 
   // Hjälp: hämta källtext för en händelsetyp
-  function getSources(evType){
+  function getSources(evType, evDesc){
     const typeMap={
       'Född':'birt','Döpt':'chr','Begr.':'buri','Begravd':'buri','Död':'deat',
       'Gift':'marr','Skild':'divr'
     };
     const evKey=typeMap[evType];
-    let srcs=[];
-    if(evKey&&p[evKey]&&p[evKey].sources) srcs=p[evKey].sources;
-    return srcs;
+    if(evKey&&p[evKey]&&p[evKey].sources) return p[evKey].sources;
+    if(evType==='Bostad'){
+      // Hitta rätt RESI-post via desc (plats)
+      const r=p.resi.find(r=>r.place===evDesc);
+      return r&&r.sources?r.sources:[];
+    }
+    if(evType==='Yrke') return p.occuSources||[];
+    return [];
   }
   function fmtSource(s){
     const abbr=s.id?((S.sources[s.id]||{}).abbr||s.id):s.inline||'';
@@ -3469,10 +3497,11 @@ function renderE(id){
   ul.innerHTML=evs.length?evs.map(ev=>{
     const dc=ev._proDate?'pro-modified':'';
     const pc=ev._proDesc?'pro-modified':'';
-    const srcs=getSources(ev.type);
+    const srcs=getSources(ev.type, ev.desc);
     const hasSrc=srcs.length>0;
     // 📄 visas alltid om källa finns; redigeringsknapp bara i Pro
-    const srcBtn=hasSrc?` <button onclick="showSources(event,'${esc(ev.type)}','${S.curId}')" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0 2px;color:var(--text-muted);vertical-align:middle;" title="Visa källa">📄</button>`:'';
+    const srcPid=ev.type==='Bostad'?`${S.curId}|${(ev.desc||'').replace(/'/g,"\\'")}`:S.curId;
+    const srcBtn=hasSrc?` <button onclick="showSources(event,'${esc(ev.type)}','${srcPid}')" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0 2px;color:var(--text-muted);vertical-align:middle;" title="Visa källa">📄</button>`:'';
     return `<li class="event-item">
     <span class="event-date ${dc}">${esc(ev.date)}</span>
     <span class="event-type">${esc(ev.type)}</span>
