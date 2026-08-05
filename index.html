@@ -920,7 +920,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.3.51 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.4.01 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1716,6 +1716,15 @@ function tlMakeClickable(el, txt){
   el.addEventListener('touchstart', e=>{e.preventDefault();handler(e);},{passive:false});
 }
 
+function showSourcesResi(e, pid, resiIdx){
+  e.stopPropagation();
+  const p=S.persons[pid]; if(!p)return;
+  const r=p.resi&&p.resi[resiIdx];
+  const srcs=r&&r.sources?r.sources:[];
+  const label='Bostad'+(r&&r.place?' — '+r.place.split(',')[0]:'');
+  _showSourcesPopup(e, label, srcs);
+}
+
 function showSources(e, evType, pid){
   e.stopPropagation();
   const p=S.persons[pid]; if(!p)return;
@@ -1726,29 +1735,18 @@ function showSources(e, evType, pid){
   const evKey=typeMap[evType];
   let srcs=[];
   if(evKey&&p[evKey]&&p[evKey].sources) srcs=p[evKey].sources;
-  else if(evType==='Bostad'){
-    // pid2 = desc skickas som tredje param
-    const desc=pid.split('|')[1]||'';
-    const pid2=pid.split('|')[0];
-    const p2=S.persons[pid2]||p;
-    const r=p2.resi.find(r=>r.place===desc);
-    srcs=r&&r.sources?r.sources:[];
-  }
   else if(evType==='Yrke') srcs=p.occuSources||[];
+  _showSourcesPopup(e, evType, srcs);
+}
 
-  if(!srcs.length){
-    // Kolla ev inline-källa från events-listan
-    const ev=(p.events||[]).find(ev=>ev.type===evType);
-    if(ev&&ev.source) srcs=[{inline:ev.source,page:'',quay:''}];
-  }
-
-  let html=`<div style="font-weight:bold;margin-bottom:6px;font-family:sans-serif;font-size:12px;color:var(--text)">📄 Källhänvisning — ${evType}</div>`;
+function _showSourcesPopup(e, label, srcs){
+  let html=`<div style="font-weight:bold;margin-bottom:6px;font-family:sans-serif;font-size:12px;color:var(--text)">📄 ${label}</div>`;
   if(!srcs.length){
     html+='<div style="color:var(--text-muted);font-size:12px;font-family:sans-serif">Ingen källa registrerad.</div>';
   } else {
-    srcs.forEach((s,i)=>{
+    srcs.forEach(s=>{
       const abbr=s.id?((S.sources[s.id]||{}).abbr||s.id):s.inline||'';
-      const stars=s.quay?'★'.repeat(Math.min(+s.quay,4)):'' ;
+      const stars=s.quay?'★'.repeat(Math.min(+s.quay,4)):'';
       html+=`<div style="font-family:sans-serif;font-size:12px;margin-bottom:4px;padding:4px 6px;background:var(--bg);border-radius:4px;border:0.5px solid var(--border);">`;
       html+=`<span style="color:var(--text)">${esc(abbr)}</span>`;
       if(s.page) html+=`<br><span style="color:var(--text-sec);font-size:11px">${esc(s.page)}</span>`;
@@ -1756,9 +1754,7 @@ function showSources(e, evType, pid){
       html+=`</div>`;
     });
   }
-  // Visa popup nära knappen
-  const btn=e.target;
-  const rect=btn.getBoundingClientRect();
+  const rect=e.target.getBoundingClientRect();
   tlShowPopup(html, rect.right, rect.top);
 }
 
@@ -3499,9 +3495,12 @@ function renderE(id){
     const pc=ev._proDesc?'pro-modified':'';
     const srcs=getSources(ev.type, ev.desc);
     const hasSrc=srcs.length>0;
-    // 📄 visas alltid om källa finns; redigeringsknapp bara i Pro
-    const srcPid=ev.type==='Bostad'?`${S.curId}|${(ev.desc||'').replace(/'/g,"\\'")}`:S.curId;
-    const srcBtn=hasSrc?` <button onclick="showSources(event,'${esc(ev.type)}','${srcPid}')" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0 2px;color:var(--text-muted);vertical-align:middle;" title="Visa källa">📄</button>`:'';
+    let srcBtn='';
+    if(hasSrc){
+      const resiIdx=ev.type==='Bostad'?p.resi.findIndex(r=>r.place===ev.desc):-1;
+      const srcCall=ev.type==='Bostad'?`showSourcesResi(event,'${S.curId}',${resiIdx})`:`showSources(event,'${esc(ev.type)}','${S.curId}')`;
+      srcBtn=` <button onclick="${srcCall}" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0 2px;color:var(--text-muted);vertical-align:middle;" title="Visa källa">📄</button>`;
+    }
     return `<li class="event-item">
     <span class="event-date ${dc}">${esc(ev.date)}</span>
     <span class="event-type">${esc(ev.type)}</span>
