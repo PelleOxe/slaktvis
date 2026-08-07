@@ -163,6 +163,11 @@ input[type="file"]{display:none;}
 #block-d.blockd-full #block-d-inner{flex:1;min-height:0;overflow:hidden;}
 /* 3D-träd */
 #tree3d-chart{background:#0a0a12;border-radius:6px;}
+
+/* ── 2D-träd ─────────────────────────────────────────── */
+#tree2d-chart{background:var(--bg);cursor:grab;}
+#tree2d-chart:active{cursor:grabbing;}
+#tree2d-chart canvas{display:block;}
 /* Solfjäder-kort */
 .fan-card{cursor:pointer;}
 .fan-card:hover .fan-slice{opacity:.85;}
@@ -937,7 +942,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.4.08 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.4.16 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1266,6 +1271,7 @@ input[type="file"]{display:none;}
           <button class="view-btn active" id="vbtn-antavla" onclick="setDView('antavla',this)" id="vbtn-antavla">Antavla</button>
           <button class="view-btn" id="vbtn-fan" onclick="setDView('fan',this)">Solfjäder</button>
           <button class="view-btn" id="vbtn-stam" onclick="setDView('stam',this)">Stamtavla</button>
+          <button class="view-btn" id="vbtn-2d" onclick="setDView('2d',this)">2D-träd</button>
           <button class="view-btn" id="vbtn-3d" onclick="setDView('3d',this)">3D-träd</button>
           <div style="position:relative;display:inline-block">
             <button class="view-btn" id="vbtn-tl" onclick="toggleTlMenu(event)">Tidslinje ▾</button>
@@ -1292,6 +1298,7 @@ input[type="file"]{display:none;}
         <div id="fan-chart"></div>
         <div id="stam-chart"></div>
         <div id="tl-chart" style="display:none;width:100%;height:100%;overflow:auto;position:relative;"></div>
+        <div id="tree2d-chart" style="display:none;width:100%;height:100%;overflow:hidden;position:relative;"></div>
         <div id="tree3d-chart" style="display:none;width:100%;height:100%;position:relative;overflow:hidden;">
           <canvas id="c3d" style="display:block;width:100%;height:100%;"></canvas>
           <div id="tree3d-info" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,10,24,0.82);color:#d4af6a;font-size:11px;padding:5px 12px;border-radius:16px;border:1px solid #d4af6a44;pointer-events:none;white-space:nowrap;z-index:5;">Klicka på ett kort · Dra för att rotera · Scrolla för att zooma</div>
@@ -2782,7 +2789,8 @@ function setDView(mode,btn){
   const stam=document.getElementById('stam-chart');
   const tl=document.getElementById('tl-chart');
   const t3d=document.getElementById('tree3d-chart');
-  chart.style.display='none'; fan.style.display='none'; stam.style.display='none'; tl.style.display='none'; t3d.style.display='none';
+  const t2d=document.getElementById('tree2d-chart');
+  chart.style.display='none'; fan.style.display='none'; stam.style.display='none'; tl.style.display='none'; t3d.style.display='none'; t2d.style.display='none';
   if(mode==='antavla'){
     chart.style.display='flex';
     chart.style.flexBasis=genHeight(S.genCount);
@@ -2799,6 +2807,9 @@ function setDView(mode,btn){
   } else if(mode==='tl-person'||mode==='tl-familj'||mode==='tl-anlinjen'){
     tl.style.display='block';
     setBlockDHeightPct('65%');
+  } else if(mode==='2d'){
+    t2d.style.display='block';
+    setBlockDHeightPct('70%');
   } else if(mode==='3d'){
     t3d.style.display='block';
     setBlockDHeightPct('70%');
@@ -2870,6 +2881,7 @@ function renderD(id){
   else if(S.dView==='tl-person') renderTlPerson(id);
   else if(S.dView==='tl-familj') renderTlFamilj(id);
   else if(S.dView==='tl-anlinjen') renderTlAnlinjen(id);
+  else if(S.dView==='2d') render2DTree(id);
   else if(S.dView==='3d') render3DTree(id);
   else setTimeout(()=>renderAntavla(id),30);
 }
@@ -6772,6 +6784,472 @@ function tree3dToggleFull(){ blockDToggleFull(); }
   });
   const t3el=document.getElementById('tree3d-chart');
   if(t3el) obs.observe(t3el,{attributes:true,attributeFilter:['style']});
+})();
+
+
+// ════════════════════════════════════════════════════════════
+// ── 2D-TRÄD ─────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+const _2D={
+  canvas:null, ctx:null,
+  pan:{x:0,y:0}, targetPan:{x:0,y:0},
+  zoom:1, targetZoom:1,
+  drag:false, lastX:0, lastY:0, downX:0, downY:0, downTime:0,
+  focusId:null, rafId:null,
+  // Layout
+  CW:210, CH:120,  // kortbredd/-höjd i pixlar
+  GX:24,  GY:56,   // gap horisontellt / vertikalt
+  nodes:{},        // pid → {x,y,w,h}
+  lines:[],        // [{x1,y1,x2,y2,col,dash}]
+  imgCache:{}
+};
+
+function render2DTree(id){
+  const cont=document.getElementById('tree2d-chart');
+  if(!cont)return;
+  if(cont.clientWidth<10){setTimeout(()=>render2DTree(id),80);return;}
+
+  // Canvas setup
+  if(!_2D.canvas){
+    _2D.canvas=document.createElement('canvas');
+    _2D.canvas.style.cssText='position:absolute;top:0;left:0;';
+    cont.appendChild(_2D.canvas);
+    _2D._cont=cont;
+    _2dBindEvents();
+  }
+  _2D.canvas.width=cont.clientWidth;
+  _2D.canvas.height=cont.clientHeight;
+  _2D.ctx=_2D.canvas.getContext('2d');
+
+  _2D.focusId=id;
+  _2dBuild(id);
+
+  if(_2D.rafId) cancelAnimationFrame(_2D.rafId);
+  _2dAnimate();
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function _2dP(id){return S.persons&&id?S.persons[id]:null;}
+function _2dFams(pid){
+  const p=_2dP(pid);if(!p)return[];
+  return(p.fams||[]).map(fid=>S.families[fid]).filter(Boolean);
+}
+function _2dParentFam(pid){
+  const p=_2dP(pid);if(!p)return null;
+  for(const fc of(p.famc||[])){const f=S.families[fc.id];if(f)return f;}
+  return null;
+}
+function _2dSpouse(pid,fam){return fam.husb===pid?fam.wife:fam.husb;}
+async function _2dImg(pid){
+  if(_2D.imgCache[pid]!==undefined)return _2D.imgCache[pid];
+  const p=_2dP(pid);if(!p){_2D.imgCache[pid]=null;return null;}
+  const url=getAvatarUrl(p);
+  if(!url||url.startsWith('data:image/svg')){_2D.imgCache[pid]=null;return null;}
+  return new Promise(res=>{
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{_2D.imgCache[pid]=img;res(img);};
+    img.onerror=()=>{_2D.imgCache[pid]=null;res(null);};
+    img.src=url;
+  });
+}
+
+// ── Layout & build v1.4.16 ─────────────────────────────────────
+// En enkel regel: placera partners en i taget, varje ny partner
+// sitter minst CW+GX från föregående. Barnraden centreras under
+// mittpunkten fokus↔partner och får aldrig överlappa grannars barnrad.
+function _2dBuild(focId){
+  _2D.nodes={};_2D.lines=[];
+  const fams=_2dFams(focId);
+  const pFam=_2dParentFam(focId);
+  const CW=_2D.CW,CH=_2D.CH,GX=_2D.GX,GY=_2D.GY;
+
+  // ── Breddberäkning ────────────────────────────────────────
+  function gcList(cid){
+    return[...new Set(_2dFams(cid).flatMap(f=>f.chil||[]).filter(id=>_2dP(id)))];
+  }
+  function slotW(cid){
+    const gc=gcList(cid);
+    return gc.length===0?CW:Math.max(CW,gc.length*(CW+GX)-GX);
+  }
+  function rowW(ch){
+    return ch.length===0?0:ch.reduce((s,cid,i)=>s+(i?GX:0)+slotW(cid),0);
+  }
+
+  // ── Y-nivåer ──────────────────────────────────────────────
+  const focY=0, chY=focY+CH+GY, gcY=chY+CH+GY, parY=focY-CH-GY;
+
+  // ── Fokus vid origo ───────────────────────────────────────
+  _2D.nodes[focId]={x:-CW/2,y:focY,w:CW,h:CH,focused:true};
+
+  // ── Familjdata ────────────────────────────────────────────
+  const famData=fams.map((fam,fi)=>{
+    const spId=_2dSpouse(focId,fam);
+    const ch=(fam.chil||[]).filter(id=>_2dP(id));
+    return{spId,ch,rw:rowW(ch),fi};
+  });
+
+  // Dela vänster/höger (fi 0,2,4=vänster; fi 1,3,5=höger)
+  const leftFams =famData.filter((_,i)=>i%2===0).reverse(); // innerst sist
+  const rightFams=famData.filter((_,i)=>i%2===1);
+
+  // ── Placeringsalgoritm ────────────────────────────────────
+  // För varje familj (vänster/höger):
+  // 1. Partner-X = max(minst ett kortbredd från föreg partner, vad barnraden kräver)
+  // 2. famMid = (focX=0 + spX)/2
+  // 3. Barnraden centreras vid famMid, kan inte överlappa föregående barnrad
+
+  function layoutSide(famList, side){
+    const result=[];
+    // spEdge: nästa lediga partnerkant räknat från fokus
+    let spEdge = side==='left' ? -CW/2-GX : CW/2+GX;
+    // chEdge: nästa lediga barnradskant
+    let chEdge = side==='left' ? 0 : 0; // börjar vid fokus centrum
+
+    famList.forEach(({spId,ch,rw})=>{
+      // --- Partner-position ---
+      // Minsta position baserat på föregående partner
+      let spCX = side==='left'
+        ? spEdge - CW/2        // höger kant av partner vid spEdge
+        : spEdge + CW/2;       // vänster kant vid spEdge
+
+      // Familjemitt = halvvägs fokus↔partner
+      let famMid = spCX/2;
+
+      // --- Barnradens krav ---
+      if(rw>0){
+        // Barnraden [famMid-rw/2 .. famMid+rw/2] får inte överlappa chEdge
+        let barnL = famMid - rw/2;
+        let barnR = famMid + rw/2;
+        if(side==='left'){
+          // Barnraden ska vara till vänster om chEdge
+          if(barnR > chEdge - GX){
+            const shift = barnR - (chEdge - GX);
+            famMid -= shift;
+            spCX   = famMid*2; // spegla om fokus
+          }
+        } else {
+          if(barnL < chEdge + GX){
+            const shift = (chEdge + GX) - barnL;
+            famMid += shift;
+            spCX   = famMid*2;
+          }
+        }
+        // Partner måste fortfarande inte krocka med föregående partner
+        if(side==='left'){
+          if(spCX > spEdge-CW/2) spCX=spEdge-CW/2, famMid=spCX/2;
+        } else {
+          if(spCX < spEdge+CW/2) spCX=spEdge+CW/2, famMid=spCX/2;
+        }
+      }
+
+      result.push({spId,ch,rw,spCX,famMid});
+
+      // Uppdatera kanter
+      if(side==='left'){
+        spEdge = spCX - CW/2 - GX;         // nästa partner: utanför denna
+        chEdge = rw>0 ? famMid-rw/2 : chEdge; // vänsterkant av denna barnrad
+      } else {
+        spEdge = spCX + CW/2 + GX;
+        chEdge = rw>0 ? famMid+rw/2 : chEdge;
+      }
+    });
+    return result;
+  }
+
+  const leftPos  = layoutSide(leftFams,'left');
+  const rightPos = layoutSide(rightFams,'right');
+
+  // ── Rita barn+barnbarn ────────────────────────────────────
+  function placeChildren(ch,famMid){
+    if(!ch.length)return;
+    const slots=ch.map(cid=>slotW(cid));
+    const totW=slots.reduce((s,w,i)=>s+(i?GX:0)+w,0);
+    let cur=famMid-totW/2;
+    const cxs=ch.map((cid,i)=>{
+      const cx=cur+slots[i]/2;
+      cur+=slots[i]+(i<ch.length-1?GX:0);
+      return cx;
+    });
+    const stemY=chY-8;
+    _2D.lines.push({x1:famMid,y1:focY+CH,x2:famMid,y2:stemY,col:'#5577cc',dash:[]});
+    if(ch.length>1)
+      _2D.lines.push({x1:cxs[0],y1:stemY,x2:cxs[ch.length-1],y2:stemY,col:'#5577cc',dash:[]});
+    ch.forEach((cid,i)=>{
+      const cx=cxs[i];
+      _2D.lines.push({x1:cx,y1:stemY,x2:cx,y2:chY,col:'#5577cc',dash:[]});
+      _2D.nodes[cid]={x:cx-CW/2,y:chY,w:CW,h:CH,focused:false};
+      const gc=gcList(cid);
+      if(gc.length){
+        const gtotW=gc.length*(CW+GX)-GX;
+        const gs=cx-gtotW/2+CW/2;
+        const gcStemY=gcY-8;
+        _2D.lines.push({x1:cx,y1:chY+CH,x2:cx,y2:gcStemY,col:'#334488',dash:[]});
+        if(gc.length>1)
+          _2D.lines.push({x1:gs,y1:gcStemY,x2:gs+(gc.length-1)*(CW+GX),y2:gcStemY,col:'#334488',dash:[]});
+        gc.forEach((gcid,gi)=>{
+          const gcx=gs+gi*(CW+GX);
+          _2D.lines.push({x1:gcx,y1:gcStemY,x2:gcx,y2:gcY,col:'#334488',dash:[]});
+          _2D.nodes[gcid]={x:gcx-CW/2,y:gcY,w:CW,h:CH,focused:false};
+        });
+      }
+    });
+  }
+
+  // ── Rita partners, linjer, barn ───────────────────────────
+  [...leftPos,...rightPos].forEach(({spId,ch,spCX,famMid})=>{
+    const side=spCX<=0?'left':'right';
+    if(spId&&_2dP(spId)){
+      _2D.nodes[spId]={x:spCX-CW/2,y:focY,w:CW,h:CH,focused:false};
+      // Partnerlinje: fokus kant → partner kant
+      const lx=side==='left'?-CW/2:CW/2;
+      const rx=side==='left'?spCX+CW/2:spCX-CW/2;
+      _2D.lines.push({x1:lx,y1:focY+CH/2,x2:rx,y2:focY+CH/2,col:'#c8a040',dash:[]});
+    }
+    placeChildren(ch,famMid);
+  });
+
+  // ── Föräldrar ─────────────────────────────────────────────
+  if(pFam){
+    const slots=[{pid:pFam.husb,sex:'M',label:'Fader okänd'},{pid:pFam.wife,sex:'F',label:'Moder okänd'}];
+    if(slots.some(s=>s.pid&&_2dP(s.pid))){
+      const farCX=-(CW/2+GX/2), morCX=CW/2+GX/2;
+      slots.forEach((sl,i)=>{
+        const cx=i===0?farCX:morCX;
+        const node={x:cx-CW/2,y:parY,w:CW,h:CH,focused:false};
+        if(sl.pid&&_2dP(sl.pid)) _2D.nodes[sl.pid]=node;
+        else _2D.nodes['__unk_'+sl.sex]={...node,unknown:true,sex:sl.sex,label:sl.label};
+      });
+      _2D.lines.push({x1:farCX+CW/2,y1:parY+CH/2,x2:morCX-CW/2,y2:parY+CH/2,col:'#c8a040',dash:[]});
+      _2D.lines.push({x1:0,y1:parY+CH,x2:0,y2:focY,col:'#5577cc',dash:[]});
+    }
+  }
+
+  // ── Centrera ──────────────────────────────────────────────
+  const cont=_2D._cont;
+  _2D.targetPan={x:cont.clientWidth/2,y:cont.clientHeight*0.45};
+  _2D.pan={..._2D.targetPan};
+  _2D.zoom=1;_2D.targetZoom=1;
+  const allIds=Object.keys(_2D.nodes).filter(k=>!k.startsWith('__'));
+  Promise.all(allIds.map(id=>_2dImg(id))).then(()=>_2dDraw());
+}
+
+
+// ── Rita ─────────────────────────────────────────────────────
+function _2dDraw(){
+  const cv=_2D.canvas; if(!cv)return;
+  const ctx=_2D.ctx;
+  const W=cv.width,H=cv.height;
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const bgCol=isDark?'#111827':'#f0f2f8';
+  const cardBg=isDark?'#1e2235':'#ffffff';
+  const cardBorder=isDark?'#3a3e6a':'#d0d4e8';
+  const textCol=isDark?'#c8ccee':'#1a1e3a';
+  const subCol=isDark?'#8890b8':'#6068a0';
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=bgCol; ctx.fillRect(0,0,W,H);
+
+  ctx.save();
+  ctx.translate(_2D.pan.x,_2D.pan.y);
+  ctx.scale(_2D.zoom,_2D.zoom);
+
+  // Linjer
+  for(const l of _2D.lines){
+    ctx.beginPath();
+    ctx.strokeStyle=l.col; ctx.lineWidth=2;
+    if(l.dash&&l.dash.length) ctx.setLineDash(l.dash); else ctx.setLineDash([]);
+    ctx.moveTo(l.x1,l.y1); ctx.lineTo(l.x2,l.y2); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Kort
+  for(const[key,n] of Object.entries(_2D.nodes)){
+    const{x,y,w,h,focused,unknown,sex,label}=n;
+    _2dDrawCard(ctx,key,x,y,w,h,focused,unknown,sex,label,cardBg,cardBorder,textCol,subCol,isDark);
+  }
+  ctx.restore();
+}
+
+function _2dDrawCard(ctx,pid,x,y,w,h,focused,unknown,sex,label,cardBg,cardBorder,textCol,subCol,isDark){
+  const r=10;
+  // Skugga
+  ctx.shadowColor='rgba(0,0,0,0.15)'; ctx.shadowBlur=12; ctx.shadowOffsetY=3;
+  // Bakgrund
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  ctx.fillStyle=focused?(isDark?'#2c1e45':'#f5f0ff'):cardBg; ctx.fill();
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  ctx.strokeStyle=focused?'#c8a040':unknown?'#556':'#3a3e6a';
+  ctx.lineWidth=focused?3:unknown?1.5:1.5;
+  if(unknown){ctx.setLineDash([6,4]);} else ctx.setLineDash([]);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Avatar-cirkel
+  const AR=20, AX=x+30, AY=y+h/2;
+  const p=_2dP(pid);
+  ctx.save(); ctx.beginPath(); ctx.arc(AX,AY,AR,0,Math.PI*2); ctx.clip();
+  const img=_2D.imgCache[pid];
+  if(img&&!unknown){
+    ctx.drawImage(img,AX-AR,AY-AR,AR*2,AR*2);
+  } else {
+    const aSex=p?p.sex:sex;
+    ctx.fillStyle=aSex==='M'?(isDark?'#1e3050':'#dce8f8'):aSex==='F'?(isDark?'#3a1a40':'#f8dcea'):(isDark?'#252535':'#e8e8f8');
+    ctx.fillRect(AX-AR,AY-AR,AR*2,AR*2);
+    const ini=unknown?'?':(p?((p.name||'?').replace(/\//g,'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('')):'?');
+    ctx.fillStyle=unknown?'#8888aa':textCol;
+    ctx.font=`bold ${unknown?16:14}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ini,AX,AY);
+  }
+  ctx.restore();
+  ctx.strokeStyle=focused?'#c8a040':'#8890b8'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(AX,AY,AR,0,Math.PI*2); ctx.stroke();
+
+  // Text
+  if(unknown){
+    ctx.fillStyle=subCol; ctx.font='italic 11px sans-serif';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(label||'Okänd',x+58,y+h/2,w-62);
+    return;
+  }
+  const TX=x+58, MW=w-62;
+  const rawName=(p?p.name||'':'').replace(/\//g,'').trim();
+  const parts=rawName.split(/\s+/);
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillStyle=focused?'#c8a040':textCol;
+  ctx.font=`bold ${focused?12:11}px sans-serif`;
+  ctx.fillText(parts.slice(0,2).join(' '),TX,y+10,MW);
+  if(parts.length>2){ctx.font='10px sans-serif';ctx.fillStyle=subCol;ctx.fillText(parts.slice(2).join(' '),TX,y+26,MW);}
+  const row2=parts.length>2?y+40:y+28;
+  ctx.font='9.5px sans-serif'; ctx.fillStyle=subCol;
+  const bY=yr(p.birt?p.birt.date:'');
+  const dY=yr(p.deat?p.deat.date:'');
+  const bP=p.birt&&p.birt.place?p.birt.place.split(',')[0].trim():'';
+  const dP=p.deat&&p.deat.place?p.deat.place.split(',')[0].trim():'';
+  if(bY||bP) ctx.fillText('*\u202f'+(bY?bY+'\u202f':'')+bP,TX,row2,MW);
+  if(dY||dP) ctx.fillText('†\u202f'+(dY?dY+'\u202f':'')+dP,TX,row2+14,MW);
+  if(focused){
+    ctx.fillStyle='rgba(200,160,64,0.15)'; ctx.fillRect(TX,y+h-17,MW-4,13);
+    ctx.fillStyle='#c8a040'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('● FOKUS',TX+MW/2-2,y+h-10);
+  }
+}
+
+// ── Animationsloop ───────────────────────────────────────────
+function _2dAnimate(){
+  _2D.rafId=requestAnimationFrame(_2dAnimate);
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const eps=0.3;
+  let moved=false;
+  const nx=lerp(_2D.pan.x,_2D.targetPan.x,0.1);
+  const ny=lerp(_2D.pan.y,_2D.targetPan.y,0.1);
+  const nz=lerp(_2D.zoom,_2D.targetZoom,0.1);
+  if(Math.abs(nx-_2D.pan.x)>0.1||Math.abs(ny-_2D.pan.y)>0.1||Math.abs(nz-_2D.zoom)>0.001){
+    _2D.pan.x=nx; _2D.pan.y=ny; _2D.zoom=nz; moved=true;
+  }
+  if(moved) _2dDraw();
+}
+
+// ── Events ───────────────────────────────────────────────────
+function _2dBindEvents(){
+  const cv=_2D.canvas;
+
+  // Hjälp: canvas-relativa koordinater från event
+  const cvPos=(e)=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
+
+  const onDown=(cx,cy)=>{
+    _2D.drag=false;_2D.downTime=Date.now();
+    _2D.lastX=cx;_2D.lastY=cy;_2D.downX=cx;_2D.downY=cy;
+  };
+  const onMove=(cx,cy)=>{
+    const dx=cx-_2D.lastX,dy=cy-_2D.lastY;
+    if(!_2D.drag&&(Math.abs(cx-_2D.downX)>5||Math.abs(cy-_2D.downY)>5)) _2D.drag=true;
+    if(_2D.drag){
+      _2D.pan.x+=dx; _2D.pan.y+=dy;
+      _2D.targetPan.x=_2D.pan.x; _2D.targetPan.y=_2D.pan.y;
+      _2dDraw();
+    }
+    _2D.lastX=cx; _2D.lastY=cy;
+  };
+  const onUp=(cx,cy)=>{
+    if(!_2D.drag||(Date.now()-_2D.downTime<200)){
+      // Klick: omvandla canvas-koordinat → world-koordinat
+      const wx=(cx-_2D.pan.x)/_2D.zoom;
+      const wy=(cy-_2D.pan.y)/_2D.zoom;
+      for(const[key,n] of Object.entries(_2D.nodes)){
+        if(key.startsWith('__')) continue;
+        if(wx>=n.x&&wx<=n.x+n.w&&wy>=n.y&&wy<=n.y+n.h){
+          sel(key,true); _2D.drag=false; return;
+        }
+      }
+    }
+    _2D.drag=false;
+  };
+  // Zoom mot muspositionen: justera pan så att world-punkten under musen stannar still
+  const doZoom=(factor,cx,cy)=>{
+    const oldZ=_2D.targetZoom;
+    const newZ=Math.max(0.15,Math.min(4,oldZ*factor));
+    // world-punkt under musen: wx=(cx-pan.x)/oldZ
+    // Efter zoom: cx = wx*newZ + pan.x'  →  pan.x' = cx - wx*newZ
+    const wx=(cx-_2D.pan.x)/oldZ;
+    const wy=(cy-_2D.pan.y)/oldZ;
+    _2D.targetZoom=newZ;
+    _2D.targetPan.x=cx-wx*newZ;
+    _2D.targetPan.y=cy-wy*newZ;
+  };
+
+  let pinch0=0, pinchMx=0, pinchMy=0;
+  cv.addEventListener('mousedown',(e)=>{const[cx,cy]=cvPos(e);onDown(cx,cy);});
+  cv.addEventListener('mousemove',(e)=>{if(e.buttons){const[cx,cy]=cvPos(e);onMove(cx,cy);}});
+  cv.addEventListener('mouseup',(e)=>{const[cx,cy]=cvPos(e);onUp(cx,cy);});
+  cv.addEventListener('wheel',(e)=>{
+    e.preventDefault();
+    const[cx,cy]=cvPos(e);
+    doZoom(e.deltaY<0?1.12:0.89,cx,cy);
+  },{passive:false});
+  cv.addEventListener('touchstart',(e)=>{
+    e.preventDefault();
+    if(e.touches.length===2){
+      pinch0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      pinchMx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+      pinchMy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+      const r=cv.getBoundingClientRect();
+      pinchMx-=r.left; pinchMy-=r.top;
+    } else {
+      const r=cv.getBoundingClientRect();
+      onDown(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);
+    }
+  },{passive:false});
+  cv.addEventListener('touchmove',(e)=>{
+    e.preventDefault();
+    if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      if(pinch0>0) doZoom(d/pinch0,pinchMx,pinchMy);
+      pinch0=d; _2D.drag=true;
+    } else {
+      const r=cv.getBoundingClientRect();
+      onMove(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);
+    }
+  },{passive:false});
+  cv.addEventListener('touchend',(e)=>{
+    e.preventDefault(); pinch0=0;
+    if(e.touches.length===0){
+      const r=cv.getBoundingClientRect(),t=e.changedTouches[0];
+      onUp(t.clientX-r.left,t.clientY-r.top);
+    }
+  },{passive:false});
+}
+
+// Stoppa loop vid vybyte
+(()=>{
+  const obs2=new MutationObserver(()=>{
+    const el=document.getElementById('tree2d-chart');
+    if(el&&el.style.display==='none'&&_2D.rafId){cancelAnimationFrame(_2D.rafId);_2D.rafId=null;}
+  });
+  const t2el=document.getElementById('tree2d-chart');
+  if(t2el) obs2.observe(t2el,{attributes:true,attributeFilter:['style']});
 })();
 
 </script>
