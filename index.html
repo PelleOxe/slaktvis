@@ -937,7 +937,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.4.07 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.4.08 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -6692,9 +6692,41 @@ function _tree3dBindEvents(canvas){
     e.preventDefault();
     _3D.targetZ=Math.max(5,Math.min(45,_3D.targetZ+e.deltaY*0.025));
   },{...sig,passive:false});
-  canvas.addEventListener('touchstart',(e)=>{e.preventDefault();const t=e.touches[0];onDown(t.clientX,t.clientY);},{...sig,passive:false});
-  canvas.addEventListener('touchmove',(e)=>{e.preventDefault();const t=e.touches[0];onMove(t.clientX,t.clientY);},{...sig,passive:false});
-  canvas.addEventListener('touchend',(e)=>{e.preventDefault();const t=e.changedTouches[0];onUp(t.clientX,t.clientY);},{...sig,passive:false});
+  let _pinchDist0=0;
+  canvas.addEventListener('touchstart',(e)=>{
+    e.preventDefault();
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      _pinchDist0=Math.hypot(dx,dy);
+    } else {
+      const t=e.touches[0]; onDown(t.clientX,t.clientY);
+    }
+  },{...sig,passive:false});
+  canvas.addEventListener('touchmove',(e)=>{
+    e.preventDefault();
+    if(e.touches.length===2){
+      // Pinch-zoom
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const dist=Math.hypot(dx,dy);
+      if(_pinchDist0>0){
+        const scale=_pinchDist0/dist; // >1 = nyp ihop = zooma ut
+        _3D.targetZ=Math.max(5,Math.min(45,_3D.targetZ*(1+(scale-1)*0.25)));
+      }
+      _pinchDist0=dist;
+      _3D.isDrag=true; // hindra klick-event
+    } else {
+      const t=e.touches[0]; onMove(t.clientX,t.clientY);
+    }
+  },{...sig,passive:false});
+  canvas.addEventListener('touchend',(e)=>{
+    e.preventDefault();
+    _pinchDist0=0;
+    if(e.touches.length===0){
+      const t=e.changedTouches[0]; onUp(t.clientX,t.clientY);
+    }
+  },{...sig,passive:false});
 }
 
 // ── Fullskärm Block D (alla vyer) ────────────────────────────
