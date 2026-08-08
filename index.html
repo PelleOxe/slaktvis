@@ -942,7 +942,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.4.21 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.4.21b &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -1216,7 +1216,7 @@ input[type="file"]{display:none;}
 </div>
 
 <!-- resume-bar already in offline_html -->
-<div id="tl-popup" onclick="tlHidePopup()" style="display:none;position:fixed;z-index:200;background:var(--surface);
+<div id="tl-popup" onclick="tlHidePopup()" style="display:none;position:fixed;z-index:9500;background:var(--surface);
   border:1px solid var(--border);border-radius:8px;padding:8px 12px;
   font-family:sans-serif;font-size:13px;color:var(--text);
   box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:300px;cursor:pointer;"></div>
@@ -1716,12 +1716,24 @@ function tlShowPopup(txt, x, y){
   if(!p)return;
   p.innerHTML=txt;
   p.style.display='block';
-  // Placera nära tap/klick men inom fönster
-  const pw=240, ph=80;
-  let px=x+12, py=y-40;
-  if(px+pw>window.innerWidth) px=x-pw-12;
-  if(py<0) py=y+12;
-  p.style.left=px+'px'; p.style.top=py+'px';
+  const pw=240;
+  const bd=document.getElementById('block-d');
+  const isFull=bd&&bd.classList.contains('blockd-full');
+  if(isFull){
+    // Popup är nu inuti #block-d (position:fixed) — använd position:fixed
+    // men koordinater relativt viewport fungerar direkt
+    p.style.position='fixed';
+    let px=x+12, py=y-40;
+    if(px+pw>window.innerWidth) px=x-pw-12;
+    if(py<8) py=y+12;
+    p.style.left=px+'px'; p.style.top=py+'px';
+  } else {
+    p.style.position='fixed';
+    let px=x+12, py=y-40;
+    if(px+pw>window.innerWidth) px=x-pw-12;
+    if(py<8) py=y+12;
+    p.style.left=px+'px'; p.style.top=py+'px';
+  }
   clearTimeout(_tlPopupTimer);
   _tlPopupTimer=setTimeout(()=>{if(p)p.style.display='none';},5000);
 }
@@ -6745,9 +6757,20 @@ function _tree3dBindEvents(canvas){
 function blockDToggleFull(){
   const bd=document.getElementById('block-d');
   const btn=document.getElementById('blockd-fullbtn');
+  const popup=document.getElementById('tl-popup');
   if(!bd||!btn)return;
   const full=!bd.classList.contains('blockd-full');
   bd.classList.toggle('blockd-full',full);
+  // Flytta popup in i/ut ur block-d så position:fixed fungerar rätt
+  if(popup){
+    if(full){
+      // Flytta in i block-d (som är position:fixed i fullskärm)
+      bd.appendChild(popup);
+    } else {
+      // Flytta tillbaka till body
+      document.body.appendChild(popup);
+    }
+  }
   // YouTube-stil: ↗↙ när normalt, ↙↗ när fullskärm
   btn.innerHTML=full?'<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M6 1v4H1V3.5h2.5L1 1l1-1 2.5 2.5V0h1.5z"/><path d="M12 17v-4h5v1.5h-2.5L17 17l-1 1-2.5-2.5V17h-1.5z"/></svg>':'<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M1 1h5v1.5H3.5L6.5 5.5 5.5 6.5 2.5 3.5V5H1V1z"/><path d="M17 17h-5v-1.5h2.5L11.5 12.5l1-1 3 3V13H17v4z"/></svg>';
   btn.title=full?'Avsluta fullskärm':'Fullskärm';
