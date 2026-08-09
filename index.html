@@ -942,7 +942,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.4.21b &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.4.25 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -6277,7 +6277,7 @@ function _3dTex(pid,focused){
     ctx.fillStyle=p.sex==='M'?'#1e3050':p.sex==='F'?'#3a1a40':'#252535';
     ctx.fillRect(AX-AR,AY-AR,AR*2,AR*2);
     const ini=(p.name||'?').replace(/\//g,'').trim().split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('');
-    ctx.fillStyle='#ccd0ec'; ctx.font='bold 22px sans-serif';
+    ctx.fillStyle='#eef0ff'; ctx.font='bold 22px sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ini,AX,AY);
   }
   ctx.restore();
@@ -6289,15 +6289,15 @@ function _3dTex(pid,focused){
   const rawName=(p.name||'(Okänt)').replace(/\//g,'').trim();
   const parts=rawName.split(/\s+/);
   ctx.textAlign='left'; ctx.textBaseline='top';
-  ctx.fillStyle=focused?'#d4af6a':'#c0c6e4';
+  ctx.fillStyle=focused?'#ffe8a0':'#e8ecff';
   ctx.font=`bold ${focused?14:13}px sans-serif`;
   ctx.fillText(parts.slice(0,2).join(' '),TX,12,MW);
   if(parts.length>2){
-    ctx.font='11px sans-serif'; ctx.fillStyle='#8890b8';
+    ctx.font='11px sans-serif'; ctx.fillStyle='#c0c8e8';
     ctx.fillText(parts.slice(2).join(' '),TX,30,MW);
   }
   const row2=parts.length>2?50:32;
-  ctx.font='10px sans-serif'; ctx.fillStyle='#6878a0';
+  ctx.font='10px sans-serif'; ctx.fillStyle='#b0b8d8';
   const bY=yr(p.birt?p.birt.date:'');
   const dY=yr(p.deat?p.deat.date:'');
   const bP=p.birt&&p.birt.place?p.birt.place.split(',')[0].trim():'';
@@ -6876,11 +6876,9 @@ async function _2dImg(pid){
   });
 }
 
-// ── Layout & build v1.4.21 ─────────────────────────────────────
-// Alla partners på samma Y strax under fokus.
-// RÖD linje horisontellt genom fokuspersonens mitt.
-// GRÖN Z: vertikal ned från röda linjen → horisontell in i SIDAN på partnerns kort.
-// Barnlinje ned från knutX under partnerns underkant.
+// ── Layout & build v1.4.25 ─────────────────────────────────────
+// 1-2 partners: fokus+partners på samma Y, knutpunkt mitt emellan
+// 3+ partners: röd linje + gröna Z-kopplingar
 function _2dBuild(focId){
   _2D.nodes={};_2D.lines=[];
   const fams=_2dFams(focId);
@@ -6888,124 +6886,137 @@ function _2dBuild(focId){
   const CW=_2D.CW,CH=_2D.CH,GX=_2D.GX,GY=_2D.GY;
   const R=5;
 
-  // ── Breddberäkning ────────────────────────────────────────
   function gcList(cid){
     return[...new Set(_2dFams(cid).flatMap(f=>f.chil||[]).filter(id=>_2dP(id)))];
   }
   function slotW(cid){
-    const gc=gcList(cid);
-    return gc.length===0?CW:Math.max(CW,gc.length*(CW+GX)-GX);
+    const gc=gcList(cid); return gc.length===0?CW:Math.max(CW,gc.length*(CW+GX)-GX);
   }
   function rowW(ch){
     return ch.length===0?0:ch.reduce((s,cid,i)=>s+(i?GX:0)+slotW(cid),0);
   }
 
-  // ── Y-nivåer ──────────────────────────────────────────────
   const focY  = 0;
-  const focMY = focY + CH/2;          // röda linjens Y
-  const spTopY = focMY + GY*0.5;      // alla partners övre kant (under röda linjen)
-  const spMY   = spTopY + CH/2;       // partners mitt-Y
-  const chY    = spTopY + CH + GY;    // barnrad övre kant
-  const gcY    = chY + CH + GY;       // barnbarnrad
-
-  // ── Fokus ─────────────────────────────────────────────────
+  const focMY = focY+CH/2;
   _2D.nodes[focId]={x:-CW/2,y:focY,w:CW,h:CH,focused:true};
 
-  // ── Familjdata ─────────────────────────────────────────────
   const famData=fams.map((fam,fi)=>{
     const spId=_2dSpouse(focId,fam);
     const ch=(fam.chil||[]).filter(id=>_2dP(id));
     return{spId,ch,rw:rowW(ch),fi};
   });
-  const leftFams =famData.filter((_,i)=>i%2===0);
-  const rightFams=famData.filter((_,i)=>i%2===1);
 
-  // ── Barn ned från knutX ───────────────────────────────────
-  function placeChildren(ch,knutX){
+  // ── Barn ned från knutX, startY = Y varifrån barnlinjen börjar ──
+  function placeChildren(ch,knutX,startY){
     if(!ch.length)return;
+    const chY=startY+GY;
+    const gcY=chY+CH+GY;
     const slots=ch.map(cid=>slotW(cid));
     const totW=slots.reduce((s,w,i)=>s+(i?GX:0)+w,0);
     let cur=knutX-totW/2;
     const cxs=ch.map((cid,i)=>{
       const cx=cur+slots[i]/2;
-      cur+=slots[i]+(i<ch.length-1?GX:0);
-      return cx;
+      cur+=slots[i]+(i<ch.length-1?GX:0); return cx;
     });
     const stemY=chY-8;
-    _2D.lines.push({x1:knutX,y1:spTopY+CH,x2:knutX,y2:stemY,col:'#5577cc',dash:[]});
+    _2D.lines.push({x1:knutX,y1:startY,x2:knutX,y2:stemY,col:'#5577cc',lw:2,dash:[]});
     if(ch.length>1)
-      _2D.lines.push({x1:cxs[0],y1:stemY,x2:cxs[ch.length-1],y2:stemY,col:'#5577cc',dash:[]});
+      _2D.lines.push({x1:cxs[0],y1:stemY,x2:cxs[ch.length-1],y2:stemY,col:'#5577cc',lw:2,dash:[]});
     ch.forEach((cid,i)=>{
       const cx=cxs[i];
-      _2D.lines.push({x1:cx,y1:stemY,x2:cx,y2:chY,col:'#5577cc',dash:[]});
+      _2D.lines.push({x1:cx,y1:stemY,x2:cx,y2:chY,col:'#5577cc',lw:2,dash:[]});
       _2D.nodes[cid]={x:cx-CW/2,y:chY,w:CW,h:CH,focused:false};
       const gc=gcList(cid);
       if(gc.length){
         const gtotW=gc.length*(CW+GX)-GX;
         const gs=cx-gtotW/2+CW/2;
         const gcStemY=gcY-8;
-        _2D.lines.push({x1:cx,y1:chY+CH,x2:cx,y2:gcStemY,col:'#334488',dash:[]});
+        _2D.lines.push({x1:cx,y1:chY+CH,x2:cx,y2:gcStemY,col:'#334488',lw:1.5,dash:[]});
         if(gc.length>1)
-          _2D.lines.push({x1:gs,y1:gcStemY,x2:gs+(gc.length-1)*(CW+GX),y2:gcStemY,col:'#334488',dash:[]});
+          _2D.lines.push({x1:gs,y1:gcStemY,x2:gs+(gc.length-1)*(CW+GX),y2:gcStemY,col:'#334488',lw:1.5,dash:[]});
         gc.forEach((gcid,gi)=>{
           const gcx=gs+gi*(CW+GX);
-          _2D.lines.push({x1:gcx,y1:gcStemY,x2:gcx,y2:gcY,col:'#334488',dash:[]});
+          _2D.lines.push({x1:gcx,y1:gcStemY,x2:gcx,y2:gcY,col:'#334488',lw:1.5,dash:[]});
           _2D.nodes[gcid]={x:gcx-CW/2,y:gcY,w:CW,h:CH,focused:false};
         });
       }
     });
   }
 
-  // ── Placera en sidas familjer ──────────────────────────────
-  // Alla partners på spTopY.
-  // knutX = punkt på röda linjen och centrum för barnraden.
-  // Partner placeras vid knutX men förskjuten i X så barnraden ryms.
-  // Z-koppling: ned från knutX (focMY) → horisontell in i partnerns sida (spMY).
-  function layoutSide(famList, side){
-    const sign = side==='left'?-1:1;
-    let xEdge = sign*CW/2; // ytterste använda X på röda linjen
-    let barnEdge = 0;      // ytterste använda X i barnraden
+  // ══════════════════════════════════════════════════════════
+  // LAYOUT A: 1-2 partners — alla på samma Y som fokus
+  // ══════════════════════════════════════════════════════════
+  if(fams.length<=2){
+    const leftFams =famData.filter((_,i)=>i%2===0);
+    const rightFams=famData.filter((_,i)=>i%2===1);
 
-    const placed=[];
-    famList.forEach(({spId,ch,rw})=>{
-      // knutX: tillräckligt långt ut för att barnraden ryms och partner ryms
-      // Barnrad behöver rw/2 på varje sida av knutX
-      // Partner (CW bred) centreras vid knutX
-      // Så knutX ska vara minst: xEdge + sign*(GX + max(CW/2, rw/2))
+    // Vänster: fi=0, Partner till vänster om fokus
+    leftFams.forEach(({spId,ch,rw})=>{
+      // Barn-bredd styr hur långt vänster partner placeras
+      // knutX = mitt emellan fokus(0) och partner
+      // barnrad centreras vid knutX, bredd rw
+      // Partner vänsterkant minst: knutX - rw/2 - GX - CW (partner+gap+barnhalva)
+      const minDist=Math.max(CW+GX, rw/2+GX+CW/2); // fokus→knutX avstånd
+      const knutX=-minDist;
+      const spCX=knutX*2; // spegla knutX om fokus (0)
 
-      const halfNeed = Math.max(CW/2, rw/2);
-      const knutX = xEdge + sign*(GX + halfNeed);
-
-      // Partner centreras vid knutX, hänger under röda linjen
-      const spCX = knutX;
       if(spId&&_2dP(spId)){
-        _2D.nodes[spId]={x:spCX-CW/2,y:spTopY,w:CW,h:CH,focused:false};
+        _2D.nodes[spId]={x:spCX-CW/2,y:focY,w:CW,h:CH,focused:false};
+        _2D.lines.push({x1:-CW/2,y1:focMY,x2:spCX+CW/2,y2:focMY,col:'#c8a040',lw:2,dash:[]});
+        _2D.lines.push({x1:knutX,y1:focMY,x2:knutX,y2:focMY,col:'#444',dot:R});
       }
-
-      // Grön Z-koppling:
-      // 1. Vertikal: knutX, focMY → knutX, spMY (partnerns mitten)
-      // 2. Horisontell: knutX, spMY → partnerns sida
-      const sideX = side==='left' ? spCX+CW/2 : spCX-CW/2; // partnerns inner-sida
-      _2D.lines.push({x1:knutX,y1:focMY,x2:knutX,y2:spMY,col:'#2a8a4a',lw:2,dash:[]});
-      _2D.lines.push({x1:knutX,y1:spMY,x2:sideX,y2:spMY,col:'#2a8a4a',lw:2,dash:[]});
-      // Knutpunkt på röda linjen
-      _2D.lines.push({x1:knutX,y1:focMY,x2:knutX,y2:focMY,col:'#2a8a4a',dot:R});
-
-      placeChildren(ch, knutX);
-
-      // Uppdatera kanter
-      xEdge = sign>0 ? spCX+CW/2 : spCX-CW/2;
-      barnEdge = side==='left' ? knutX-rw/2 : knutX+rw/2;
-      placed.push(knutX);
+      placeChildren(ch,knutX,focMY);
     });
-    return xEdge;
+
+    // Höger: fi=1, Partner till höger om fokus
+    rightFams.forEach(({spId,ch,rw})=>{
+      const minDist=Math.max(CW+GX, rw/2+GX+CW/2);
+      const knutX=minDist;
+      const spCX=knutX*2;
+
+      if(spId&&_2dP(spId)){
+        _2D.nodes[spId]={x:spCX-CW/2,y:focY,w:CW,h:CH,focused:false};
+        _2D.lines.push({x1:CW/2,y1:focMY,x2:spCX-CW/2,y2:focMY,col:'#c8a040',lw:2,dash:[]});
+        _2D.lines.push({x1:knutX,y1:focMY,x2:knutX,y2:focMY,col:'#444',dot:R});
+      }
+      placeChildren(ch,knutX,focMY);
+    });
+
+  // ══════════════════════════════════════════════════════════
+  // LAYOUT B: 3+ partners — röd linje + gröna Z-kopplingar
+  // ══════════════════════════════════════════════════════════
+  } else {
+    const spTopY=focMY+8;
+    const spMY  =spTopY+CH/2;
+    const leftFams =famData.filter((_,i)=>i%2===0);
+    const rightFams=famData.filter((_,i)=>i%2===1);
+
+    function layoutSide(famList,side){
+      const sign=side==='left'?-1:1;
+      let xEdge=sign*CW/2, barnEdge=0;
+      famList.forEach(({spId,ch,rw})=>{
+        let knutX=xEdge+sign*(GX+CW/2);
+        if(rw>0){
+          const need=side==='left'?barnEdge-GX-rw/2:barnEdge+GX+rw/2;
+          if(side==='left'?knutX>need:knutX<need) knutX=need;
+        }
+        const spCX=knutX;
+        if(spId&&_2dP(spId))
+          _2D.nodes[spId]={x:spCX-CW/2,y:spTopY,w:CW,h:CH,focused:false};
+        const sideX=side==='left'?spCX+CW/2:spCX-CW/2;
+        _2D.lines.push({x1:knutX,y1:focMY,x2:knutX,y2:spMY,col:'#2a8a4a',lw:2,dash:[]});
+        _2D.lines.push({x1:knutX,y1:spMY,x2:sideX,y2:spMY,col:'#2a8a4a',lw:2,dash:[]});
+        _2D.lines.push({x1:knutX,y1:focMY,x2:knutX,y2:focMY,col:'#2a8a4a',dot:R});
+        placeChildren(ch,knutX,spTopY+CH);
+        xEdge=side==='left'?spCX-CW/2:spCX+CW/2;
+        barnEdge=side==='left'?knutX-rw/2:knutX+rw/2;
+      });
+      return xEdge;
+    }
+    const lEdge=layoutSide(leftFams,'left');
+    const rEdge=layoutSide(rightFams,'right');
+    _2D.lines.unshift({x1:lEdge,y1:focMY,x2:rEdge,y2:focMY,col:'#cc3333',lw:2.5,dash:[]});
   }
-
-  const lEdge = layoutSide(leftFams,'left');
-  const rEdge = layoutSide(rightFams,'right');
-
-  // ── RÖD linje ─────────────────────────────────────────────
-  _2D.lines.unshift({x1:lEdge,y1:focMY,x2:rEdge,y2:focMY,col:'#cc3333',lw:2.5,dash:[]});
 
   // ── Föräldrar ─────────────────────────────────────────────
   const parY=focY-CH-GY;
@@ -7019,21 +7030,23 @@ function _2dBuild(focId){
         if(sl.pid&&_2dP(sl.pid)) _2D.nodes[sl.pid]=node;
         else _2D.nodes['__unk_'+sl.sex]={...node,unknown:true,sex:sl.sex,label:sl.label};
       });
-      _2D.lines.push({x1:farCX-CW/2,y1:parY+CH/2,x2:morCX+CW/2,y2:parY+CH/2,col:'#cc3333',lw:2.5,dash:[]});
-      _2D.lines.push({x1:0,y1:parY+CH/2,x2:0,y2:parY+CH/2,col:'#2a8a4a',dot:R});
-      _2D.lines.push({x1:0,y1:parY+CH,x2:0,y2:focY,col:'#5577cc',dash:[]});
+      // Guldlinje far-mor
+      _2D.lines.push({x1:farCX-CW/2,y1:parY+CH/2,x2:morCX+CW/2,y2:parY+CH/2,col:'#c8a040',lw:2,dash:[]});
+      // Knutpunkt mitt på föräldralinjen
+      _2D.lines.push({x1:0,y1:parY+CH/2,x2:0,y2:parY+CH/2,col:'#444',dot:R});
+      // Blå linje från knutpunkten ned till fokus övre kant
+      _2D.lines.push({x1:0,y1:parY+CH/2,x2:0,y2:focY,col:'#5577cc',lw:2,dash:[]});
     }
   }
 
   // ── Centrera ──────────────────────────────────────────────
   const cont=_2D._cont;
-  _2D.targetPan={x:cont.clientWidth/2,y:cont.clientHeight*0.35};
+  _2D.targetPan={x:cont.clientWidth/2,y:cont.clientHeight*0.45};
   _2D.pan={..._2D.targetPan};
   _2D.zoom=1;_2D.targetZoom=1;
   const allIds=Object.keys(_2D.nodes).filter(k=>!k.startsWith('__'));
   Promise.all(allIds.map(id=>_2dImg(id))).then(()=>_2dDraw());
 }
-
 
 // ── Rita ─────────────────────────────────────────────────────
 function _2dDraw(){
@@ -7043,9 +7056,9 @@ function _2dDraw(){
   const isDark=document.documentElement.getAttribute('data-theme')==='dark';
   const bgCol=isDark?'#111827':'#f0f2f8';
   const cardBg=isDark?'#1e2235':'#ffffff';
-  const cardBorder=isDark?'#3a3e6a':'#d0d4e8';
-  const textCol=isDark?'#c8ccee':'#1a1e3a';
-  const subCol=isDark?'#8890b8':'#6068a0';
+  const cardBorder=isDark?'#5a5e9a':'#9098c8';
+  const textCol=isDark?'#e8ecff':'#0e1230';
+  const subCol=isDark?'#a0a8cc':'#3a4080';
 
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle=bgCol; ctx.fillRect(0,0,W,H);
@@ -7127,11 +7140,11 @@ function _2dDrawCard(ctx,pid,x,y,w,h,focused,unknown,sex,label,cardBg,cardBorder
   const parts=rawName.split(/\s+/);
   ctx.textAlign='left'; ctx.textBaseline='top';
   ctx.fillStyle=focused?'#c8a040':textCol;
-  ctx.font=`bold ${focused?12:11}px sans-serif`;
+  ctx.font=`bold ${focused?13:12}px sans-serif`;
   ctx.fillText(parts.slice(0,2).join(' '),TX,y+10,MW);
   if(parts.length>2){ctx.font='10px sans-serif';ctx.fillStyle=subCol;ctx.fillText(parts.slice(2).join(' '),TX,y+26,MW);}
   const row2=parts.length>2?y+40:y+28;
-  ctx.font='9.5px sans-serif'; ctx.fillStyle=subCol;
+  ctx.font='11px sans-serif'; ctx.fillStyle=subCol;
   const bY=yr(p.birt?p.birt.date:'');
   const dY=yr(p.deat?p.deat.date:'');
   const bP=p.birt&&p.birt.place?p.birt.place.split(',')[0].trim():'';
