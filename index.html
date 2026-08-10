@@ -942,7 +942,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.4.25 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.4.32 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -6238,7 +6238,7 @@ async function _3dLoadImg(pid){
 const CW=280, CH=168;  // canvas pixel-storlek för texturen
 const KW=3.0, KH=1.8, KD=0.22; // Three.js enhet-storlek (bredd/höjd/djup)
 
-function _3dTex(pid,focused){
+function _3dTex(pid,focused,cardType){
   const p=_3dP(pid); if(!p)return new THREE.CanvasTexture(document.createElement('canvas'));
   const cv=document.createElement('canvas'); cv.width=CW; cv.height=CH;
   const ctx=cv.getContext('2d');
@@ -6256,7 +6256,7 @@ function _3dTex(pid,focused){
   ctx.fillStyle=g; ctx.fill();
 
   // Yttre ram
-  ctx.strokeStyle=focused?'#d4af6a':'#3a3e6a';
+  ctx.strokeStyle=focused?'#d4af6a':cardType==='partner'?'#5aace8':cardType==='parent'?'#d4af6a':'#e0e4f8';
   ctx.lineWidth=focused?4:2; ctx.stroke();
   if(focused){
     ctx.strokeStyle='rgba(212,175,106,0.25)';ctx.lineWidth=1;
@@ -6307,7 +6307,7 @@ function _3dTex(pid,focused){
   if(focused){
     ctx.fillStyle='rgba(212,175,106,0.16)'; ctx.fillRect(TX,CH-22,MW,16);
     ctx.fillStyle='#d4af6a'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center';
-    ctx.fillText('● FOKUS',TX+MW/2,CH-14);
+    ctx.fillText('● Fokusperson',TX+MW/2,CH-14);
   }
   return new THREE.CanvasTexture(cv);
 }
@@ -6316,12 +6316,12 @@ function _3dTex(pid,focused){
 // ── SKAPA KORT (tjock bricka) ─────────────────────────────────
 // Returnerar ett Object3D med framsida + sidokropp + osynlig hit
 // ══════════════════════════════════════════════════════════════
-function _3dCard(pid,focused){
+function _3dCard(pid,focused,cardType){
   const group=new THREE.Group();
   group.userData.personId=pid;
 
   // Framsida (PlaneGeometry med textur) — frontZ = +KD/2
-  const tex=_3dTex(pid,focused);
+  const tex=_3dTex(pid,focused,cardType);
   const front=new THREE.Mesh(
     new THREE.PlaneGeometry(KW,KH),
     new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false})
@@ -6330,8 +6330,12 @@ function _3dCard(pid,focused){
   group.add(front);
 
   // Sidokropp (BoxGeometry) — ger tjocklek
-  const edgeCol=focused?0x9a7f3a:0x2a2e55;
-  const sideCol=focused?0x1a1030:0x0a0c1a;
+  // Ramfärg: fokusperson=guld, partner=ljusblå, barn/förälder=vit
+  const edgeCol=focused?0xc8a030
+    :cardType==='partner'?0x6ab0e0
+    :cardType==='parent'?0xc8a030
+    :0xd8ddf0;  // barn/barnbarn = vit-blå
+  const sideCol=focused?0x1a1030:cardType==='partner'?0x0a1a2a:0x0a0c14;
   const boxMats=[
     new THREE.MeshLambertMaterial({color:sideCol}), // +X
     new THREE.MeshLambertMaterial({color:sideCol}), // -X
@@ -6465,7 +6469,7 @@ async function _tree3dBuildAsync(focId){
   await Promise.all([...new Set(allIds)].map(id=>_3dLoadImg(id)));
 
   // ── Fokusperson centralt ──
-  const fokCard=_3dCard(focId,true);
+  const fokCard=_3dCard(focId,true,'focus');
   fokCard.position.set(0,0,0);
   _3D.root.add(fokCard);
   _3D.nodes[focId]={card:fokCard};
@@ -6475,9 +6479,9 @@ async function _tree3dBuildAsync(focId){
   const nFams=focFams.length;
   const GY_FAM=3.6;      // vertikal avstånd ned till barnrad
   const G_SP=KW*0.55;    // avstånd fokus → partner
-  const G_CH=3.4;        // avstånd mellan syskon (horisontellt relativt pivot)
-  const G_GCH=3.0;       // barnbarn
-  const G_GY2=3.2;       // barnbarn Y
+  const G_CH=4.0;        // avstånd mellan syskon (ökat för att ge barnbarn plats)
+  const G_GCH=3.2;       // barnbarn
+  const G_GY2=3.4;       // barnbarn Y
 
   // Hjälp: transformera lokal (lx,lz_offset) i en familjvinkel → world XZ
   // lx = avstånd längs familjens riktning, lz_side = sidoavstånd vinkelrätt
@@ -6495,8 +6499,8 @@ async function _tree3dBuildAsync(focId){
     const children=fam.chil||[];
 
     // Avstånd: fokuskortet kant → partner-kortets kant
-    // Fokus kant = KW/2, partner placeras vid KW/2 + G_SP + KW/2
-    const G_SP_GAP=1.2;  // gap mellan kortkanterna
+    // Ökas dynamiskt vid fler partners för att undvika överlapp
+    const G_SP_GAP=1.2 + Math.max(0, nFams-2)*0.7;
     const spCenterLX=KW/2+G_SP_GAP+KW/2;  // lokalt X till partnerns centrum
 
     // Partnerlinjen: fokus-kortets HÖGRA kant → partners VÄNSTRA kant
@@ -6510,7 +6514,7 @@ async function _tree3dBuildAsync(focId){
     const hasSpouse=spId&&_3dP(spId);
     if(hasSpouse){
       const [wx,,wz]=toWorld(angle,spCenterLX,0);
-      const spCard=_3dCard(spId,false);
+      const spCard=_3dCard(spId,false,'partner');
       spCard.position.set(wx,0,wz);
       _3D.root.add(spCard);
       _3D.nodes[spId]={card:spCard};
@@ -6533,8 +6537,8 @@ async function _tree3dBuildAsync(focId){
       const totalW=(children.length-1)*G_CH;
       const [mlx,,mlz]=toWorld(angle,famLX,0,0);
 
-      // Vertikal ned från mitten av partnerlinjen
-      _3dLine(_3D.root,mlx,-(KH/2),mlz,mlx,chY+KH/2+0.6,mlz,0x5577cc,0.55);
+      // Vertikal ned från partnerlinjens Y (0) ned till stamgren
+      _3dLine(_3D.root,mlx,0,mlz,mlx,chY+KH/2+0.6,mlz,0x5577cc,0.55);
 
       // Horisontell stamgren längs sido-axeln
       if(children.length>1){
@@ -6550,29 +6554,36 @@ async function _tree3dBuildAsync(focId){
 
         _3dLine(_3D.root,cwx,chY+KH/2+0.5,cwz,cwx,chY+KH/2,cwz,0x5577cc,0.45);
 
-        const chCard=_3dCard(cid,false);
+        const chCard=_3dCard(cid,false,'child');
         chCard.position.set(cwx,chY,cwz);
         _3D.root.add(chCard);
         _3D.nodes[cid]={card:chCard};
 
-        // Barnbarn
+        // Barnbarn — sprids längs 45°-roterad axel relativt barnets position
         const gcFams=_3dFams(cid);
         const gcAll=[...new Set(gcFams.flatMap(f=>f.chil||[]))];
         if(gcAll.length>0){
           const gcY=chY-G_GY2;
           const gcTotalW=(gcAll.length-1)*G_GCH;
+          // 45° extra rotation för barnbarnens spridningsaxel
+          const gcAngle=angle+Math.PI/4;
+          const gcToWorld=(lz_side)=>{
+            const wx=cwx+Math.sin(gcAngle)*lz_side;
+            const wz=cwz+Math.cos(gcAngle)*lz_side;
+            return [wx,wz];
+          };
           _3dLine(_3D.root,cwx,chY-KH/2,cwz,cwx,gcY+KH/2+0.5,cwz,0x334488,0.4);
           if(gcAll.length>1){
-            const [gsX,,gsZ]=toWorld(angle,famLX,0,cSide-gcTotalW/2);
-            const [geX,,geZ]=toWorld(angle,famLX,0,cSide+gcTotalW/2);
+            const [gsX,gsZ]=gcToWorld(-gcTotalW/2);
+            const [geX,geZ]=gcToWorld(+gcTotalW/2);
             _3dLine(_3D.root,gsX,gcY+KH/2+0.45,gsZ,geX,gcY+KH/2+0.45,geZ,0x334488,0.35);
           }
           gcAll.forEach((gcid,gi)=>{
             if(!_3dP(gcid))return;
-            const gcSide=cSide-gcTotalW/2+gi*G_GCH;
-            const [gcwx,,gcwz]=toWorld(angle,famLX,0,gcSide);
+            const gcOffset=-gcTotalW/2+gi*G_GCH;
+            const [gcwx,gcwz]=gcToWorld(gcOffset);
             _3dLine(_3D.root,gcwx,gcY+KH/2+0.4,gcwz,gcwx,gcY+KH/2,gcwz,0x334488,0.3);
-            const gcCard=_3dCard(gcid,false);
+            const gcCard=_3dCard(gcid,false,'child');
             gcCard.position.set(gcwx,gcY,gcwz);
             _3D.root.add(gcCard);
             _3D.nodes[gcid]={card:gcCard};
@@ -6607,7 +6618,7 @@ async function _tree3dBuildAsync(focId){
         const px=parXs[i];
         let pc;
         if(slot.pid&&_3dP(slot.pid)){
-          pc=_3dCard(slot.pid,false);
+          pc=_3dCard(slot.pid,false,'parent');
         } else {
           pc=_3dCardUnknown(slot.sex,slot.label);
         }
@@ -6642,7 +6653,7 @@ function _tree3dAnimate(){
     r*sinX,
     r*cosY*cosX
   );
-  _3D.cam.lookAt(_3D.camCX,0,0);
+  _3D.cam.lookAt(_3D.camCX,-0.9,0);  // -0.9 = fokusperson i övre 45%
 
   // Alla kort-grupper vänder framsidan mot kameran, Y-axeln låst uppåt
   const camPos=_3D.cam.position;
@@ -6687,7 +6698,7 @@ function _tree3dBindEvents(canvas){
     const dx=cx-_3D.lastX, dy=cy-_3D.lastY;
     if(!_3D.isDrag&&(Math.abs(cx-_3D.downX)>5||Math.abs(cy-_3D.downY)>5)) _3D.isDrag=true;
     if(_3D.isDrag){
-      _3D.rotY+=dx*0.006;
+      _3D.rotY-=dx*0.006;
       _3D.rotX=Math.max(-1.1,Math.min(1.1,_3D.rotX+dy*0.005));
     }
     _3D.lastX=cx; _3D.lastY=cy;
@@ -6994,6 +7005,7 @@ function _2dBuild(focId){
     function layoutSide(famList,side){
       const sign=side==='left'?-1:1;
       let xEdge=sign*CW/2, barnEdge=0;
+      let lastKnutX=0; // ytterste knutX på denna sida
       famList.forEach(({spId,ch,rw})=>{
         let knutX=xEdge+sign*(GX+CW/2);
         if(rw>0){
@@ -7008,10 +7020,12 @@ function _2dBuild(focId){
         _2D.lines.push({x1:knutX,y1:spMY,x2:sideX,y2:spMY,col:'#2a8a4a',lw:2,dash:[]});
         _2D.lines.push({x1:knutX,y1:focMY,x2:knutX,y2:focMY,col:'#2a8a4a',dot:R});
         placeChildren(ch,knutX,spTopY+CH);
+        lastKnutX=knutX;
         xEdge=side==='left'?spCX-CW/2:spCX+CW/2;
         barnEdge=side==='left'?knutX-rw/2:knutX+rw/2;
       });
-      return xEdge;
+      // Returnera sista knutX (röda linjen slutar vid gröna punkten)
+      return famList.length>0?lastKnutX:sign*CW/2;
     }
     const lEdge=layoutSide(leftFams,'left');
     const rEdge=layoutSide(rightFams,'right');
@@ -7154,7 +7168,7 @@ function _2dDrawCard(ctx,pid,x,y,w,h,focused,unknown,sex,label,cardBg,cardBorder
   if(focused){
     ctx.fillStyle='rgba(200,160,64,0.15)'; ctx.fillRect(TX,y+h-17,MW-4,13);
     ctx.fillStyle='#c8a040'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center';
-    ctx.fillText('● FOKUS',TX+MW/2-2,y+h-10);
+    ctx.fillText('● Fokusperson',TX+MW/2-2,y+h-10);
   }
 }
 
