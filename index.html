@@ -942,7 +942,7 @@ input[type="file"]{display:none;}
 
   <div id="info-block">
     <div id="info-top" style="white-space:nowrap;"><span id="info-count"><strong>—</strong></span>&nbsp;<span id="info-file">—</span></div>
-    <div id="copyright">v1.4.32 &nbsp;|&nbsp; © 2026 Per Andersson</div>
+    <div id="copyright">v1.4.34 &nbsp;|&nbsp; © 2026 Per Andersson</div>
   </div>
 </div>
 
@@ -6175,7 +6175,7 @@ function _tree3dStart(focId){
     _3D.scene.add(new THREE.AmbientLight(0xffffff,0.6));
     const dl=new THREE.DirectionalLight(0xffeedd,1.0);
     dl.position.set(5,10,12); _3D.scene.add(dl);
-    const dl2=new THREE.DirectionalLight(0x334488,0.35);
+    const dl2=new THREE.DirectionalLight(0xffffff,0.5);
     dl2.position.set(-8,-3,-10); _3D.scene.add(dl2);
     // Stjärnfält
     const sg=new THREE.BufferGeometry();
@@ -6537,22 +6537,25 @@ async function _tree3dBuildAsync(focId){
       const totalW=(children.length-1)*G_CH;
       const [mlx,,mlz]=toWorld(angle,famLX,0,0);
 
-      // Vertikal ned från partnerlinjens Y (0) ned till stamgren
-      _3dLine(_3D.root,mlx,0,mlz,mlx,chY+KH/2+0.6,mlz,0x5577cc,0.55);
+      // Stamgrenens Y — alla linjer möts här
+      const stemY=chY+KH/2+0.5;
+      // Vertikal ned från partnerlinjens Y (0) ned till stamgrenen
+      _3dLine(_3D.root,mlx,0,mlz,mlx,stemY,mlz,0xffffff,0.7);
 
       // Horisontell stamgren längs sido-axeln
       if(children.length>1){
         const [sX,,sZ]=toWorld(angle,famLX,0,-totalW/2);
         const [eX,,eZ]=toWorld(angle,famLX,0,+totalW/2);
-        _3dLine(_3D.root,sX,chY+KH/2+0.5,sZ,eX,chY+KH/2+0.5,eZ,0x5577cc,0.5);
+        _3dLine(_3D.root,sX,stemY,sZ,eX,stemY,eZ,0xffffff,0.7);
       }
 
       children.forEach((cid,ci)=>{
         if(!_3dP(cid))return;
-        const cSide=-totalW/2+ci*G_CH;  // position längs sido-axeln
+        const cSide=-totalW/2+ci*G_CH;
         const [cwx,,cwz]=toWorld(angle,famLX,0,cSide);
 
-        _3dLine(_3D.root,cwx,chY+KH/2+0.5,cwz,cwx,chY+KH/2,cwz,0x5577cc,0.45);
+        // Stub ned från stamgrenen till barnkortet överkant
+        _3dLine(_3D.root,cwx,stemY,cwz,cwx,chY+KH/2,cwz,0xffffff,0.65);
 
         const chCard=_3dCard(cid,false,'child');
         chCard.position.set(cwx,chY,cwz);
@@ -6572,17 +6575,17 @@ async function _tree3dBuildAsync(focId){
             const wz=cwz+Math.cos(gcAngle)*lz_side;
             return [wx,wz];
           };
-          _3dLine(_3D.root,cwx,chY-KH/2,cwz,cwx,gcY+KH/2+0.5,cwz,0x334488,0.4);
+          _3dLine(_3D.root,cwx,chY-KH/2,cwz,cwx,gcY+KH/2+0.5,cwz,0xffffff,0.55);
           if(gcAll.length>1){
             const [gsX,gsZ]=gcToWorld(-gcTotalW/2);
             const [geX,geZ]=gcToWorld(+gcTotalW/2);
-            _3dLine(_3D.root,gsX,gcY+KH/2+0.45,gsZ,geX,gcY+KH/2+0.45,geZ,0x334488,0.35);
+            _3dLine(_3D.root,gsX,gcY+KH/2+0.45,gsZ,geX,gcY+KH/2+0.45,geZ,0xffffff,0.5);
           }
           gcAll.forEach((gcid,gi)=>{
             if(!_3dP(gcid))return;
             const gcOffset=-gcTotalW/2+gi*G_GCH;
             const [gcwx,gcwz]=gcToWorld(gcOffset);
-            _3dLine(_3D.root,gcwx,gcY+KH/2+0.4,gcwz,gcwx,gcY+KH/2,gcwz,0x334488,0.3);
+            _3dLine(_3D.root,gcwx,gcY+KH/2+0.4,gcwz,gcwx,gcY+KH/2,gcwz,0xffffff,0.45);
             const gcCard=_3dCard(gcid,false,'child');
             gcCard.position.set(gcwx,gcY,gcwz);
             _3D.root.add(gcCard);
@@ -6612,7 +6615,7 @@ async function _tree3dBuildAsync(focId){
       // Partnerlinjens mitt = x=0 = dit barnlinjen pekar
       const parMidX=0;
       // Vertikal linje från fokus upp till partnerlinjens mitt
-      _3dLine(_3D.root,parMidX,KH/2,0,parMidX,parY,0,0x5577cc,0.5);
+      _3dLine(_3D.root,parMidX,KH/2,0,parMidX,parY,0,0xffffff,0.7);
       const parXs=[farX,morX];
       parSlots.forEach((slot,i)=>{
         const px=parXs[i];
